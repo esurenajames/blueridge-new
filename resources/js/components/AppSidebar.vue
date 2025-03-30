@@ -29,13 +29,15 @@ const dashboardRoute = computed(() => {
     }
 });
 
-const mainNavItems: NavItem[] = [
-    {
+const mainNavItems = computed(() => {
+    if (!dashboardRoute.value) return [];
+    
+    return [{
         title: 'Dashboard',
         href: route(dashboardRoute.value),
         icon: LayoutGrid,
-    },
-];
+    }];
+});
 </script>
 
 <template>
@@ -44,7 +46,7 @@ const mainNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route(dashboardRoute.value)">
+                        <Link v-if="dashboardRoute" :href="route(dashboardRoute)">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
