@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActiveUserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -26,6 +27,10 @@ Route::get('admin/dashboard', function () {
 // Route::get('treasurer/dashboard', function () {
 //     return Inertia::render('TreasurerDashboard');
 // })->middleware(['auth', 'verified', 'role:treasurer'])->name('treasurer.dashboard');
+
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/active-users', [ActiveUserController::class, 'index'])->name('admin.active-users');
+});
 
 Route::get('unauthorized', function () {
     return Inertia::render('Unauthorize');
