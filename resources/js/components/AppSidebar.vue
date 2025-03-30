@@ -44,7 +44,7 @@ const mainNavItems: NavItem[] = [
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link :href="route(dashboardRoute)">
+                        <Link :href="route(dashboardRoute.value)">
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
