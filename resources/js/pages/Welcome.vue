@@ -1,6 +1,28 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import welcomeImage from '../../images/welcome.jpg';
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
+
+const dashboardRoute = computed(() => {
+    if (!user.value) return 'login';
+    
+    switch (user.value.role) {
+        case 'admin':
+            return 'admin.dashboard';
+        case 'captain':
+            return 'captain.dashboard';
+        case 'secretary':
+            return 'secretary.dashboard';
+        case 'treasurer':
+            return 'treasurer.dashboard';
+        default:
+            return 'dashboard';
+    }
+});
 </script>
 
 <template>
@@ -13,7 +35,7 @@ import welcomeImage from '../../images/welcome.jpg';
             <nav class="flex items-center justify-end gap-4">
                 <Link
                     v-if="$page.props.auth.user"
-                    :href="route('dashboard')"
+                    :href="route(dashboardRoute)"
                     class="inline-block rounded-lg border border-blue-600 bg-blue-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-blue-700 dark:border-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600"
                 >
                     Dashboard
