@@ -9,8 +9,6 @@ import UserMenuContent from './UserMenuContent.vue';
 
 const page = usePage<SharedData>();
 const user = page.props.auth.user as User;
-const userRole = page.props.auth.user.role;
-const userEmail = page.props.auth.user.email;
 
 const { isMobile, state } = useSidebar();
 </script>

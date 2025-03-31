@@ -5,7 +5,7 @@ import NavUser from '@/components/NavUser.vue';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -32,11 +32,23 @@ const dashboardRoute = computed(() => {
 const mainNavItems = computed(() => {
     if (!dashboardRoute.value) return [];
     
-    return [{
+    const items: NavItem[] = [{
         title: 'Dashboard',
         href: route(dashboardRoute.value),
         icon: LayoutGrid,
     }];
+
+    if (user.value?.role === 'admin') {
+        items.push(
+            {
+                title: 'Users',
+                href: route('admin.users'),
+                icon: UserCheck,
+            },
+        );
+    }
+
+    return items;
 });
 </script>
 
