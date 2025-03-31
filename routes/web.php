@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ActiveUserController;
+use App\Http\Controllers\AdminDashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -12,9 +12,13 @@ Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified', 'role:official'])->name('dashboard');
 
-Route::get('admin/dashboard', function () {
-    return Inertia::render('AdminDashboard');
-})->middleware(['auth', 'verified', 'role:admin'])->name('admin.dashboard');
+Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:admin'])
+    ->name('admin.dashboard');
+
+Route::get('user', function () {
+    return Inertia::render('UserManagement');
+})->middleware(['auth', 'verified', 'role:admin'])->name('admin.users');
 
 // Route::get('captain/dashboard', function () {
 //     return Inertia::render('CaptainDashboard');

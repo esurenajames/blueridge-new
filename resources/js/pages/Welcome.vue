@@ -2,7 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import welcomeImage from '../../images/welcome.jpg';
+import welcomeImage from '../../images/welcome.svg';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);

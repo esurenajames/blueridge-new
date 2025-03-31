@@ -11,15 +11,7 @@
                         class="h-full w-full object-cover transition-transform duration-300 hover:scale-105" 
                     />
                 </div>
-                <div class="relative flex flex-col justify-end h-full pb-8">
-                    <div class="p-6 pb-0 text-center">
-                        <span class="text-xl font-bold text-gray-700 tracking-wider opacity-90 backdrop-blur-sm">
-                            BARANGAY BLUE RIDGE B FUND MANAGEMENT & PROCUREMENT SYSTEM
-                        </span>
-                    </div>
-                </div>
             </div>
-
             <div class="flex-1 p-6 lg:p-12">
                 <div class="mx-auto w-full max-w-md space-y-8">
                     <div class="space-y-4">
@@ -125,7 +117,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoaderCircle } from 'lucide-vue-next';
-import loginImage from '@/./../images/login.jpg';
+import loginImage from '@/./../images/login.svg';
 
 defineProps<{
     status?: string;
