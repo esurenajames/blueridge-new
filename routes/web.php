@@ -20,6 +20,7 @@ Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
 });
 
 // Route::get('captain/dashboard', function () {

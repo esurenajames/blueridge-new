@@ -55,13 +55,21 @@ const handleSubmit = () => {
       emit('close');
       form.reset();
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update user. Please try again.",
-        variant: "destructive",
-      });
-    },
+    onError: (errors) => {
+        if (errors.error) {
+          toast({
+            title: "Error",
+            description: errors.error, 
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to delete user. Please try again.",
+            variant: "destructive",
+          });
+        }
+      },
   });
 };
 </script>
@@ -84,7 +92,6 @@ const handleSubmit = () => {
             :error="form.errors.name"
           />
         </div>
-        
         <div class="space-y-2">
           <label for="email" class="text-sm font-medium">Email</label>
           <Input 
@@ -94,7 +101,6 @@ const handleSubmit = () => {
             :error="form.errors.email"
           />
         </div>
-
         <div class="space-y-2">
           <label for="role" class="text-sm font-medium">Role</label>
           <Select v-model="form.role">
@@ -112,7 +118,6 @@ const handleSubmit = () => {
             </SelectContent>
           </Select>
         </div>
-
         <div class="space-y-2">
           <label for="status" class="text-sm font-medium">Status</label>
           <Select v-model="form.status">
@@ -130,7 +135,6 @@ const handleSubmit = () => {
             </SelectContent>
           </Select>
         </div>
-
         <div class="flex justify-end gap-3">
           <Button 
             type="button" 

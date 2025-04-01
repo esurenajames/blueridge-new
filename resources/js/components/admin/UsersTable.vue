@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pencil, Trash2 } from 'lucide-vue-next';
 import EditUser from './EditUser.vue';
+import DeleteUser from './DeleteUser.vue';
 
 interface User {
   id: number;
@@ -44,6 +45,7 @@ const sortedUsers = computed(() => {
 });
 
 const showEditDialog = ref(false);
+const showDeleteDialog = ref(false);
 const selectedUser = ref<User | null>(null);
 
 const handleEdit = (user: User) => {
@@ -53,6 +55,16 @@ const handleEdit = (user: User) => {
 
 const handleCloseEdit = () => {
   showEditDialog.value = false;
+  selectedUser.value = null;
+};
+
+const handleDelete = (user: User) => {
+  selectedUser.value = user;
+  showDeleteDialog.value = true;
+};
+
+const handleCloseDelete = () => {
+  showDeleteDialog.value = false;
   selectedUser.value = null;
 };
 
@@ -154,8 +166,8 @@ const displayRole = (role: string) => {
                         <span 
                             class="capitalize inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
                             :class="{
-                                'bg-green-700/20 text-green-500 ring-green-600/40 dark:bg-green-900/40 dark:text-green-300': user.status === 'active',
-                                'bg-red-700/20 text-red-500 ring-red-600/40 dark:bg-red-900/40 dark:text-red-300': user.status === 'inactive'
+                                'bg-green-700 text-green-500 ring-green-600 dark:bg-green-900 dark:text-green-300': user.status === 'active',
+                                'bg-red-700 text-red-500 ring-red-600 dark:bg-red-900 dark:text-red-300': user.status === 'inactive'
                             }"
                         >
                             {{ user.status }}
@@ -177,7 +189,7 @@ const displayRole = (role: string) => {
                                     <Pencil class="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem class="text-destructive">
+                                <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
                                     <Trash2 class="mr-2 h-4 w-4" />
                                     <span>Delete</span>
                                 </DropdownMenuItem>
@@ -212,10 +224,16 @@ const displayRole = (role: string) => {
             </Pagination>
         </div>
         <EditUser 
-    v-if="selectedUser"
-    :user="selectedUser"
-    :show="showEditDialog"
-    @close="handleCloseEdit"
-  />
+            v-if="selectedUser"
+            :user="selectedUser"
+            :show="showEditDialog"
+            @close="handleCloseEdit"
+        />
+        <DeleteUser 
+            v-if="selectedUser"
+            :user="selectedUser"
+            :show="showDeleteDialog"
+            @close="handleCloseDelete"
+        />
     </div>
 </template>

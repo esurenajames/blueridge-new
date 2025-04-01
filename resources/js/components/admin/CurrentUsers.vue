@@ -53,7 +53,13 @@ const displayRole = (role: string) => {
                         </div>
                     </div>
                     <div class="text-right">
-                        <span class="capitalize rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-100">
+                        <span 
+                            class="capitalize inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                            :class="{
+                                'bg-green-700/20 text-green-500 ring-green-600/40 dark:bg-green-900/40 dark:text-green-300': user.status === 'active',
+                                'bg-red-700/20 text-red-500 ring-red-600/40 dark:bg-red-900/40 dark:text-red-300': user.status === 'inactive'
+                            }"
+                        >
                             {{ user.status }}
                         </span>
                     </div>
