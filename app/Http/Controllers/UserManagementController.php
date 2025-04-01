@@ -30,6 +30,7 @@ class UserManagementController extends Controller
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
+            'role' => ['required', 'string', Rule::in(['captain', 'admin', 'official', 'secretary', 'treasurer'])],
             'status' => ['required', 'string', Rule::in(['active', 'inactive'])],
         ]);
 
