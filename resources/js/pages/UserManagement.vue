@@ -1,23 +1,39 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { MoreHorizontal } from 'lucide-vue-next'
+import { computed } from 'vue';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Plus, Search, Pencil, Trash2 } from 'lucide-vue-next';
 
-const users = [
-    {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'admin',
-        status: 'active',
-        createdAt: '2024-03-31',
-    },
-    // ... more mock data for testing
-];
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
+const page = usePage();
+const users = computed(() => page.props.users as User[]);
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -26,6 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+// ...existing code...
 </script>
 
 <template>
@@ -43,23 +60,23 @@ const breadcrumbs: BreadcrumbItem[] = [
                         class="pl-10 w-full"
                     />
                 </div>
-                <Button variant="default" class="w-full sm:w-auto shadow-sm">
+                <Button class="w-full sm:w-auto">
                     <Plus class="mr-2 h-4 w-4" />
                     Create New User
                 </Button>
             </div>
 
             <!-- Users Table -->
-            <div class="rounded-lg border bg-white shadow-sm dark:bg-gray-900 overflow-x-auto">
+           <div class="rounded-md border">
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead class="min-w-[150px]">Name</TableHead>
-                            <TableHead class="min-w-[200px]">Email</TableHead>
-                            <TableHead class="min-w-[100px]">Role</TableHead>
-                            <TableHead class="min-w-[100px]">Status</TableHead>
-                            <TableHead class="min-w-[120px]">Created At</TableHead>
-                            <TableHead class="min-w-[100px]">Actions</TableHead>
+                            <TableHead class="w-[150px]">Name</TableHead>
+                            <TableHead class="w-[200px]">Email</TableHead>
+                            <TableHead class="w-[100px]">Role</TableHead>
+                            <TableHead class="w-[100px]">Status</TableHead>
+                            <TableHead class="w-[120px]">Created At</TableHead>
+                            <TableHead class="w-[100px]">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -67,41 +84,43 @@ const breadcrumbs: BreadcrumbItem[] = [
                             <TableCell class="font-medium">{{ user.name }}</TableCell>
                             <TableCell>{{ user.email }}</TableCell>
                             <TableCell>
-                                <span class="capitalize inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                                <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400">
                                     {{ user.role }}
                                 </span>
                             </TableCell>
                             <TableCell>
                                 <span 
-                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                                    class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
                                     :class="{
-                                        'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400': user.status === 'active',
-                                        'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400': user.status === 'inactive'
+                                        'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400': user.status === 'active',
+                                        'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400': user.status === 'inactive'
                                     }"
                                 >
                                     {{ user.status }}
                                 </span>
                             </TableCell>
-                            <TableCell class="text-gray-500 dark:text-gray-400">
+                            <TableCell class="text-muted-foreground">
                                 {{ new Date(user.createdAt).toLocaleDateString() }}
                             </TableCell>
                             <TableCell>
-                                <div class="flex items-center gap-2">
-                                    <Button 
-                                        variant="outline" 
-                                        size="icon"
-                                        class="h-8 w-8"
-                                    >
-                                        <Pencil class="h-4 w-4" />
-                                    </Button>
-                                    <Button 
-                                        variant="outline" 
-                                        size="icon"
-                                        class="h-8 w-8 text-red-500 hover:text-red-600 hover:border-red-600"
-                                    >
-                                        <Trash2 class="h-4 w-4" />
-                                    </Button>
-                                </div>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal class="h-4 w-4" />
+                                            <span class="sr-only">Open menu</span>
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem>
+                                            <Pencil class="mr-2 h-4 w-4" />
+                                            <span>Edit</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem class="text-destructive">
+                                            <Trash2 class="mr-2 h-4 w-4" />
+                                            <span>Delete</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </TableCell>
                         </TableRow>
                     </TableBody>
