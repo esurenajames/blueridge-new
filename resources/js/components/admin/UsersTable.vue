@@ -2,32 +2,12 @@
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-vue-next';
-import {
-  Pagination,
-  PaginationList,
-  PaginationListItem,
-  PaginationEllipsis,
-  PaginationFirst,
-  PaginationLast,
-  PaginationNext,
-  PaginationPrev,
-} from '@/components/ui/pagination'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Pencil, Trash2 } from 'lucide-vue-next';
+import { Pagination, PaginationList, PaginationListItem, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrev } from '@/components/ui/pagination';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Pencil, Trash2, KeyRound } from 'lucide-vue-next';
+import EditUser from './EditUser.vue';
+import DeleteUser from './DeleteUser.vue';
 
 interface User {
   id: number;
@@ -63,6 +43,30 @@ const sortedUsers = computed(() => {
     return 0;
   });
 });
+
+const showEditDialog = ref(false);
+const showDeleteDialog = ref(false);
+const selectedUser = ref<User | null>(null);
+
+const handleEdit = (user: User) => {
+  selectedUser.value = user;
+  showEditDialog.value = true;
+};
+
+const handleCloseEdit = () => {
+  showEditDialog.value = false;
+  selectedUser.value = null;
+};
+
+const handleDelete = (user: User) => {
+  selectedUser.value = user;
+  showDeleteDialog.value = true;
+};
+
+const handleCloseDelete = () => {
+  showDeleteDialog.value = false;
+  selectedUser.value = null;
+};
 
 const paginatedUsers = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
@@ -151,17 +155,19 @@ const displayRole = (role: string) => {
                         <span class="hidden sm:block">{{ user.name }}</span>
                     </TableCell>
                     <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
-                    <TableCell>
-                        <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/30 dark:text-blue-400">
+                   <TableCell>
+                        <span 
+                            class="capitalize inline-flex items-center rounded-md bg-blue-700/20 px-2 py-1 text-xs font-medium text-blue-500 ring-1 ring-inset ring-blue-700/40 dark:bg-blue-900/40 dark:text-blue-300">
                             {{ displayRole(user.role) }}
                         </span>
                     </TableCell>
-                    <TableCell class="hidden md:table-cell">
+
+                    <TableCell>
                         <span 
-                            class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
+                            class="capitalize inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
                             :class="{
-                                'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400': user.status === 'active',
-                                'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400': user.status === 'inactive'
+                                'bg-green-700 text-green-500 ring-green-600 dark:bg-green-900 dark:text-green-300': user.status === 'active',
+                                'bg-red-700 text-red-500 ring-red-600 dark:bg-red-900 dark:text-red-300': user.status === 'inactive'
                             }"
                         >
                             {{ user.status }}
@@ -179,11 +185,15 @@ const displayRole = (role: string) => {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem @click="handleEdit(user)">
                                     <Pencil class="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem class="text-destructive">
+                                <DropdownMenuItem>
+                                    <KeyRound class="mr-2 h-4 w-4" />
+                                    <span>Generate Pass</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
                                     <Trash2 class="mr-2 h-4 w-4" />
                                     <span>Delete</span>
                                 </DropdownMenuItem>
@@ -217,5 +227,17 @@ const displayRole = (role: string) => {
                 </PaginationList>
             </Pagination>
         </div>
+        <EditUser 
+            v-if="selectedUser"
+            :user="selectedUser"
+            :show="showEditDialog"
+            @close="handleCloseEdit"
+        />
+        <DeleteUser 
+            v-if="selectedUser"
+            :user="selectedUser"
+            :show="showDeleteDialog"
+            @close="handleCloseDelete"
+        />
     </div>
 </template>
