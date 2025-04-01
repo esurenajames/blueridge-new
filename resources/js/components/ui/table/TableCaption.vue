@@ -8,7 +8,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <thead :class="cn('[&_tr]:border-b', props.class)">
+  <caption :class="cn('mt-4 text-sm text-muted-foreground', props.class)">
     <slot />
-  </thead>
+  </caption>
 </template>
