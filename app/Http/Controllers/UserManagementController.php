@@ -39,6 +39,10 @@ class UserManagementController extends Controller
         if ($user->role === 'admin' && $adminCount === 1 && $validated['role'] !== 'admin') {
             return redirect()->back()->withErrors(['error' => 'You cannot change the role of the last remaining admin.']);
         }
+        
+        if ($user->id === auth()->id() && $validated['status'] !== $user->status) {
+            return redirect()->back()->withErrors(['error' => 'You cannot change your own status.']);
+        }
     
         $user->update($validated);
     
@@ -47,7 +51,6 @@ class UserManagementController extends Controller
             'user' => new UserManagementResource($user),
         ]);
     }
-    
 
     public function destroy(User $user)
     {

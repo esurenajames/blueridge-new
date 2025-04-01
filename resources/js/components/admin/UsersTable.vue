@@ -5,7 +5,7 @@ import { MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-vue-next';
 import { Pagination, PaginationList, PaginationListItem, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrev } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Pencil, Trash2 } from 'lucide-vue-next';
+import { Pencil, Trash2, KeyRound } from 'lucide-vue-next';
 import EditUser from './EditUser.vue';
 import DeleteUser from './DeleteUser.vue';
 
@@ -188,6 +188,10 @@ const displayRole = (role: string) => {
                                 <DropdownMenuItem @click="handleEdit(user)">
                                     <Pencil class="mr-2 h-4 w-4" />
                                     <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <KeyRound class="mr-2 h-4 w-4" />
+                                    <span>Generate Pass</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
                                     <Trash2 class="mr-2 h-4 w-4" />
