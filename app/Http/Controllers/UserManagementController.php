@@ -66,4 +66,10 @@ class UserManagementController extends Controller
 
         return redirect()->back()->with('success', 'User deleted successfully.');
     }
+
+    public function generatePassword()
+    {
+        $password = str_random(10);
+        return response()->json(['password' => $password]);
+    }
 }

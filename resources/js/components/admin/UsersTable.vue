@@ -102,47 +102,34 @@ const displayRole = (role: string) => {
 <template>
     <div class="rounded-md border overflow-x-auto">
         <Table>
-            <TableCaption class="pb-2">
-                A list of all users in the system.
-            </TableCaption>
             <TableHeader>
                 <TableRow>
-                    <TableHead @click="sortBy('name')" class="cursor-pointer min-w-[120px]">
+                    <TableHead class="cursor-pointer min-w-[100px]">
                         <div class="flex items-center">
                             <span>Name</span>
-                            <ChevronUp v-if="sortKey === 'name' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'name' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('email')" class="cursor-pointer min-w-[180px] hidden sm:table-cell">
+                    <TableHead class="cursor-pointer min-w-[100px] hidden sm:table-cell">
                         <div class="flex items-center">
                             <span>Email</span>
-                            <ChevronUp v-if="sortKey === 'email' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'email' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('role')" class="cursor-pointer min-w-[100px]">
+                    <TableHead class="cursor-pointer min-w-[100px]">
                         <div class="flex items-center">
                             <span>Role</span>
-                            <ChevronUp v-if="sortKey === 'role' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'role' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('status')" class="cursor-pointer min-w-[90px] hidden md:table-cell">
+                    <TableHead class="cursor-pointer min-w-[100px] hidden md:table-cell">
                         <div class="flex items-center">
                             <span>Status</span>
-                            <ChevronUp v-if="sortKey === 'status' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'status' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('createdAt')" class="cursor-pointer min-w-[110px] hidden lg:table-cell">
+                    <TableHead class="cursor-pointer min-w-[100px] hidden lg:table-cell">
                         <div class="flex items-center">
                             <span>Created At</span>
-                            <ChevronUp v-if="sortKey === 'createdAt' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'createdAt' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead class="w-[60px]">Actions</TableHead>
+                    <TableHead class="w-[100px]">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -191,7 +178,7 @@ const displayRole = (role: string) => {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
                                     <KeyRound class="mr-2 h-4 w-4" />
-                                    <span>Generate Pass</span>
+                                    <span>Generate Key</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
                                     <Trash2 class="mr-2 h-4 w-4" />
