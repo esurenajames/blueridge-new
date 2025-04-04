@@ -9,6 +9,9 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Pencil, Trash2, KeyRound } from 'lucide-vue-next';
 import EditUser from './EditUser.vue';
 import DeleteUser from './DeleteUser.vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useInitials } from '@/composables/useInitials';
+import GenerateKey from './GenerateKey.vue';
 
 interface User {
   id: number;
@@ -22,6 +25,8 @@ interface User {
 const props = defineProps<{
   users: User[];
 }>();
+
+const { getInitials } = useInitials();
 
 const sortKey = ref<keyof User | null>(null);
 const sortOrder = ref<'asc' | 'desc'>('asc');
@@ -47,6 +52,7 @@ const sortedUsers = computed(() => {
 
 const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
+const showGenerateKeyDialog = ref(false);
 const selectedUser = ref<User | null>(null);
 
 const handleEdit = (user: User) => {
@@ -54,18 +60,28 @@ const handleEdit = (user: User) => {
   showEditDialog.value = true;
 };
 
-const handleCloseEdit = () => {
-  showEditDialog.value = false;
-  selectedUser.value = null;
-};
-
 const handleDelete = (user: User) => {
   selectedUser.value = user;
   showDeleteDialog.value = true;
 };
 
+const handleGenerateKey = (user: User) => {
+  selectedUser.value = user;
+  showGenerateKeyDialog.value = true;
+};
+
+const handleCloseEdit = () => {
+  showEditDialog.value = false;
+  selectedUser.value = null;
+};
+
 const handleCloseDelete = () => {
   showDeleteDialog.value = false;
+  selectedUser.value = null;
+};
+
+const handleCloseGenerateKey = () => {
+  showGenerateKeyDialog.value = false;
   selectedUser.value = null;
 };
 
@@ -152,10 +168,24 @@ const displayRole = (role: string) => {
                 <TableRow v-for="user in paginatedUsers" :key="user.id">
                     <TableCell class="font-medium">
                         <div class="flex flex-col sm:hidden">
-                            <span>{{ user.name }}</span>
-                            <span class="text-sm text-muted-foreground">{{ user.email }}</span>
+                            <div class="flex items-center gap-2">
+                                <Avatar class="h-8 w-8">
+                                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                    <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <span>{{ user.name }}</span>
+                                    <span class="text-sm text-muted-foreground block">{{ user.email }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="hidden sm:block">{{ user.name }}</span>
+                        <div class="hidden sm:flex items-center gap-2">
+                            <Avatar class="h-8 w-8">
+                                <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
+                            </Avatar>
+                            <span>{{ user.name }}</span>
+                        </div>
                     </TableCell>
                     <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
                    <TableCell>
@@ -191,7 +221,7 @@ const displayRole = (role: string) => {
                                     <Pencil class="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem @click="handleGenerateKey(user)">
                                     <KeyRound class="mr-2 h-4 w-4" />
                                     <span>Generate Key</span>
                                 </DropdownMenuItem>
@@ -240,6 +270,12 @@ const displayRole = (role: string) => {
             :user="selectedUser"
             :show="showDeleteDialog"
             @close="handleCloseDelete"
+        />
+        <GenerateKey 
+            v-if="selectedUser"
+            :user="selectedUser"
+            :show="showGenerateKeyDialog"
+            @close="handleCloseGenerateKey"
         />
     </div>
 </template>

@@ -32,7 +32,7 @@ const displayRole = (role: string) => {
         <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-3">
             <CardTitle class="text-lg font-medium">
                 Current Users
-                <Badge variant="secondary" class="ml-2">
+                <Badge variant="secondary" class="ml-2 text-sm">
                     {{ userCount }}
                 </Badge>
             </CardTitle>

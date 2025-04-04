@@ -20,7 +20,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        // 'last_name',
         'email',
         'password',
         'role',
@@ -50,9 +49,4 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    // protected function name(): Attribute
-    // {
-    //     return Attribute::get(fn () => "{$this->first_name} {$this->last_name}");
-    // }
 }

@@ -40,6 +40,7 @@ class AuthenticatedSessionController extends Controller
             'admin' => 'admin.dashboard',
             'secretary' => 'secretary.dashboard',
             'treasurer' => 'treasurer.dashboard',
+            'official' => 'dashboard',
             default => 'dashboard',
         };
 
