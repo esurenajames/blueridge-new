@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import { Badge } from '@/components/ui/badge';
+import { MoreHorizontal } from 'lucide-vue-next';
 import { Pagination, PaginationList, PaginationListItem, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrev } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -91,6 +92,21 @@ const goToPage = (page: number) => {
   }
 };
 
+const getRoleBadgeVariant = (role: string) => {
+  switch (role.toLowerCase()) {
+    case 'admin':
+      return 'default';
+    case 'official':
+      return 'secondary';
+    default:
+      return 'outline';
+  }
+};
+
+const getStatusBadgeVariant = (status: string) => {
+  return status === 'active' ? 'success' : 'destructive';
+};
+
 const displayRole = (role: string) => {
     if (role.toLowerCase() === 'official') {
         return 'Barangay Official';
@@ -143,22 +159,21 @@ const displayRole = (role: string) => {
                     </TableCell>
                     <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
                    <TableCell>
-                        <span 
-                            class="capitalize inline-flex items-center rounded-md bg-blue-700/20 px-2 py-1 text-xs font-medium text-blue-500 ring-1 ring-inset ring-blue-700/40 dark:bg-blue-900/40 dark:text-blue-300">
+                        <Badge
+                            :variant="getRoleBadgeVariant(user.role)"
+                            class="capitalize"
+                            >
                             {{ displayRole(user.role) }}
-                        </span>
+                        </Badge>
                     </TableCell>
 
                     <TableCell>
-                        <span 
-                            class="capitalize inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
-                            :class="{
-                                'bg-green-700 text-green-500 ring-green-600 dark:bg-green-900 dark:text-green-300': user.status === 'active',
-                                'bg-red-700 text-red-500 ring-red-600 dark:bg-red-900 dark:text-red-300': user.status === 'inactive'
-                            }"
-                        >
+                        <Badge
+                            :variant="getStatusBadgeVariant(user.status)"
+                            class="capitalize"
+                            >
                             {{ user.status }}
-                        </span>
+                        </Badge>
                     </TableCell>
                     <TableCell class="hidden lg:table-cell text-muted-foreground">
                         {{ new Date(user.createdAt).toLocaleDateString() }}
@@ -190,7 +205,7 @@ const displayRole = (role: string) => {
                 </TableRow>
             </TableBody>
         </Table>       
-        <div class="flex justify-center pb-2">
+        <div class="flex justify-center p-2">
             <Pagination>
                 <PaginationList class="flex items-center space-x-1">
                     <PaginationFirst @click="goToPage(1)" :disabled="currentPage === 1" />

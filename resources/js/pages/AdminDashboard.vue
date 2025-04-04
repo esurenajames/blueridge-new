@@ -9,7 +9,7 @@ import ActiveUser from '../components/admin/CurrentUsers.vue';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/admin/dashboard',
     },
 ];
 

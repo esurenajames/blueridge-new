@@ -67,9 +67,18 @@ class UserManagementController extends Controller
         return redirect()->back()->with('success', 'User deleted successfully.');
     }
 
-    public function generatePassword()
+    public function create(Request $request)
     {
-        $password = str_random(10);
-        return response()->json(['password' => $password]);
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['required', 'string', Rule::in(['captain', 'admin', 'official', 'secretary', 'treasurer'])],
+            'status' => ['required', 'string', Rule::in(['active', 'inactive'])],
+        ]);
+    
+        User::create($validated);
+    
+        return redirect()->back()->with('success', 'User created successfully.');
     }
 }

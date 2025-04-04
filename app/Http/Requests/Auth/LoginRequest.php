@@ -40,15 +40,22 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
-
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+    
+        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
-
+    
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
-
+    
+        if (Auth::user()->status === 'inactive') {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account status is currently inactive. Please contact the administrator to activate your account.',
+            ]);
+        }
+    
         RateLimiter::clear($this->throttleKey());
     }
 
