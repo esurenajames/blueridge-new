@@ -71,6 +71,7 @@ const handleSubmit = validateForm((values) => {
   form.name = name.value;
   form.email = email.value;
   form.role = role.value;
+  form.status = status.value;
 
   form.put(route('admin.users.update', props.user.id), {
     preserveScroll: true,

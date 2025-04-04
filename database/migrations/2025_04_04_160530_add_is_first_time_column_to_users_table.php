@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->enum('is_first_time', ['true', 'false'])
-                ->default('true')
+            $table->boolean('is_first_time')
+                ->default(true)
                 ->after('status');
         });
     }

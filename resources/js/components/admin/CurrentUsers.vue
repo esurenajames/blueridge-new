@@ -28,43 +28,43 @@ const displayRole = (role: string) => {
 </script>
 
 <template>
-    <Card>
-        <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle class="text-lg font-medium">
+    <Card class="h-full">
+        <CardHeader class="flex flex-row items-center justify-between ">
+            <CardTitle class="text-base font-medium">
                 Current Users
                 <Badge variant="secondary" class="ml-2 text-sm">
                     {{ userCount }}
                 </Badge>
             </CardTitle>
         </CardHeader>
-        <CardContent>
-            <ScrollArea> 
-                <div class="space-y-2">
-                    <div v-for="user in activeUsers" :key="user.id"
-                        class="flex items-center justify-between rounded-lg bg-muted/40 p-3">
-                        <div class="flex items-center space-x-3">
-                            <Avatar>
-                                <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                                <AvatarFallback>
-                                    {{ getInitials(user.name) }}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p class="text-sm font-medium leading-none">
-                                    {{ user.name }}
-                                </p>
-                                <p class="text-sm text-muted-foreground capitalize">
-                                    {{ displayRole(user.role) }}
-                                </p>
+            <CardContent class="pb-10">
+                <ScrollArea class="h-[180px] ">
+                    <div class="space-y-2">
+                        <div v-for="user in activeUsers" :key="user.id"
+                            class="flex items-center justify-between rounded-lg bg-muted/40 p-3">
+                            <div class="flex items-center space-x-3">
+                                <Avatar>
+                                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                    <AvatarFallback>
+                                        {{ getInitials(user.name) }}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p class="text-sm font-medium leading-none">
+                                        {{ user.name }}
+                                    </p>
+                                    <p class="text-sm text-muted-foreground capitalize">
+                                        {{ displayRole(user.role) }}
+                                    </p>
+                                </div>
                             </div>
+                            <Badge :variant="user.status === 'active' ? 'success' : 'destructive'"
+                                class="capitalize">
+                                {{ user.status }}
+                            </Badge>
                         </div>
-                        <Badge :variant="user.status === 'active' ? 'success' : 'destructive'"
-                            class="capitalize">
-                            {{ user.status }}
-                        </Badge>
                     </div>
-                </div>
-            </ScrollArea>
-        </CardContent>
+                </ScrollArea>
+            </CardContent>
     </Card>
 </template>
