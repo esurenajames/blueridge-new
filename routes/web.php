@@ -19,8 +19,10 @@ Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/users', [UserManagementController::class, 'index'])->name('admin.users');
+    Route::post('/users', [UserManagementController::class, 'create'])->name('admin.users.create');
     Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    Route::put('/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('admin.users.update-password');
 });
 
 // Route::get('captain/dashboard', function () {

@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, ChevronUp, ChevronDown } from 'lucide-vue-next';
+import { Badge } from '@/components/ui/badge';
+import { MoreHorizontal } from 'lucide-vue-next';
 import { Pagination, PaginationList, PaginationListItem, PaginationEllipsis, PaginationFirst, PaginationLast, PaginationNext, PaginationPrev } from '@/components/ui/pagination';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Pencil, Trash2, KeyRound } from 'lucide-vue-next';
 import EditUser from './EditUser.vue';
 import DeleteUser from './DeleteUser.vue';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useInitials } from '@/composables/useInitials';
+import GenerateKey from './GenerateKey.vue';
 
 interface User {
   id: number;
@@ -21,6 +25,8 @@ interface User {
 const props = defineProps<{
   users: User[];
 }>();
+
+const { getInitials } = useInitials();
 
 const sortKey = ref<keyof User | null>(null);
 const sortOrder = ref<'asc' | 'desc'>('asc');
@@ -46,6 +52,7 @@ const sortedUsers = computed(() => {
 
 const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
+const showGenerateKeyDialog = ref(false);
 const selectedUser = ref<User | null>(null);
 
 const handleEdit = (user: User) => {
@@ -53,18 +60,28 @@ const handleEdit = (user: User) => {
   showEditDialog.value = true;
 };
 
-const handleCloseEdit = () => {
-  showEditDialog.value = false;
-  selectedUser.value = null;
-};
-
 const handleDelete = (user: User) => {
   selectedUser.value = user;
   showDeleteDialog.value = true;
 };
 
+const handleGenerateKey = (user: User) => {
+  selectedUser.value = user;
+  showGenerateKeyDialog.value = true;
+};
+
+const handleCloseEdit = () => {
+  showEditDialog.value = false;
+  selectedUser.value = null;
+};
+
 const handleCloseDelete = () => {
   showDeleteDialog.value = false;
+  selectedUser.value = null;
+};
+
+const handleCloseGenerateKey = () => {
+  showGenerateKeyDialog.value = false;
   selectedUser.value = null;
 };
 
@@ -91,6 +108,21 @@ const goToPage = (page: number) => {
   }
 };
 
+const getRoleBadgeVariant = (role: string) => {
+  switch (role.toLowerCase()) {
+    case 'admin':
+      return 'default';
+    case 'official':
+      return 'secondary';
+    default:
+      return 'outline';
+  }
+};
+
+const getStatusBadgeVariant = (status: string) => {
+  return status === 'active' ? 'success' : 'destructive';
+};
+
 const displayRole = (role: string) => {
     if (role.toLowerCase() === 'official') {
         return 'Barangay Official';
@@ -102,76 +134,76 @@ const displayRole = (role: string) => {
 <template>
     <div class="rounded-md border overflow-x-auto">
         <Table>
-            <TableCaption class="pb-2">
-                A list of all users in the system.
-            </TableCaption>
             <TableHeader>
                 <TableRow>
-                    <TableHead @click="sortBy('name')" class="cursor-pointer min-w-[120px]">
+                    <TableHead class="cursor-pointer min-w-[100px]">
                         <div class="flex items-center">
                             <span>Name</span>
-                            <ChevronUp v-if="sortKey === 'name' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'name' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('email')" class="cursor-pointer min-w-[180px] hidden sm:table-cell">
+                    <TableHead class="cursor-pointer min-w-[100px] hidden sm:table-cell">
                         <div class="flex items-center">
                             <span>Email</span>
-                            <ChevronUp v-if="sortKey === 'email' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'email' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('role')" class="cursor-pointer min-w-[100px]">
+                    <TableHead class="cursor-pointer min-w-[100px]">
                         <div class="flex items-center">
                             <span>Role</span>
-                            <ChevronUp v-if="sortKey === 'role' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'role' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('status')" class="cursor-pointer min-w-[90px] hidden md:table-cell">
+                    <TableHead class="cursor-pointer min-w-[100px] hidden md:table-cell">
                         <div class="flex items-center">
                             <span>Status</span>
-                            <ChevronUp v-if="sortKey === 'status' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'status' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead @click="sortBy('createdAt')" class="cursor-pointer min-w-[110px] hidden lg:table-cell">
+                    <TableHead class="cursor-pointer min-w-[100px] hidden lg:table-cell">
                         <div class="flex items-center">
                             <span>Created At</span>
-                            <ChevronUp v-if="sortKey === 'createdAt' && sortOrder === 'asc'" class="h-4 w-4 ml-1" />
-                            <ChevronDown v-if="sortKey === 'createdAt' && sortOrder === 'desc'" class="h-4 w-4 ml-1" />
                         </div>
                     </TableHead>
-                    <TableHead class="w-[60px]">Actions</TableHead>
+                    <TableHead class="w-[100px]">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 <TableRow v-for="user in paginatedUsers" :key="user.id">
                     <TableCell class="font-medium">
                         <div class="flex flex-col sm:hidden">
-                            <span>{{ user.name }}</span>
-                            <span class="text-sm text-muted-foreground">{{ user.email }}</span>
+                            <div class="flex items-center gap-2">
+                                <Avatar class="h-8 w-8">
+                                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                    <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <span>{{ user.name }}</span>
+                                    <span class="text-sm text-muted-foreground block">{{ user.email }}</span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="hidden sm:block">{{ user.name }}</span>
+                        <div class="hidden sm:flex items-center gap-2">
+                            <Avatar class="h-8 w-8">
+                                <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
+                            </Avatar>
+                            <span>{{ user.name }}</span>
+                        </div>
                     </TableCell>
                     <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
                    <TableCell>
-                        <span 
-                            class="capitalize inline-flex items-center rounded-md bg-blue-700/20 px-2 py-1 text-xs font-medium text-blue-500 ring-1 ring-inset ring-blue-700/40 dark:bg-blue-900/40 dark:text-blue-300">
+                        <Badge
+                            :variant="getRoleBadgeVariant(user.role)"
+                            class="capitalize"
+                            >
                             {{ displayRole(user.role) }}
-                        </span>
+                        </Badge>
                     </TableCell>
 
                     <TableCell>
-                        <span 
-                            class="capitalize inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
-                            :class="{
-                                'bg-green-700 text-green-500 ring-green-600 dark:bg-green-900 dark:text-green-300': user.status === 'active',
-                                'bg-red-700 text-red-500 ring-red-600 dark:bg-red-900 dark:text-red-300': user.status === 'inactive'
-                            }"
-                        >
+                        <Badge
+                            :variant="getStatusBadgeVariant(user.status)"
+                            class="capitalize"
+                            >
                             {{ user.status }}
-                        </span>
+                        </Badge>
                     </TableCell>
                     <TableCell class="hidden lg:table-cell text-muted-foreground">
                         {{ new Date(user.createdAt).toLocaleDateString() }}
@@ -189,9 +221,9 @@ const displayRole = (role: string) => {
                                     <Pencil class="mr-2 h-4 w-4" />
                                     <span>Edit</span>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem @click="handleGenerateKey(user)">
                                     <KeyRound class="mr-2 h-4 w-4" />
-                                    <span>Generate Pass</span>
+                                    <span>Generate Key</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
                                     <Trash2 class="mr-2 h-4 w-4" />
@@ -203,7 +235,7 @@ const displayRole = (role: string) => {
                 </TableRow>
             </TableBody>
         </Table>       
-        <div class="flex justify-center pb-2">
+        <div class="flex justify-center p-2">
             <Pagination>
                 <PaginationList class="flex items-center space-x-1">
                     <PaginationFirst @click="goToPage(1)" :disabled="currentPage === 1" />
@@ -238,6 +270,12 @@ const displayRole = (role: string) => {
             :user="selectedUser"
             :show="showDeleteDialog"
             @close="handleCloseDelete"
+        />
+        <GenerateKey 
+            v-if="selectedUser"
+            :user="selectedUser"
+            :show="showGenerateKeyDialog"
+            @close="handleCloseGenerateKey"
         />
     </div>
 </template>

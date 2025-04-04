@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserRequest;
 use App\Http\Resources\UserManagementResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -19,20 +20,9 @@ class UserManagementController extends Controller
         ]);
     }
 
-    public function update(Request $request, User $user)
+    public function update(UserRequest $request, User $user)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'role' => ['required', 'string', Rule::in(['captain', 'admin', 'official', 'secretary', 'treasurer'])],
-            'status' => ['required', 'string', Rule::in(['active', 'inactive'])],
-        ]);
+        $validated = $request->validated();
     
         $adminCount = User::where('role', 'admin')->count();
     
@@ -65,5 +55,43 @@ class UserManagementController extends Controller
         $user->delete();
 
         return redirect()->back()->with('success', 'User deleted successfully.');
+    }
+
+    public function create(UserRequest $request)
+    {
+        $validated = $request->validated();
+
+        if (isset($validated['password'])) {
+            $validated['password'] = bcrypt($validated['password']);
+        }
+        
+        $user = User::create($validated);
+    
+        return redirect()->back()->with([
+            'success' => 'User created successfully',
+            'user' => new UserManagementResource($user)
+        ]);
+    }
+
+    public function updatePassword(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'password' => ['required', 'string', 'min:8'],
+        ]);
+
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->withErrors([
+                'error' => 'You cannot change your own password through this interface.'
+            ]);
+        }
+
+        $user->update([
+            'password' => bcrypt($validated['password'])
+        ]);
+
+        return redirect()->back()->with([
+            'success' => 'Password updated successfully',
+            'user' => new UserManagementResource($user)
+        ]);
     }
 }

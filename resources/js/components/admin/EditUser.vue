@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from '@inertiajs/vue3';
+import { useField, useForm as useVeeForm } from 'vee-validate';
+import * as yup from 'yup';
 
 interface Props {
   user: {
@@ -34,6 +36,28 @@ const statuses = [
   { value: 'inactive', label: 'Inactive' },
 ];
 
+const validationSchema = yup.object({
+  name: yup.string().required('Name is required'),
+  email: yup.string().required('Email is required').email('Must be a valid email'),
+  role: yup.string().required('Role is required'),
+  status: yup.string().required('Status is required'),
+});
+
+const { handleSubmit: validateForm } = useVeeForm({
+  validationSchema,
+  initialValues: {
+    name: props.user.name,
+    email: props.user.email,
+    role: props.user.role,
+    status: props.user.status,
+  },
+});
+
+const { value: name, errorMessage: nameError } = useField('name');
+const { value: email, errorMessage: emailError } = useField('email');
+const { value: role, errorMessage: roleError } = useField('role');
+const { value: status, errorMessage: statusError } = useField('status');
+
 const form = useForm({
   name: props.user.name,
   email: props.user.email,
@@ -43,7 +67,12 @@ const form = useForm({
 
 const { toast } = useToast();
 
-const handleSubmit = () => {
+const handleSubmit = validateForm((values) => {
+  form.name = name.value;
+  form.email = email.value;
+  form.role = role.value;
+  form.status = status.value;
+
   form.put(route('admin.users.update', props.user.id), {
     preserveScroll: true,
     onSuccess: () => {
@@ -53,25 +82,24 @@ const handleSubmit = () => {
         variant: "success",
       });
       emit('close');
-      form.reset();
     },
     onError: (errors) => {
-        if (errors.error) {
-          toast({
-            title: "Error",
-            description: errors.error, 
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to delete user. Please try again.",
-            variant: "destructive",
-          });
-        }
-      },
+      if (errors.error) {
+        toast({
+          title: "Error",
+          description: errors.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update user. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
   });
-};
+});
 </script>
 
 <template>
@@ -88,23 +116,25 @@ const handleSubmit = () => {
           <label for="name" class="text-sm font-medium">Name</label>
           <Input 
             id="name"
-            v-model="form.name"
-            :error="form.errors.name"
+            v-model="name"
+            :class="nameError ? 'border-red-500 focus-visible:ring-red-500' : ''"
           />
+          <span v-if="nameError" class="text-sm text-red-500">{{ nameError }}</span>
         </div>
         <div class="space-y-2">
           <label for="email" class="text-sm font-medium">Email</label>
           <Input 
             id="email"
             type="email"
-            v-model="form.email"
-            :error="form.errors.email"
+            v-model="email"
+            :class="emailError ? 'border-red-500 focus-visible:ring-red-500' : ''"
           />
+          <span v-if="emailError" class="text-sm text-red-500">{{ emailError }}</span>
         </div>
         <div class="space-y-2">
           <label for="role" class="text-sm font-medium">Role</label>
-          <Select v-model="form.role">
-            <SelectTrigger>
+          <Select v-model="role">
+            <SelectTrigger :class="roleError ? 'border-red-500 focus:ring-red-500' : ''">
               <SelectValue placeholder="Select role" />
             </SelectTrigger>
             <SelectContent>
@@ -117,11 +147,12 @@ const handleSubmit = () => {
               </SelectItem>
             </SelectContent>
           </Select>
+          <span v-if="roleError" class="text-sm text-red-500">{{ roleError }}</span>
         </div>
         <div class="space-y-2">
           <label for="status" class="text-sm font-medium">Status</label>
-          <Select v-model="form.status">
-            <SelectTrigger>
+          <Select v-model="status">
+            <SelectTrigger :class="statusError ? 'border-red-500 focus:ring-red-500' : ''">
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
@@ -134,6 +165,7 @@ const handleSubmit = () => {
               </SelectItem>
             </SelectContent>
           </Select>
+          <span v-if="statusError" class="text-sm text-red-500">{{ statusError }}</span>
         </div>
         <div class="flex justify-end gap-3">
           <Button 
@@ -147,7 +179,7 @@ const handleSubmit = () => {
             type="submit" 
             :disabled="form.processing"
           >
-            Save Changes
+            {{ form.processing ? 'Saving...' : 'Save Changes' }}
           </Button>
         </div>
       </form>

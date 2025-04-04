@@ -58,7 +58,7 @@ const mainNavItems = computed(() => {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <Link v-if="dashboardRoute" :href="route(dashboardRoute)">
+                        <Link v-if="dashboardRoute" :href="route(dashboardRoute)" class>
                             <AppLogo />
                         </Link>
                     </SidebarMenuButton>
