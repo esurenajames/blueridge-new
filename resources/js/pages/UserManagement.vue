@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
@@ -38,6 +38,19 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/users',
     },
 ];
+
+const searchQuery = ref('');
+
+const filteredUsers = computed(() => {
+    if (!searchQuery.value) return props.users;
+    
+    const query = searchQuery.value.toLowerCase();
+    return props.users.filter(user => 
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        user.role.toLowerCase().includes(query)
+    );
+});
 </script>
 
 <template>
@@ -49,6 +62,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                 <div class="relative w-full sm:max-w-md">
                     <Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
                     <Input 
+                        v-model="searchQuery"
                         type="search"
                         placeholder="Search users..."
                         class="pl-10 w-full"
@@ -59,7 +73,7 @@ const breadcrumbs: BreadcrumbItem[] = [
                     Create New User
                 </Button>
             </div>
-            <UsersTable :users="users" />
+            <UsersTable :users="filteredUsers" />
         </div>
 
         <CreateUser 

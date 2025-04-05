@@ -13,8 +13,23 @@ class AdminDashboardController extends Controller
             ->where('status', 'active')
             ->get();
 
+        $userStats = [
+            'total' => User::count(),
+            'active' => User::where('status', 'active')->count(),
+            'inactive' => User::where('status', 'inactive')->count(),
+        ];
+
+        $roleDistribution = User::all()
+            ->groupBy('role')
+            ->map(fn ($group) => $group->count())
+            ->toArray();
+
         return Inertia::render('AdminDashboard', [
-            'activeUsers' => $users
+            'activeUsers' => $users,
+            'userStats' => [
+                ...$userStats,
+                'roles' => $roleDistribution,
+            ],
         ]);
     }
 }

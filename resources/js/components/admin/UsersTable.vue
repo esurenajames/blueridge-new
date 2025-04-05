@@ -12,6 +12,7 @@ import DeleteUser from './DeleteUser.vue';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/composables/useInitials';
 import GenerateKey from './GenerateKey.vue';
+import { FileX } from 'lucide-vue-next'; 
 
 interface User {
   id: number;
@@ -115,12 +116,12 @@ const getRoleBadgeVariant = (role: string) => {
     case 'official':
       return 'secondary';
     default:
-      return 'outline';
+      return 'secondary';
   }
 };
 
 const getStatusBadgeVariant = (status: string) => {
-  return status === 'active' ? 'success' : 'destructive';
+  return status === 'active' ? 'secondary' : 'destructive';
 };
 
 const displayRole = (role: string) => {
@@ -165,77 +166,87 @@ const displayRole = (role: string) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                <TableRow v-for="user in paginatedUsers" :key="user.id">
-                    <TableCell class="font-medium">
-                        <div class="flex flex-col sm:hidden">
-                            <div class="flex items-center gap-2">
+                <template v-if="paginatedUsers.length > 0">
+                    <TableRow v-for="user in paginatedUsers" :key="user.id">
+                        <!-- Existing table cells code -->
+                        <TableCell class="font-medium">
+                            <!-- Existing mobile view -->
+                            <div class="flex flex-col sm:hidden">
+                                <div class="flex items-center gap-2">
+                                    <Avatar class="h-8 w-8">
+                                        <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                        <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <span>{{ user.name }}</span>
+                                        <span class="text-sm text-muted-foreground block">{{ user.email }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Existing desktop view -->
+                            <div class="hidden sm:flex items-center gap-2">
                                 <Avatar class="h-8 w-8">
                                     <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
                                     <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
                                 </Avatar>
-                                <div>
-                                    <span>{{ user.name }}</span>
-                                    <span class="text-sm text-muted-foreground block">{{ user.email }}</span>
-                                </div>
+                                <span>{{ user.name }}</span>
                             </div>
-                        </div>
-                        <div class="hidden sm:flex items-center gap-2">
-                            <Avatar class="h-8 w-8">
-                                <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                                <AvatarFallback>{{ getInitials(user.name) }}</AvatarFallback>
-                            </Avatar>
-                            <span>{{ user.name }}</span>
-                        </div>
-                    </TableCell>
-                    <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
-                   <TableCell>
-                        <Badge
-                            :variant="getRoleBadgeVariant(user.role)"
-                            class="capitalize"
-                            >
-                            {{ displayRole(user.role) }}
-                        </Badge>
-                    </TableCell>
-
-                    <TableCell>
-                        <Badge
-                            :variant="getStatusBadgeVariant(user.status)"
-                            class="capitalize"
-                            >
-                            {{ user.status }}
-                        </Badge>
-                    </TableCell>
-                    <TableCell class="hidden lg:table-cell text-muted-foreground">
-                        {{ new Date(user.createdAt).toLocaleDateString() }}
-                    </TableCell>
-                    <TableCell>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal class="h-4 w-4" />
-                                    <span class="sr-only">Open menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem @click="handleEdit(user)">
-                                    <Pencil class="mr-2 h-4 w-4" />
-                                    <span>Edit</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem @click="handleGenerateKey(user)">
-                                    <KeyRound class="mr-2 h-4 w-4" />
-                                    <span>Generate Key</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
-                                    <Trash2 class="mr-2 h-4 w-4" />
-                                    <span>Delete</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                </TableRow>
+                        </TableCell>
+                        <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
+                        <TableCell>
+                            <Badge :variant="getRoleBadgeVariant(user.role)" class="capitalize">
+                                {{ displayRole(user.role) }}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            <Badge :variant="getStatusBadgeVariant(user.status)" class="capitalize">
+                                {{ user.status }}
+                            </Badge>
+                        </TableCell>
+                        <TableCell class="hidden lg:table-cell text-muted-foreground">
+                            {{ new Date(user.createdAt).toLocaleDateString() }}
+                        </TableCell>
+                        <TableCell>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal class="h-4 w-4" />
+                                        <span class="sr-only">Open menu</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem @click="handleEdit(user)">
+                                        <Pencil class="mr-2 h-4 w-4" />
+                                        <span>Edit</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="handleGenerateKey(user)">
+                                        <KeyRound class="mr-2 h-4 w-4" />
+                                        <span>Generate Key</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @click="handleDelete(user)" class="text-destructive">
+                                        <Trash2 class="mr-2 h-4 w-4" />
+                                        <span>Delete</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                </template>
+                <template v-else>
+                    <TableRow>
+                        <TableCell colspan="6">
+                            <div class="flex flex-col items-center justify-center py-8 gap-3">
+                                <FileX class="h-12 w-12 text-muted-foreground" />
+                                <p class="text-lg font-medium text-muted-foreground">No users found</p>
+                                <p class="text-sm text-muted-foreground">Try adjusting your search criteria</p>
+                            </div>
+                        </TableCell>
+                    </TableRow>
+                </template>
             </TableBody>
-        </Table>       
-        <div class="flex justify-center p-2">
+        </Table>
+
+        <div v-if="paginatedUsers.length > 0" class="flex justify-center p-2">
             <Pagination>
                 <PaginationList class="flex items-center space-x-1">
                     <PaginationFirst @click="goToPage(1)" :disabled="currentPage === 1" />
@@ -259,6 +270,7 @@ const displayRole = (role: string) => {
                 </PaginationList>
             </Pagination>
         </div>
+
         <EditUser 
             v-if="selectedUser"
             :user="selectedUser"

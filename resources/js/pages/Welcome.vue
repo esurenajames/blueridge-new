@@ -10,7 +10,7 @@ const user = computed(() => page.props.auth.user);
 const dashboardRoute = computed(() => {
     if (!user.value) return 'login';
     
-    switch (user.value.role) {
+    switch (user.value.role.toLowerCase()) {
         case 'admin':
             return 'admin.dashboard';
         case 'captain':
@@ -19,8 +19,10 @@ const dashboardRoute = computed(() => {
             return 'secretary.dashboard';
         case 'treasurer':
             return 'treasurer.dashboard';
-        default:
+        case 'official':
             return 'dashboard';
+        default:
+            return 'login';
     }
 });
 </script>
