@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useInitials } from '@/composables/useInitials';
 import { computed } from 'vue';
+import { Users2 } from 'lucide-vue-next';
 
 const { getInitials } = useInitials();
 
@@ -28,17 +29,23 @@ const displayRole = (role: string) => {
 </script>
 
 <template>
-    <Card class="h-full">
-        <CardHeader class="flex flex-row items-center justify-between ">
-            <CardTitle class="text-base font-medium">
-                Current Users
-                <Badge variant="secondary" class="ml-2 text-sm">
-                    {{ userCount }}
-                </Badge>
-            </CardTitle>
-        </CardHeader>
-            <CardContent class="pb-10">
-                <ScrollArea class="h-[180px] ">
+    <Card class="h-full overflow-hidden">
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
+                        <Users2 class="size-5 text-emerald-500" />
+                    </div>
+                    Current Users 
+                    <Badge variant="secondary" class="text-sm bg-emerald-100 dark:bg-emerald-900/20">
+                        {{ userCount }}
+                    </Badge>
+                </CardTitle>
+                <CardDescription class="text-sm text-muted-foreground">
+                    List of currently registered barangay officials and their status
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ScrollArea class="h-[400px] pb-2">
                     <div class="space-y-2">
                         <div v-for="user in activeUsers" :key="user.id"
                             class="flex items-center justify-between rounded-lg bg-muted/40 p-3">
@@ -58,7 +65,7 @@ const displayRole = (role: string) => {
                                     </p>
                                 </div>
                             </div>
-                            <Badge :variant="user.status === 'active' ? 'success' : 'destructive'"
+                            <Badge variant="secondary" :variant="user.status === 'active' ? 'success' : 'destructive'"
                                 class="capitalize">
                                 {{ user.status }}
                             </Badge>
