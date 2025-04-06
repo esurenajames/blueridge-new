@@ -1,38 +1,77 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { FileText, Receipt, CreditCard, PlusCircle } from 'lucide-vue-next';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { FileText, Receipt, PlusCircle, ArrowRight } from 'lucide-vue-next';
+import { ref } from 'vue';
+import RequestForm from '@/components/barangay-officials/RequestForm.vue';
+
+defineOptions({
+    inheritAttrs: true
+})
+
+const showRequestDialog = ref(false);
+
+const handleCloseRequest = () => {
+  showRequestDialog.value = false;
+};
+
+const downloadDocumentation = () => {
+    window.open('/storage/test.pdf', '_blank');
+};
 </script>
 
 <template>
-    <Card class="h-full transition-all hover:border-blue-500/50 hover:shadow-md dark:hover:border-blue-400/50">
-        <CardContent class="flex h-full flex-col justify-between p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                    <Receipt class="size-6 text-blue-500" />
-                </div>
-                <div>
-                    <h3 class="font-semibold">Create Procurement Request</h3>
-                    <p class="text-sm text-muted-foreground">New fund request form</p>
-                </div>
-            </div>
-
-            <div class="space-y-4">
-                <div class="grid gap-4">
-                    <div class="flex items-center gap-2 rounded-lg bg-muted/50 p-3">
-                        <FileText class="size-5 text-blue-500" />
-                        <span class="text-sm">Documentation</span>
+    <Card v-bind="$attrs">
+        <div class="space-y-2">
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
+                        <Receipt class="size-5 text-blue-500" />
                     </div>
+                    Create Procurement
+                </CardTitle>
+                <CardDescription>
+                    Create and manage procurement requests for your barangay
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div class="space-y-4">
+                    <div class="relative rounded-lg border bg-card text-card-foreground">
+                        <div class="absolute -top-2.5 left-3 px-2 bg-background text-xs font-medium text-muted-foreground">
+                            Before you start
+                        </div>
+                        <div class="p-4 space-y-3">
+                            <div 
+                                class="flex items-center gap-2 rounded-lg bg-muted/50 p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                                @click="downloadDocumentation"
+                            >
+                                <FileText class="size-5 text-blue-500 overflow-hidden" />
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-medium max-w-[250px] truncate ">Documentation and Requirements</span>
+                                    <span class="text-xs text-muted-foreground hidden sm:block max-w-[250px] truncate ">Click here to view the process and guidelines</span>
+                                </div>
+                                <ArrowRight class="size-4 ml-auto text-muted-foreground" />
+                            </div>
+                        </div>
+                    </div>
+                    <Button 
+                        variant="ghost" 
+                        @click="showRequestDialog = true"
+                        class="w-full p-8 gap-2 border-2 overflow-hidden border-muted hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 group"
+                    >
+                        <PlusCircle class="size-5 group-hover:text-blue-500 transition-colors" />
+                        <span class="font-medium">Start New Request</span>
+                        <span class="text-xs text-muted-foreground hidden sm:block max-w-[250px] truncate">Begin the procurement process</span>
+                    </Button>
                 </div>
-            </div>
-
-            <Button 
-                variant="ghost" 
-                class="mt-6 w-full p-10 gap-2 border-2 border-dashed border-muted hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-            >
-                <PlusCircle class="size-5" />
-                Start New Request
-            </Button>
-        </CardContent>
+            </CardContent>
+        </div>
     </Card>
+
+    <RequestForm
+        v-if="showRequestDialog"
+        :show="showRequestDialog"
+        @close="handleCloseRequest"
+    />
+
 </template>

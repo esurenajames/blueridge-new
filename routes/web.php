@@ -25,6 +25,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::put('/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('admin.users.update-password');
 });
 
+Route::get('/request', function () {
+    return Inertia::render('RequestView');
+})->name('request.view');
+
 // Route::get('captain/dashboard', function () {
 //     return Inertia::render('CaptainDashboard');
 // })->middleware(['auth', 'verified', 'role:captain'])->name('captain.dashboard');
