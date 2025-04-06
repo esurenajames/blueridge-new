@@ -41,7 +41,7 @@ php artisan migrate
 ```
 
 6. Git Branching
-- For better organization and collaboration, use the following branch naming convention:
+For better organization and collaboration, use the following branch naming convention:
 feat/your-name (replace your-name with your actual name or identifier)
 ```
 git switch -c feat/james
