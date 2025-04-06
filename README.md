@@ -6,7 +6,7 @@ A web application built with Laravel and Vue.js that manages barangay official r
 
 - PHP 8.2 or higher
 - Node.js 16.0 or higher  
-  - Use Node Version Manager:  
+- Use Node Version Manager:  
     - [nvm for macOS/Linux](https://github.com/nvm-sh/nvm)  
     - [nvm for Windows](https://github.com/coreybutler/nvm-windows)
 - Composer
