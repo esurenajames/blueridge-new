@@ -39,6 +39,10 @@ php artisan key:generate
 php artisan migrate
 ```
 
+6. Git Branching
+use feat/your-name
+```
+
 ## Development
 
 To start the development server, run:
