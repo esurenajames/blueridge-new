@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useInitials } from '@/composables/useInitials';
 import { computed } from 'vue';
@@ -35,13 +35,13 @@ const displayRole = (role: string) => {
                     <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/20">
                         <Users2 class="size-5 text-emerald-500" />
                     </div>
-                    Current Users 
+                    Current Active Users 
                     <Badge variant="secondary" class="text-sm bg-emerald-100 dark:bg-emerald-900/20">
                         {{ userCount }}
                     </Badge>
                 </CardTitle>
                 <CardDescription class="text-sm text-muted-foreground">
-                    List of currently registered barangay officials and their status
+                    List of currently active and registered barangay officials
                 </CardDescription>
             </CardHeader>
             <CardContent>

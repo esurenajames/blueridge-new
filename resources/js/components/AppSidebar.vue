@@ -2,10 +2,11 @@
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem } from '@/components/ui/sidebar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, UserCheck } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -39,13 +40,31 @@ const mainNavItems = computed(() => {
     }];
 
     if (user.value?.role === 'admin') {
-        items.push(
-            {
-                title: 'Users',
-                href: route('admin.users'),
-                icon: UserCheck,
-            },
-        );
+        items.push({
+            title: 'Users',
+            href: route('admin.users'),
+            icon: UserCheck,
+        });
+    }
+
+    if (user.value?.role === 'official') {
+        items.push({
+            title: 'Requests',
+            icon: FileText,
+            collapsible: true,
+            items: [
+                {
+                    title: 'View All',
+                    href: route('request.view'),
+                    icon: Folder
+                },
+                {
+                    title: 'Create Request',
+                    href: route('request.view'),
+                    icon: FileText
+                }
+            ]
+        });
     }
 
     return items;

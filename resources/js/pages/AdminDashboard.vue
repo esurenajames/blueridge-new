@@ -31,12 +31,6 @@ defineProps<{
             [key: string]: number;
         };
     };
-    recentActivity: Array<{
-        id: number;
-        user: string;
-        action: string;
-        timestamp: string;
-    }>;
 }>();
 
 const { auth } = usePage().props;

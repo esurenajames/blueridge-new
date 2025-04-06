@@ -5,6 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Smile, Meh, Frown, SmilePlus, Quote } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 
+defineOptions({
+    inheritAttrs: true
+})
+
 const props = defineProps<{
     userId: number;
 }>();
@@ -124,43 +128,45 @@ const closeDialog = () => {
 </script>
 
 <template>
-    <Card class="h-full overflow-hidden">
-        <div class="space-y-2">
-            <CardHeader>
-                <CardTitle class="flex items-center gap-2">
-                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/20">
-                        <Smile class="size-5 text-yellow-500" />
+    <div v-bind="$attrs">
+        <Card class="h-full overflow-hidden">
+            <div class="space-y-2">
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-100 dark:bg-yellow-900/20">
+                            <Smile class="size-5 text-yellow-500" />
+                        </div>
+                        How are you feeling today?
+                    </CardTitle>
+                    <CardDescription>
+                        Select your mood and receive a supportive message
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="flex flex-col gap-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <Button
+                            v-for="mood in moods"
+                            :key="mood.label"
+                            variant="outline"
+                            class="flex flex-col items-center gap-2 p-4 h-auto transition-all"
+                            :class="[
+                                mood.color,
+                                selectedMood === mood.label ? `ring-2 ${mood.ringColor}` : ''
+                            ]"
+                            @click="selectMood(mood.label)"
+                        >
+                            <component 
+                                :is="mood.icon" 
+                                class="h-8 w-8"
+                            />
+                            <span class="text-sm">{{ mood.label }}</span>
+                        </Button>
                     </div>
-                    How are you feeling today?
-                </CardTitle>
-                <CardDescription>
-                    Select your mood and receive a supportive message
-                </CardDescription>
-            </CardHeader>
-            <CardContent class="flex flex-col gap-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <Button
-                        v-for="mood in moods"
-                        :key="mood.label"
-                        variant="outline"
-                        class="flex flex-col items-center gap-2 p-4 h-auto transition-all"
-                        :class="[
-                            mood.color,
-                            selectedMood === mood.label ? `ring-2 ${mood.ringColor}` : ''
-                        ]"
-                        @click="selectMood(mood.label)"
-                    >
-                        <component 
-                            :is="mood.icon" 
-                            class="h-8 w-8"
-                        />
-                        <span class="text-sm">{{ mood.label }}</span>
-                    </Button>
-                </div>
-            </CardContent>
-        </div>
-    </Card>
-
+                </CardContent>
+            </div>
+        </Card>
+    </div>
+    
     <Dialog :open="showQuoteDialog" @update:open="closeDialog">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>

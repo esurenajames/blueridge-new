@@ -168,9 +168,7 @@ const displayRole = (role: string) => {
             <TableBody>
                 <template v-if="paginatedUsers.length > 0">
                     <TableRow v-for="user in paginatedUsers" :key="user.id">
-                        <!-- Existing table cells code -->
                         <TableCell class="font-medium">
-                            <!-- Existing mobile view -->
                             <div class="flex flex-col sm:hidden">
                                 <div class="flex items-center gap-2">
                                     <Avatar class="h-8 w-8">
