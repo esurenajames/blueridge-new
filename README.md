@@ -38,11 +38,13 @@ php artisan key:generate
 5. Database Setup
 php artisan migrate
 ```
-
+````
 6. Git Branching
-use feat/your-name
+- For better organization and collaboration, use the following branch naming convention:
+feat/your-name (replace your-name with your actual name or identifier)
 ```
-
+git switch -c feat/james
+```
 ## Development
 
 To start the development server, run:
