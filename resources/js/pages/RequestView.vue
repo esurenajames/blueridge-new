@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
+import { Head } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, CheckCircle2, XCircle, User, Calendar, CheckCircle, AlertCircle, Circle, Check, Circle as Dot, FileText, Download, RefreshCw } from 'lucide-vue-next';
@@ -91,6 +92,8 @@ const timelineSteps = computed(() =>
 </script>
 
 <template>
+    <Head title="Request View" />
+
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -277,7 +280,7 @@ const timelineSteps = computed(() =>
                                 v-for="(event, index) in timelineSteps"
                                 :key="index"
                                 v-slot="{ state }"
-                                class="relative flex w-full items-start gap-3"
+                                class="relative flex w-full items-start gap-3 cursor-default pointer-events-none select-none"
                                 :step="event.step"
                             >
                                 <StepperSeparator

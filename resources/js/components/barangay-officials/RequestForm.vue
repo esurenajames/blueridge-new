@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { ClipboardList, Users, Upload, FileText, CreditCard, X, Check } from 'lucide-vue-next';
+import { ClipboardList, Users, Upload, FileText, CreditCard, X, Check, Eye, Edit2 } from 'lucide-vue-next';
 
 const props = defineProps<{
   show: boolean;
@@ -72,7 +72,6 @@ const { value: categoryValue, errorMessage: categoryError } = useField<string>('
 const { value: descriptionValue, errorMessage: descriptionError } = useField<string>('description');
 
 const { toast } = useToast();
-const selectedCollaborators = ref<string[]>([]);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const uploadedFiles = ref<File[]>([]);
 
@@ -134,14 +133,31 @@ const removeFile = (index: number) => {
   uploadedFiles.value.splice(index, 1);
 };
 
-const removeCollaborator = (index: number) => {
-  selectedCollaborators.value.splice(index, 1);
+interface Collaborator {
+  name: string;
+  permission: 'view' | 'edit';
+}
+
+const selectedCollaborators = ref<Collaborator[]>([]);
+
+// Update the addCollaborator function
+const addCollaborator = (value: string) => {
+  if (value && !selectedCollaborators.value.some(c => c.name === value)) {
+    selectedCollaborators.value.push({
+      name: value,
+      permission: 'view' // Default permission
+    });
+  }
 };
 
-const addCollaborator = (value: string) => {
-  if (value && !selectedCollaborators.value.includes(value)) {
-    selectedCollaborators.value.push(value);
-  }
+// Add a function to update permissions
+const updatePermission = (index: number, permission: 'view' | 'edit') => {
+  selectedCollaborators.value[index].permission = permission;
+};
+
+// Update the removeCollaborator function (no changes needed but included for context)
+const removeCollaborator = (index: number) => {
+  selectedCollaborators.value.splice(index, 1);
 };
 
 const onSubmit = handleSubmit((values) => {
@@ -312,12 +328,16 @@ const onSubmit = handleSubmit((values) => {
 
         <div v-if="currentStep === 3" class="space-y-4">
           <div class="space-y-2">
-            <label class="text-sm font-medium">Add Team Members</label>
+            <label class="text-sm font-medium">Add Team Members
+               <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
+                  Optional
+              </span>
+            </label>
             <Select @update:modelValue="addCollaborator">
-              <SelectTrigger>
+              <SelectTrigger class="h-9">
                 <SelectValue placeholder="Select team member" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent class="min-w-[200px]">
                 <SelectItem value="john">John Doe</SelectItem>
                 <SelectItem value="jane">Jane Smith</SelectItem>
                 <SelectItem value="bob">Bob Johnson</SelectItem>
@@ -328,22 +348,80 @@ const onSubmit = handleSubmit((values) => {
           <div v-if="selectedCollaborators.length > 0" class="space-y-2">
             <div v-for="(collaborator, index) in selectedCollaborators" 
               :key="index"
-              class="flex items-center gap-2 p-2 bg-muted rounded-md">
-              <Users class="size-4" />
-              <span class="text-sm">{{ collaborator }}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="ml-auto h-8 w-8"
-                @click="removeCollaborator(index)"
-              >
-                <X class="size-4" />
-              </Button>
+              class="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+            >
+              <!-- Left: Avatar and Info -->
+              <div class="flex items-center gap-3 flex-1">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Users class="h-5 w-5 text-primary" />
+                </div>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-sm font-medium truncate">{{ collaborator.name }}</span>
+                  <span class="text-xs text-muted-foreground">Team Member</span>
+                </div>
+              </div>
+
+              <!-- Right: Actions -->
+              <div class="flex items-center gap-2">
+                <!-- Permission Dropdown -->
+                <Select 
+                  :model-value="collaborator.permission"
+                  @update:modelValue="(value) => updatePermission(index, value as 'view' | 'edit')"
+                >
+                  <SelectTrigger class="h-8 w-[100px]">
+                    <SelectValue>
+                      <div class="flex items-center gap-1.5">
+                        <Eye v-if="collaborator.permission === 'view'" class="size-3.5" />
+                        <Edit2 v-else class="size-3.5" />
+                        <span class="capitalize text-xs">{{ collaborator.permission }}</span>
+                      </div>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="view">
+                      <div class="flex items-center gap-1.5">
+                        <Eye class="size-3.5" />
+                        <span>View</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="edit">
+                      <div class="flex items-center gap-1.5">
+                        <Edit2 class="size-3.5" />
+                        <span>Edit</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <!-- Remove Button -->
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                  @click="removeCollaborator(index)"
+                >
+                  <X class="size-4" />
+                </Button>
+              </div>
             </div>
+          </div>
+
+          <div 
+            v-if="!selectedCollaborators.length" 
+            class="text-sm text-muted-foreground text-center p-6 bg-muted/50 rounded-lg"
+          >
+            <Users class="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
+            <p>No collaborators added yet</p>
+            
           </div>
         </div>
 
         <div v-if="currentStep === 4" class="space-y-4">
+          <label class="text-sm font-medium">Supporting Documents
+              <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
+                Optional
+            </span>
+          </label>
           <div
             class="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors"
             @dragover.prevent
