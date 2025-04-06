@@ -10,6 +10,7 @@ A web application built with Laravel and Vue.js that manages barangay official r
 - npm 
 - MySQL (for development)
 - TablePlus
+- [shadcn/ui](https://www.shadcn-vue.com/) – used for building modern, accessible UI components
 
 ## Installation
 
@@ -67,4 +68,4 @@ composer run dev
 - TypeScript
 - Tailwind CSS
 - Inertia.js
-- SQLite (Development)
+- MySQL
