@@ -63,6 +63,7 @@ composer run dev
 
 - `npm run dev` - Start Vite development server
 - `php artisan serve` - Start the backend server
+- `npm run start` - Start both the backend and vite development server 
 
 ## Tech Stack
 
