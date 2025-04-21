@@ -55,12 +55,12 @@ const mainNavItems = computed(() => {
             items: [
                 {
                     title: 'View All',
-                    href: route('request.view'),
+                    href: route('requests.index'),
                     icon: Folder
                 },
                 {
                     title: 'Create Request',
-                    href: route('request.view'),
+                    href: route('requests.index'),
                     icon: FileText
                 }
             ]
