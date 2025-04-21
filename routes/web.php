@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserManagementController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -9,9 +11,24 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified', 'role:official'])->name('dashboard');
+// Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
+//     // ...existing routes...
+//     Route::get('/active-users', [DashboardController::class, 'getActiveUsers'])->name('users.active');
+// });
+
+Route::get('dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:official'])
+    ->name('dashboard');
+
+Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
+    Route::get('/requests', [RequestController::class, 'index'])->name('requests.index');
+    Route::post('/dashboard/store-request', [DashboardController::class, 'storeRequest'])->name('dashboard.store-request');
+    Route::get('/requests/{id}', [DashboardController::class, 'show'])->name('requests.view');
+    Route::post('/requests/{id}/process', [RequestController::class, 'process'])->name('requests.process');
+    Route::post('/requests/{id}/void', [RequestController::class, 'void'])->name('requests.void');
+    Route::get('requests/{id}/download/{filename}', [RequestController::class, 'downloadFile'])->name('requests.download-file');
+});
+
 
 Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:admin'])

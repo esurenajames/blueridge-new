@@ -13,7 +13,8 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const { auth } = usePage().props;
+const page = usePage();
+const { auth, activeUsers } = page.props;
 </script>
 
 <template>
@@ -24,7 +25,10 @@ const { auth } = usePage().props;
             <div class="grid  gap-6 md:grid-cols-3 relative">
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
                      <div class="flex-1 w-full">
-                        <CreateForm class="h-full" />
+                        <CreateForm 
+                          class="h-full"
+                          :active-users="activeUsers"
+                        />
                      </div>
                 </div>
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">

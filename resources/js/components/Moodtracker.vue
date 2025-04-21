@@ -111,11 +111,6 @@ const selectMood = (mood: string) => {
     showQuoteDialog.value = true;
 };
 
-const clearMood = () => {
-    selectedMood.value = null;
-    localStorage.removeItem(getStorageKey(props.userId));
-};
-
 const currentQuote = computed(() => {
     if (!selectedMood.value) return '';
     const moodQuotes = quotes[selectedMood.value as keyof typeof quotes];
