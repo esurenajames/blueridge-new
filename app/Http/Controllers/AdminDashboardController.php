@@ -9,8 +9,9 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $users = User::select(['id', 'name', 'role', 'status'])
+        $users = User::query()
             ->where('status', 'active')
+            ->orderBy('created_at', 'desc')    
             ->get();
 
         $userStats = [

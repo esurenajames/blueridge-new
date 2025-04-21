@@ -9,10 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { ClipboardList, Users, Upload, FileText, CreditCard, X, Check, Eye, Edit2 } from 'lucide-vue-next';
+import { Users, Upload, FileText, X, Check, Eye, Edit2 } from 'lucide-vue-next';
 
 const props = defineProps<{
   show: boolean;
+  activeUsers: Array<{
+    id: number;
+    name: string;
+    role: string;
+  }>;
 }>();
 
 const emit = defineEmits(['close']);
@@ -20,30 +25,22 @@ const currentStep = ref(1);
 
 const steps = [{
   step: 1,
-  title: 'Request Type',
-  description: 'Choose request type',
-  icon: ClipboardList,
-}, {
-  step: 2,
   title: 'Request Info',
   description: 'Fill request details',
   icon: FileText,
 }, {
-  step: 3,
+  step: 2,
   title: 'Collaborators',
   description: 'Add team members',
   icon: Users,
 }, {
-  step: 4,
+  step: 3,
   title: 'Documents',
-  description: 'Upload supporting files or documents',
+  description: 'Upload supporting files',
   icon: Upload,
 }];
 
-const requestType = ref<'petty-cash' | 'request-form' | null>(null);
-
 const validationSchema = object({
-  type: string().required('Request type is required'),
   name: string()
     .required('Name is required')
     .min(3, 'Name must be at least 3 characters'),
@@ -55,18 +52,7 @@ const validationSchema = object({
   files: array()
 });
 
-const { handleSubmit, errors, resetForm } = useVeeForm({
-  validationSchema,
-  initialValues: {
-    type: '',
-    name: '',
-    category: '',
-    description: '',
-    collaborators: [],
-    files: []
-  }
-});
-
+const { handleSubmit } = useVeeForm({ validationSchema });
 const { value: nameValue, errorMessage: nameError } = useField<string>('name');
 const { value: categoryValue, errorMessage: categoryError } = useField<string>('category');
 const { value: descriptionValue, errorMessage: descriptionError } = useField<string>('description');
@@ -75,29 +61,23 @@ const { toast } = useToast();
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const uploadedFiles = ref<File[]>([]);
 
-const isStep2Valid = ref(false);
-const isStep2Touched = ref(false);
+const isStep1Valid = ref(false);
 
-// Replace the existing isStepValid computed property
 const isStepValid = computed(() => {
   switch (currentStep.value) {
     case 1:
-      return requestType.value !== null;
+      return isStep1Valid.value;
     case 2:
-      return isStep2Valid.value;
+      return true;
     case 3:
-      return true; // Optional collaborators
-    case 4:
-      return true; // Optional files
+      return true;
     default:
       return false;
   }
 });
 
-// Add watchers to validate step 2
 watch([nameValue, categoryValue, descriptionValue], ([name, category, description]) => {
-  isStep2Touched.value = true;
-  isStep2Valid.value = Boolean(
+  isStep1Valid.value = Boolean(
     name && 
     name.length >= 3 && 
     category && 
@@ -106,18 +86,12 @@ watch([nameValue, categoryValue, descriptionValue], ([name, category, descriptio
   );
 }, { immediate: true });
 
-// Update the handleStepChange function
 const handleStepChange = (step: number) => {
   if (step > currentStep.value) {
-    // Moving forward
-    if (currentStep.value === 2) {
-      isStep2Touched.value = true;
-    }
     if (isStepValid.value) {
       currentStep.value = step;
     }
   } else {
-    // Moving backward
     currentStep.value = step;
   }
 };
@@ -125,7 +99,8 @@ const handleStepChange = (step: number) => {
 const handleFileUpload = (event: Event) => {
   const input = event.target as HTMLInputElement;
   if (input.files) {
-    uploadedFiles.value = [...uploadedFiles.value, ...Array.from(input.files)];
+    const newFiles = Array.from(input.files);
+    uploadedFiles.value = [...uploadedFiles.value, ...newFiles];
   }
 };
 
@@ -134,64 +109,99 @@ const removeFile = (index: number) => {
 };
 
 interface Collaborator {
+  id: string;
   name: string;
+  role: string;
   permission: 'view' | 'edit';
 }
 
 const selectedCollaborators = ref<Collaborator[]>([]);
 
-// Update the addCollaborator function
-const addCollaborator = (value: string) => {
-  if (value && !selectedCollaborators.value.some(c => c.name === value)) {
-    selectedCollaborators.value.push({
-      name: value,
-      permission: 'view' // Default permission
-    });
+const addCollaborator = (userId: string) => {
+  const user = props.activeUsers.find(u => u.id.toString() === userId);
+  if (user && !selectedCollaborators.value.some(c => c.id === user.id.toString())) {
+    const newCollaborator = {
+      id: user.id.toString(),
+      name: user.name,
+      role: user.role,
+      permission: 'view' as const
+    };
+    selectedCollaborators.value.push(newCollaborator);
   }
 };
 
-// Add a function to update permissions
 const updatePermission = (index: number, permission: 'view' | 'edit') => {
   selectedCollaborators.value[index].permission = permission;
 };
 
-// Update the removeCollaborator function (no changes needed but included for context)
 const removeCollaborator = (index: number) => {
   selectedCollaborators.value.splice(index, 1);
 };
 
-const onSubmit = handleSubmit((values) => {
-  const formData = {
-    ...values,
-    type: requestType.value,
-    collaborators: selectedCollaborators.value,
-    files: uploadedFiles.value
-  };
+const form = useForm({
+  name: '',
+  category: '',
+  description: '',
+  collaborators: [] as { id: number; permission: string }[],
+  files: [] as File[]
+});
 
-  useForm(formData).post(route('requests.store'), {
+const resetForm = () => {
+  nameValue.value = '';
+  categoryValue.value = '';
+  descriptionValue.value = '';
+  selectedCollaborators.value = [];
+  uploadedFiles.value = [];
+  form.reset();
+};
+
+const onSubmit = () => {
+  if (!isStep1Valid.value) {
+    toast({
+      title: "Error",
+      description: "Please fill in all required fields",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const formattedCollaborators = selectedCollaborators.value.map(collaborator => ({
+    id: parseInt(collaborator.id),
+    permission: collaborator.permission
+  }));
+
+  form.name = nameValue.value;
+  form.category = categoryValue.value;
+  form.description = descriptionValue.value;
+  form.collaborators = formattedCollaborators;
+  form.files = uploadedFiles.value;
+
+  form.post(route('dashboard.store-request'), {
     preserveScroll: true,
-    onSuccess: () => {
+    forceFormData: true,
+    onSuccess: (page) => {
       toast({
         title: "Success",
         description: "Request created successfully",
         variant: "success",
       });
-      emit('close');
-      resetForm();
-      requestType.value = null;
-      selectedCollaborators.value = [];
-      uploadedFiles.value = [];
-      currentStep.value = 1;
+      // Use page.props.request.id instead of response.request.id
+      window.location.href = route('requests.view', { id: page.props.request.id });
     },
     onError: (errors) => {
+      if (errors.name || errors.category || errors.description) {
+        currentStep.value = 1;
+      } else if (errors.collaborators) {
+        currentStep.value = 2;
+      }
       toast({
         title: "Error",
-        description: errors.error || "Failed to create request",
+        description: Object.values(errors)[0] as string || "Failed to create request",
         variant: "destructive",
       });
     },
   });
-});
+};
 </script>
 
 <template>
@@ -203,88 +213,46 @@ const onSubmit = handleSubmit((values) => {
           Follow the steps below to create your request
         </DialogDescription>
       </DialogHeader>
-
-      <Stepper v-model="currentStep">
-        <StepperItem
-          v-for="item in steps"
-          :key="item.step"
-          class="basis-1/4"
-          :step="item.step"
-        >
-          <StepperTrigger class="cursor-default pointer-events-none select-none">
-            <StepperIndicator>
-              <component 
-                :is="currentStep > item.step && isStepValid ? Check : item.icon" 
-                class="w-4 h-4"
-              />
-            </StepperIndicator>
-            <div class="flex flex-col">
-              <StepperTitle>
-                {{ item.title }}
-              </StepperTitle>
-              <StepperDescription>
-                {{ item.description }}
-              </StepperDescription>
-            </div>
-          </StepperTrigger>
-          <StepperSeparator
-            v-if="item.step !== steps[steps.length - 1].step"
-            class="w-full h-px"
-          />
-        </StepperItem>
-      </Stepper>
+      
+      <form @submit.prevent="onSubmit" class="space-y-4">
+      <div class="flex justify-center">
+        <Stepper v-model="currentStep" class="max-w-[600px]">
+          <StepperItem
+            v-for="item in steps"
+            :key="item.step"
+            class="basis-1/3"
+            :step="item.step"
+          >
+            <StepperTrigger 
+              class="cursor-pointer select-none"
+              @click="handleStepChange(item.step)"
+            >
+              <StepperIndicator>
+                <component 
+                  :is="currentStep > item.step && isStepValid ? Check : item.icon" 
+                  class="w-4 h-4"
+                />
+              </StepperIndicator>
+              <div class="flex flex-col">
+                <StepperTitle>
+                  {{ item.title }}
+                </StepperTitle>
+                <StepperDescription>
+                  {{ item.description }}
+                </StepperDescription>
+              </div>
+            </StepperTrigger>
+            <StepperSeparator
+              v-if="item.step !== steps[steps.length - 1].step"
+              class="w-full h-px"
+            />
+          </StepperItem>
+        </Stepper>
+      </div>
 
       <div class="mt-8">
+        <!-- Step 1: Request Info -->
         <div v-if="currentStep === 1" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              :class="[
-                'h-24 flex flex-col items-center justify-center',
-                requestType === 'petty-cash' ? 'border-primary ring-2 ring-primary' : ''
-              ]"
-              @click="requestType = 'petty-cash'"
-            >
-              <CreditCard class="w-6 h-6 mb-2" />
-              <span class="font-medium">Petty Cash Voucher</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              :class="[
-                'h-24 flex flex-col items-center justify-center',
-                requestType === 'request-form' ? 'border-primary ring-2 ring-primary' : ''
-              ]"
-              @click="requestType = 'request-form'"
-            >
-              <ClipboardList class="w-6 h-6 mb-2" />
-              <span class="font-medium">Request Form</span>
-            </Button>
-          </div>
-          <div v-if="requestType" class="mt-4 p-4 rounded-lg bg-gray-200 dark:bg-muted">
-            <div v-if="requestType === 'petty-cash'" class="space-y-2">
-              <h3 class="font-medium">Petty Cash Voucher Details:</h3>
-              <ul class="text-sm text-muted-foreground list-disc pl-4">
-                <li>For small cash disbursements and reimbursements</li>
-                <li>Maximum amount: ₱5,000</li>
-                <li>Requires immediate liquidation within 48 hours</li>
-                <li>Must include receipts and supporting documents</li>
-              </ul>
-            </div>
-            <div v-else-if="requestType === 'request-form'" class="space-y-2">
-              <h3 class="font-medium">Request Form Details:</h3>
-              <ul class="text-sm text-muted-foreground list-disc pl-4">
-                <li>For general requests (supplies, equipment, maintenance)</li>
-                <li>No maximum amount limit</li>
-                <li>Requires department head approval</li>
-                <li>Processing time: 3-5 working days</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <form v-if="currentStep === 2" @submit.prevent="onSubmit" class="space-y-4">
           <div class="space-y-4">
             <div class="grid gap-4">
               <div class="space-y-2">
@@ -296,6 +264,7 @@ const onSubmit = handleSubmit((values) => {
                 />
                 <span v-if="nameError" class="text-sm text-red-500">{{ nameError }}</span>
               </div>
+              
               <div class="space-y-2">
                 <label class="text-sm font-medium">Category</label>
                 <Select v-model="categoryValue">
@@ -311,6 +280,7 @@ const onSubmit = handleSubmit((values) => {
                 </Select>
                 <span v-if="categoryError" class="text-sm text-red-500">{{ categoryError }}</span>
               </div>
+              
               <div class="space-y-2">
                 <label class="text-sm font-medium">Description</label>
                 <Input
@@ -324,13 +294,14 @@ const onSubmit = handleSubmit((values) => {
               </div>
             </div>
           </div>
-        </form>
+        </div>
 
-        <div v-if="currentStep === 3" class="space-y-4">
+        <!-- Step 2: Collaborators -->
+        <div v-if="currentStep === 2" class="space-y-4">
           <div class="space-y-2">
             <label class="text-sm font-medium">Add Team Members
-               <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
-                  Optional
+              <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
+                Optional
               </span>
             </label>
             <Select @update:modelValue="addCollaborator">
@@ -338,9 +309,13 @@ const onSubmit = handleSubmit((values) => {
                 <SelectValue placeholder="Select team member" />
               </SelectTrigger>
               <SelectContent class="min-w-[200px]">
-                <SelectItem value="john">John Doe</SelectItem>
-                <SelectItem value="jane">Jane Smith</SelectItem>
-                <SelectItem value="bob">Bob Johnson</SelectItem>
+                <SelectItem 
+                  v-for="user in activeUsers" 
+                  :key="user.id" 
+                  :value="user.id.toString()"
+                >
+                  {{ user.name }}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -350,20 +325,17 @@ const onSubmit = handleSubmit((values) => {
               :key="index"
               class="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
             >
-              <!-- Left: Avatar and Info -->
               <div class="flex items-center gap-3 flex-1">
                 <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                   <Users class="h-5 w-5 text-primary" />
                 </div>
                 <div class="flex flex-col min-w-0">
                   <span class="text-sm font-medium truncate">{{ collaborator.name }}</span>
-                  <span class="text-xs text-muted-foreground">Team Member</span>
+                  <span class="text-xs text-muted-foreground capitalize">{{ collaborator.role }}</span>
                 </div>
               </div>
 
-              <!-- Right: Actions -->
               <div class="flex items-center gap-2">
-                <!-- Permission Dropdown -->
                 <Select 
                   :model-value="collaborator.permission"
                   @update:modelValue="(value) => updatePermission(index, value as 'view' | 'edit')"
@@ -393,7 +365,6 @@ const onSubmit = handleSubmit((values) => {
                   </SelectContent>
                 </Select>
 
-                <!-- Remove Button -->
                 <Button
                   variant="ghost"
                   size="icon"
@@ -412,14 +383,14 @@ const onSubmit = handleSubmit((values) => {
           >
             <Users class="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
             <p>No collaborators added yet</p>
-            
           </div>
         </div>
 
-        <div v-if="currentStep === 4" class="space-y-4">
+        <!-- Step 3: Documents -->
+        <div v-if="currentStep === 3" class="space-y-4">
           <label class="text-sm font-medium">Supporting Documents
-              <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
-                Optional
+            <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
+              Optional
             </span>
           </label>
           <div
@@ -432,11 +403,19 @@ const onSubmit = handleSubmit((values) => {
               ref="fileInputRef"
               class="hidden"
               multiple
-              @change="handleFileUpload"
+              @change.prevent="handleFileUpload"
             />
-            <Upload class="size-8 mx-auto text-muted-foreground mb-4" />
+                        <Upload class="size-8 mx-auto text-muted-foreground mb-4" />
             <div class="space-y-2">
-              <Button variant="link" @click="fileInputRef?.click()">
+              <Button 
+                type="button" 
+                variant="link" 
+                @click.prevent="(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  fileInputRef?.click();
+                }"
+              >
                 Upload files
               </Button>
               <p class="text-sm text-muted-foreground">
@@ -466,24 +445,33 @@ const onSubmit = handleSubmit((values) => {
           </div>
         </div>
       </div>
-
       <div class="flex justify-between mt-6">
-        <Button
-          type="button"
-          variant="outline"
-          @click="currentStep > 1 ? currentStep-- : null"
-          :disabled="currentStep === 1"
-        >
-          Previous
-        </Button>
-        <Button
-          type="button"
-          @click="currentStep < steps.length ? currentStep++ : onSubmit()"
-          :disabled="!isStepValid"
-        >
-          {{ currentStep === steps.length ? 'Submit' : 'Next' }}
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            @click="currentStep > 1 ? currentStep-- : null"
+            :disabled="currentStep === 1"
+          >
+            Previous
+          </Button>
+        <div class="flex gap-2">
+          <Button
+            v-if="currentStep < steps.length"
+            type="button"
+            @click="handleStepChange(currentStep + 1)"
+            :disabled="currentStep === 1 && !isStep1Valid"
+          >
+            Next
+          </Button>
+          <Button
+            v-if="currentStep === steps.length"
+            type="submit"
+          >
+            Submit Request
+          </Button>
+        </div>
       </div>
+    </form>
     </DialogContent>
   </Dialog>
 </template>

@@ -41,37 +41,52 @@ const displayRole = (role: string) => {
                     </Badge>
                 </CardTitle>
                 <CardDescription class="text-sm text-muted-foreground">
-                    List of currently active and registered barangay officials
+                    List of currently active and registered barangay officials, including how long ago each account was created.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <ScrollArea class="h-[400px] pb-2">
-                    <div class="space-y-2">
-                        <div v-for="user in activeUsers" :key="user.id"
-                            class="flex items-center justify-between rounded-lg bg-muted/40 p-3">
-                            <div class="flex items-center space-x-3">
-                                <Avatar>
-                                    <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                                    <AvatarFallback>
-                                        {{ getInitials(user.name) }}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <p class="text-sm font-medium leading-none">
-                                        {{ user.name }}
-                                    </p>
-                                    <p class="text-sm text-muted-foreground capitalize">
-                                        {{ displayRole(user.role) }}
-                                    </p>
-                                </div>
+                <div class="space-y-2">
+                    <div v-for="user in activeUsers" 
+                        :key="user.id"
+                        class="flex items-center justify-between rounded-lg bg-muted/40 p-3">
+                        <!-- User info section -->
+                        <div class="flex items-center space-x-3 flex-1">
+                            <Avatar>
+                                <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
+                                <AvatarFallback>
+                                    {{ getInitials(user.name) }}
+                                </AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <p class="text-sm font-medium leading-none">
+                                    {{ user.name }}
+                                </p>
+                                <p class="text-sm text-muted-foreground capitalize">
+                                    {{ displayRole(user.role) }}
+                                </p>
                             </div>
-                            <Badge variant="secondary" :variant="user.status === 'active' ? 'success' : 'destructive'"
-                                class="capitalize">
+                        </div>
+
+                        <!-- Status and time section -->
+                        <div class="flex items-center gap-4">
+                            <div class="hidden md:block min-w-24 text-right">
+                                <p class="text-xs text-muted-foreground">
+                                    {{ user.created_ago }}
+                                </p>
+                            </div>
+                            <Badge 
+                                variant="secondary" 
+                                :variant="user.status === 'active' ? 'success' : 'destructive'"
+                                class="capitalize whitespace-nowrap"
+                            >
                                 {{ user.status }}
                             </Badge>
+                            
                         </div>
                     </div>
-                </ScrollArea>
-            </CardContent>
+                </div>
+            </ScrollArea>
+        </CardContent>
     </Card>
 </template>

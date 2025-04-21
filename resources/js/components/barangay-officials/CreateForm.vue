@@ -18,6 +18,14 @@ const handleCloseRequest = () => {
 const downloadDocumentation = () => {
     window.open('/storage/test.pdf', '_blank');
 };
+
+const props = defineProps<{
+  activeUsers: Array<{
+    id: number;
+    name: string;
+  }>;
+}>();
+
 </script>
 
 <template>
@@ -71,6 +79,7 @@ const downloadDocumentation = () => {
     <RequestForm
         v-if="showRequestDialog"
         :show="showRequestDialog"
+        :active-users="activeUsers"
         @close="handleCloseRequest"
     />
 
