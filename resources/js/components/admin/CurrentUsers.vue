@@ -76,7 +76,6 @@ const displayRole = (role: string) => {
                                 </p>
                             </div>
                             <Badge 
-                                variant="secondary" 
                                 :variant="user.status === 'active' ? 'success' : 'destructive'"
                                 class="capitalize whitespace-nowrap"
                             >
