@@ -29,7 +29,6 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     Route::get('requests/{id}/download/{filename}', [RequestController::class, 'downloadFile'])->name('requests.download-file');
 });
 
-
 Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:admin'])
     ->name('admin.dashboard');
