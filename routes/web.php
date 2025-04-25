@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\CaptainController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\RequestController;
 use App\Http\Controllers\UserManagementController;
@@ -20,13 +21,14 @@ Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:official'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
-    Route::get('/requests', [RequestController::class, 'index'])->name('requests.index');
+Route::middleware(['auth', 'verified', 'role:official' ])->group(function () {
+    Route::get('/requests/{tab?}', [RequestController::class, 'index'])->name('requests.index');
     Route::post('/dashboard/store-request', [DashboardController::class, 'storeRequest'])->name('dashboard.store-request');
-    Route::get('/requests/{id}', [DashboardController::class, 'show'])->name('requests.view');
+    Route::get('/requests/view/{id}', [DashboardController::class, 'show'])->name('requests.view');
     Route::post('/requests/{id}/process', [RequestController::class, 'process'])->name('requests.process');
     Route::post('/requests/{id}/void', [RequestController::class, 'void'])->name('requests.void');
     Route::get('requests/{id}/download/{filename}', [RequestController::class, 'downloadFile'])->name('requests.download-file');
+    Route::get('/requests/statistics', [RequestController::class, 'getStatistics'])->name('requests.statistics');
 });
 
 Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
@@ -41,13 +43,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::put('/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('admin.users.update-password');
 });
 
-Route::get('/request', function () {
-    return Inertia::render('RequestView');
-})->name('request.view');
 
-// Route::get('captain/dashboard', function () {
-//     return Inertia::render('CaptainDashboard');
-// })->middleware(['auth', 'verified', 'role:captain'])->name('captain.dashboard');
+Route::get('captain/dashboard', [CaptainController::class, 'index'])
+    ->middleware(['auth', 'verified', 'role:captain'])
+    ->name('captain.dashboard');
+
+
 
 // Route::get('secretary/dashboard', function () {
 //     return Inertia::render('SecretaryDashboard');

@@ -5,7 +5,7 @@ import { Head, usePage, router } from '@inertiajs/vue3';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Clock, CheckCircle, XCircle, AlertCircle, LayoutGrid, ClipboardList, FileSpreadsheet, ShoppingCart, ShoppingBag, History, Eye, Edit2, Trash2, MoreVertical } from 'lucide-vue-next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -42,9 +42,10 @@ interface RequestsByTab {
     history: Request[];
 }
 
-// Update the props
-const { requests } = usePage().props as {
+// Accept initialTab from backend
+const { requests, initialTab } = usePage().props as {
     requests: RequestsByTab;
+    initialTab: string;
 };
 
 const getStatusConfig = (status: string) => {
@@ -69,7 +70,7 @@ const tabs = [
     { id: 'history', label: 'History', count: requests.history.length, icon: History },
 ];
 
-const currentTab = ref('all');
+const currentTab = ref(initialTab || 'all');
 
 const filteredRequests = computed(() => {
     return requests[currentTab.value as keyof RequestsByTab];
@@ -78,6 +79,12 @@ const filteredRequests = computed(() => {
 const handleCardClick = (requestId: number) => {
     router.visit(route('requests.view', { id: requestId }));
 };
+
+watch(currentTab, (newTab) => {
+    if (newTab !== initialTab) {
+        router.visit(route('requests.index', { tab: newTab }), { replace: true, preserveState: true });
+    }
+});
 </script>
 
 <template>

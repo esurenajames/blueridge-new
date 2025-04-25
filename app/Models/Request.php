@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Request extends Model
 {
+    protected $table = 'requests';
     protected $fillable = [
         'name',
         'category',

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseOrder extends Model
 {
+    protected $table = 'request_purchase_orders';
     protected $fillable = [
         'request_id',
         'status',

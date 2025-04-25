@@ -4,11 +4,14 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, CheckCircle2, XCircle, User, Calendar, CheckCircle, AlertCircle, Circle, Check, Circle as Dot, FileText, Download, RefreshCw } from 'lucide-vue-next';
+import { Clock, Edit2, CheckCircle2, XCircle, User, Calendar, CheckCircle, AlertCircle, Circle, Check, Circle as Dot, FileText, Download, RefreshCw } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch } from 'vue';
 import { useToast } from '@/components/ui/toast';
 import Confirmation from '@/components/Confirmation.vue';
+import { getDisplayRole } from '@/utils/roles';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getAvatarProps } from '@/utils/avatar';
 
 const { toast } = useToast();
 
@@ -45,12 +48,13 @@ const props = defineProps<{
     title: string;
     category: string;
     description: string;
-    status: 'draft' | 'pending' | 'approved' | 'declined' | 'voided';
+    status: 'draft' | 'pending' | 'approved' | 'declined' | 'voided' | 'completed';
     created_at: string;
     created_by: string;
     collaborators?: Array<{
       name: string;
       role: string;
+      permission: string;
     }>;
     files?: Array<{
       name: string;
@@ -58,7 +62,12 @@ const props = defineProps<{
       uploaded_at: string;
     }>;
   };
+  userPermission: string; // Move this out as a separate prop
 }>();
+
+const canEdit = computed(() => {
+  return props.userPermission === 'owner' || props.userPermission === 'edit';
+});
 
 const request = ref({ ...props.request });
 
@@ -232,6 +241,15 @@ const downloadFile = (file: { name: string }) => {
                   <CardDescription class="ml-2">Request #{{ request.id }}</CardDescription>
                 </div>
               </div>
+              <Button 
+                v-if="request.status === 'draft' && canEdit"
+                variant="default"
+                class="gap-2"
+               
+              >
+                <component :is="Edit2" class="h-4 w-4" />
+                Edit Request
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
@@ -246,15 +264,27 @@ const downloadFile = (file: { name: string }) => {
                 <div class="space-y-2">
                   <div v-for="(collaborator, index) in request.collaborators" 
                     :key="index"
-                    class="flex items-center gap-2 p-2 bg-muted rounded-md"
+                    class="flex items-center justify-between p-2 bg-muted rounded-md"
                   >
-                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                      <User class="h-4 w-4 text-primary" />
+                    <div class="flex items-center gap-2">
+                      <Avatar class="h-8 w-8">
+                        <AvatarImage 
+                          v-if="getAvatarProps(collaborator).showAvatar" 
+                          :src="getAvatarProps(collaborator).src" 
+                          :alt="getAvatarProps(collaborator).alt" 
+                        />
+                        <AvatarFallback class="bg-primary/10">
+                          {{ getAvatarProps(collaborator).fallback }}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium">{{ collaborator.name }}</span>
+                        <span class="text-xs text-muted-foreground">{{ getDisplayRole(collaborator.role) }}</span>
+                      </div>
                     </div>
-                    <div class="flex flex-col">
-                      <span class="text-sm font-medium">{{ collaborator.name }}</span>
-                      <span class="text-xs text-muted-foreground">{{ collaborator.role }}</span>
-                    </div>
+                    <Badge :variant="collaborator.permission === 'edit' ? 'default' : 'secondary'" class="capitalize text-xs px-4">
+                      {{ collaborator.permission === 'edit' ? 'Can Edit' : 'View Only' }}
+                    </Badge>
                   </div>
                   <div v-if="!request.collaborators?.length" class="text-sm text-muted-foreground">
                     No collaborators assigned
@@ -316,6 +346,7 @@ const downloadFile = (file: { name: string }) => {
               </div>
 
               <div class="flex flex-col gap-3 pt-2">
+               <template v-if="canEdit">
                 <Button 
                   v-if="request.status !== 'declined' && request.status !== 'pending' && request.status !== 'voided'"
                   class="w-full gap-2"
@@ -369,7 +400,20 @@ const downloadFile = (file: { name: string }) => {
                   <XCircle class="h-4 w-4" />
                   Void Request
                 </Button>
+                </template>
+                <div 
+                  v-if="!canEdit && request.status !== 'voided'"
+                  class="text-sm text-muted-foreground text-center p-2"
+                >
+                  You only have view access to this request.
+                </div>
 
+                <div 
+                  v-if="request.status === 'voided'"
+                  class="text-sm text-muted-foreground text-center p-2"
+                >
+                  This request has been voided and cannot be modified.
+                </div>
                 <div 
                   v-if="request.status === 'voided'"
                   class="text-sm text-muted-foreground text-center p-2"
