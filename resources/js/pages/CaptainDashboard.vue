@@ -23,26 +23,20 @@ const { auth, activeUsers, requestStats } = page.props;
 
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex flex-col h-full gap-6 p-4 relative">
-            <div class="grid  gap-6 md:grid-cols-3 relative">
+            <div class="grid  gap-6 md:grid-cols-3 relative min-h-[300px]">
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
                      <div class="flex-1 w-full">
-                        <CreateForm 
-                          class="h-full"
-                          :active-users="activeUsers"
-                        />
+                        <PlaceholderPattern class="h-full" />
                      </div>
                 </div>
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
                      <div class="flex-1 w-full ">
-                        <RequestSummary 
-                            :request-stats="requestStats"
-                            class="h-full"
-                        />
+                        <PlaceholderPattern class="h-full" />
                      </div>
                 </div>
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
                      <div class="flex-1 w-full">
-                        <MoodTracker :user-id="auth.user.id" class="h-full" />
+                        <PlaceholderPattern class="h-full" />
                      </div>
                 </div>
             </div>

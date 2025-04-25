@@ -67,6 +67,21 @@ const mainNavItems = computed(() => {
         });
     }
 
+    if (user.value?.role === 'captain') {
+        items.push({
+            title: 'Requests',
+            icon: FileText,
+            collapsible: true,
+            items: [
+                {
+                    title: 'View All',
+                    href: route('requests.index'),
+                    icon: Folder
+                },
+            ]
+        });
+    }
+
     return items;
 });
 </script>

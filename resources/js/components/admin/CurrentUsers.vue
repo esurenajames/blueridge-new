@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useInitials } from '@/composables/useInitials';
 import { computed } from 'vue';
+import { getDisplayRole } from '@/utils/roles';
 import { Users2 } from 'lucide-vue-next';
+import { getAvatarProps } from '@/utils/avatar';
 
 const { getInitials } = useInitials();
 
@@ -20,12 +22,7 @@ const props = defineProps<{
 }>();
 
 const userCount = computed(() => props.activeUsers.length);
-const displayRole = (role: string) => {
-    if (role.toLowerCase() === 'official') {
-        return 'Barangay Official';
-    }
-    return role;
-};
+const avatarProps = computed(() => getAvatarProps(props.user));
 </script>
 
 <template>
@@ -52,18 +49,22 @@ const displayRole = (role: string) => {
                         class="flex items-center justify-between rounded-lg bg-muted/40 p-3">
                         <!-- User info section -->
                         <div class="flex items-center space-x-3 flex-1">
-                            <Avatar>
-                                <AvatarImage v-if="user.avatar" :src="user.avatar" :alt="user.name" />
-                                <AvatarFallback>
-                                    {{ getInitials(user.name) }}
-                                </AvatarFallback>
-                            </Avatar>
+                                <Avatar>
+                                    <AvatarImage 
+                                        v-if="getAvatarProps(user).showAvatar" 
+                                        :src="getAvatarProps(user).src" 
+                                        :alt="getAvatarProps(user).alt" 
+                                    />
+                                    <AvatarFallback>
+                                        {{ getAvatarProps(user).fallback }}
+                                    </AvatarFallback>
+                                </Avatar>
                             <div>
                                 <p class="text-sm font-medium leading-none">
                                     {{ user.name }}
                                 </p>
                                 <p class="text-sm text-muted-foreground capitalize">
-                                    {{ displayRole(user.role) }}
+                                    {{ getDisplayRole(user.role) }}
                                 </p>
                             </div>
                         </div>

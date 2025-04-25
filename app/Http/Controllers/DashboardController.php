@@ -13,11 +13,38 @@ class DashboardController extends Controller
     public function index()
     {
         $users = User::query()
-            ->where('status', 'active')  
+            ->where('status', 'active')
+            ->where('role', 'official')  
+            ->get();
+    
+        $myRequests = RequestModel::where('created_by', auth()->id())
+            ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
+            ->withCount(['files'])
+            ->get();
+    
+        $collaborativeRequests = RequestModel::whereHas('collaborators', function($query) {
+            $query->where('user_id', auth()->id());
+        })
+            ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
+            ->withCount(['files'])
             ->get();
     
         return Inertia::render('Dashboard', [
-            'activeUsers' => $users
+            'activeUsers' => $users,
+            'requestStats' => [
+                'single' => [
+                    'requestForms' => $myRequests->count(),
+                    'quotations' => $myRequests->where('category', 'quotation')->count(),
+                    'purchaseRequests' => $myRequests->where('category', 'purchase_request')->count(),
+                    'purchaseOrders' => $myRequests->where('category', 'purchase_order')->count(),
+                ],
+                'collaborative' => [
+                    'requestForms' => $collaborativeRequests->count(),
+                    'quotations' => $collaborativeRequests->where('category', 'quotation')->count(),
+                    'purchaseRequests' => $collaborativeRequests->where('category', 'purchase_request')->count(),
+                    'purchaseOrders' => $collaborativeRequests->where('category', 'purchase_order')->count(),
+                ]
+            ]
         ]);
     }
     
@@ -60,8 +87,19 @@ class DashboardController extends Controller
 
     public function show($id)
     {
-        $request = RequestModel::with(['collaborators', 'files', 'creator'])
+        $request = RequestModel::with(['creator', 'collaborators', 'files'])
             ->findOrFail($id);
+
+        $userPermission = 'view';
+        
+        if ($request->created_by === auth()->id()) {
+            $userPermission = 'owner';
+        } else {
+            $collaborator = $request->collaborators->where('id', auth()->id())->first();
+            if ($collaborator) {
+                $userPermission = $collaborator->pivot->permission;
+            }
+        }
 
         return Inertia::render('RequestView', [
             'request' => [
@@ -71,17 +109,19 @@ class DashboardController extends Controller
                 'description' => $request->description,
                 'status' => $request->status,
                 'created_at' => $request->created_at->format('Y-m-d'),
+                'created_by' => $request->creator->name,
                 'collaborators' => $request->collaborators->map(fn($c) => [
                     'name' => $c->name,
-                    'role' => $c->role
+                    'role' => $c->role,
+                    'permission' => $c->pivot->permission
                 ]),
                 'files' => $request->files->map(fn($f) => [
                     'name' => $f->name,
                     'size' => $f->size,
-                    'uploaded_at' => $f->created_at->format('Y-m-d')
+                    'uploaded_at' => $f->created_at->format('Y-m-d'),
                 ]),
-                'created_by' => $request->creator->name
-            ]
+            ],
+            'userPermission' => $userPermission 
         ]);
     }
 }

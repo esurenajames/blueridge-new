@@ -11,10 +11,10 @@ use Inertia\Inertia;
 class RequestController extends Controller
 {
 
-    public function index()
+    public function index($tab = 'all')
     {
         $baseQuery = RequestModel::query()
-            ->with(['creator', 'collaborators'])
+            ->with(['creator', 'collaborators', 'quotation', 'purchaseRequest', 'purchaseOrder'])
             ->where(function ($query) {
                 $query->where('created_by', auth()->id())
                     ->orWhereHas('collaborators', function ($q) {
@@ -22,28 +22,63 @@ class RequestController extends Controller
                     });
             });
     
-        $activeRequests = (clone $baseQuery)
-            ->whereNotIn('status', ['completed', 'voided'])
+        // Get all active requests including drafts for the 'all' tab
+        $allRequests = (clone $baseQuery)
+            ->whereIn('status', ['pending', 'draft'])
             ->latest()
             ->get();
     
+        // Get requests that are in form stage (pending only, no entries in other tables)
+        $formRequests = (clone $baseQuery)
+            ->where('status', 'pending')
+            ->whereDoesntHave('quotation')
+            ->whereDoesntHave('purchaseRequest')
+            ->whereDoesntHave('purchaseOrder')
+            ->latest()
+            ->get();
+    
+        // Get requests that are in quotation stage
+        $quotationRequests = (clone $baseQuery)
+            ->whereHas('quotation', function($query) {
+                $query->where('status', 'pending');
+            })
+            ->latest()
+            ->get();
+    
+        // Get requests that are in purchase request stage
+        $purchaseRequestRequests = (clone $baseQuery)
+            ->whereHas('purchaseRequest', function($query) {
+                $query->where('status', 'pending');
+            })
+            ->latest()
+            ->get();
+    
+        // Get requests that are in purchase order stage
+        $purchaseOrderRequests = (clone $baseQuery)
+            ->whereHas('purchaseOrder', function($query) {
+                $query->where('status', 'pending');
+            })
+            ->latest()
+            ->get();
+    
+        // Get completed or voided requests
         $historicalRequests = (clone $baseQuery)
             ->whereIn('status', ['completed', 'voided'])
             ->latest()
             ->get();
     
         $transformedRequests = collect([
-            'all' => $activeRequests,
-            'form' => $activeRequests->where('category', 'form'),
-            'quotation' => $activeRequests->where('category', 'quotation'),
-            'purchase-request' => $activeRequests->where('category', 'purchase-request'),
-            'purchase-order' => $activeRequests->where('category', 'purchase-order'),
+            'all' => $allRequests,
+            'form' => $formRequests,
+            'quotation' => $quotationRequests,
+            'purchase-request' => $purchaseRequestRequests,
+            'purchase-order' => $purchaseOrderRequests,
             'history' => $historicalRequests
-        ])->map(function ($requests) {
+        ])->map(function ($requests) {  
             return $requests->map(function ($request) {
                 return [
                     'id' => $request->id,
-                    'name' => $request->name,
+                    'title' => $request->name,
                     'category' => $request->category,
                     'status' => $request->status,
                     'description' => $request->description,
@@ -53,13 +88,26 @@ class RequestController extends Controller
                         'id' => $collaborator->id,
                         'name' => $collaborator->name,
                         'permission' => $collaborator->pivot->permission
-                    ])
+                    ]),
+                    'quotation' => $request->quotation ? [
+                        'remarks' => $request->quotation->remarks,
+                        'status' => $request->quotation->status
+                    ] : null,
+                    'purchase_request' => $request->purchaseRequest ? [
+                        'remarks' => $request->purchaseRequest->remarks,
+                        'status' => $request->purchaseRequest->status
+                    ] : null,
+                    'purchase_order' => $request->purchaseOrder ? [
+                        'remarks' => $request->purchaseOrder->remarks,
+                        'status' => $request->purchaseOrder->status
+                    ] : null
                 ];
             });
         });
-    
+
         return Inertia::render('RequestViewAll', [
-            'requests' => $transformedRequests
+            'requests' => $transformedRequests,
+            'initialTab' => $tab,
         ]);
     }
 

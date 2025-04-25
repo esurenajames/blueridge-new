@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Quotation extends Model
 {
+    protected $table = 'request_quotations';
     protected $fillable = [
         'request_id',
         'status',

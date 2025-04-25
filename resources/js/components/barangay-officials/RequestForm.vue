@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast/use-toast';
 import { Users, Upload, FileText, X, Check, Eye, Edit2 } from 'lucide-vue-next';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getAvatarProps } from '@/utils/avatar';
 
 const props = defineProps<{
   show: boolean;
@@ -224,8 +226,7 @@ const onSubmit = () => {
             :step="item.step"
           >
             <StepperTrigger 
-              class="cursor-pointer select-none"
-              @click="handleStepChange(item.step)"
+              class="select-none cursor-default pointer-events-none"
             >
               <StepperIndicator>
                 <component 
@@ -326,9 +327,16 @@ const onSubmit = () => {
               class="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
             >
               <div class="flex items-center gap-3 flex-1">
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                  <Users class="h-5 w-5 text-primary" />
-                </div>
+                <Avatar class="h-8 w-8">
+                  <AvatarImage 
+                    v-if="getAvatarProps(collaborator).showAvatar" 
+                    :src="getAvatarProps(collaborator).src" 
+                    :alt="getAvatarProps(collaborator).alt" 
+                  />
+                  <AvatarFallback class="bg-primary/10">
+                    {{ getAvatarProps(collaborator).fallback }}
+                  </AvatarFallback>
+                </Avatar>
                 <div class="flex flex-col min-w-0">
                   <span class="text-sm font-medium truncate">{{ collaborator.name }}</span>
                   <span class="text-xs text-muted-foreground capitalize">{{ collaborator.role }}</span>

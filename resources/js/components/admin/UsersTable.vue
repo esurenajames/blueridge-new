@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useInitials } from '@/composables/useInitials';
 import GenerateKey from './GenerateKey.vue';
 import { FileX } from 'lucide-vue-next'; 
+import { getDisplayRole } from '@/utils/roles';
 
 interface User {
   id: number;
@@ -124,12 +125,6 @@ const getStatusBadgeVariant = (status: string) => {
   return status === 'active' ? 'secondary' : 'destructive';
 };
 
-const displayRole = (role: string) => {
-    if (role.toLowerCase() === 'official') {
-        return 'Barangay Official';
-    }
-    return role;
-};
 </script>
 
 <template>
@@ -193,7 +188,7 @@ const displayRole = (role: string) => {
                         <TableCell class="hidden sm:table-cell">{{ user.email }}</TableCell>
                         <TableCell>
                             <Badge :variant="getRoleBadgeVariant(user.role)" class="capitalize">
-                                {{ displayRole(user.role) }}
+                                {{ getDisplayRole(user.role) }}
                             </Badge>
                         </TableCell>
                         <TableCell>

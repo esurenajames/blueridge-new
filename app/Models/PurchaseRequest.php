@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseRequest extends Model
 {
+    protected $table = 'request_purchase_requests';
     protected $fillable = [
         'request_id',
         'status',
