@@ -54,10 +54,13 @@ class User extends Authenticatable
         ];
     }
 
-    public function getCreatedAgoAttribute()
-{
-    return $this->created_at->diffForHumans();
-}
+    public function getCreatedAgoAttribute($value)
+    {
+        if ($this->created_at) {
+            return $this->created_at->diffForHumans();
+        }
+        return null;
+    }
 
     public function requests()
     {

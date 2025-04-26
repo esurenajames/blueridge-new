@@ -2,10 +2,10 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
-import CreateForm from '../components/barangay-officials/CreateForm.vue';
-import MoodTracker from '../components/Moodtracker.vue';
-import RequestSummary from '../components/barangay-officials/RequestSummary.vue';
+import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
+import CreateForm from '@/components/barangay-officials/CreateForm.vue';
+import MoodTracker from '@/components/Moodtracker.vue';
+import RequestSummary from '@/components/barangay-officials/RequestSummary.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Officials;
 
 use App\Http\Requests\RequestFormRequest;
 use App\Models\Request as RequestModel;
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
-class DashboardController extends Controller
+class OfficialDashboardController extends Controller
 {
     public function index()
     {
@@ -29,7 +30,7 @@ class DashboardController extends Controller
             ->withCount(['files'])
             ->get();
     
-        return Inertia::render('Dashboard', [
+        return Inertia::render('officials/Dashboard', [
             'activeUsers' => $users,
             'requestStats' => [
                 'single' => [
@@ -83,45 +84,5 @@ class DashboardController extends Controller
         return to_route('requests.view', [
             'id' => $newRequest->id
         ])->with('success', 'Request created successfully');
-    }
-
-    public function show($id)
-    {
-        $request = RequestModel::with(['creator', 'collaborators', 'files'])
-            ->findOrFail($id);
-
-        $userPermission = 'view';
-        
-        if ($request->created_by === auth()->id()) {
-            $userPermission = 'owner';
-        } else {
-            $collaborator = $request->collaborators->where('id', auth()->id())->first();
-            if ($collaborator) {
-                $userPermission = $collaborator->pivot->permission;
-            }
-        }
-
-        return Inertia::render('RequestView', [
-            'request' => [
-                'id' => $request->id,
-                'title' => $request->name,
-                'category' => $request->category,
-                'description' => $request->description,
-                'status' => $request->status,
-                'created_at' => $request->created_at->format('Y-m-d'),
-                'created_by' => $request->creator->name,
-                'collaborators' => $request->collaborators->map(fn($c) => [
-                    'name' => $c->name,
-                    'role' => $c->role,
-                    'permission' => $c->pivot->permission
-                ]),
-                'files' => $request->files->map(fn($f) => [
-                    'name' => $f->name,
-                    'size' => $f->size,
-                    'uploaded_at' => $f->created_at->format('Y-m-d'),
-                ]),
-            ],
-            'userPermission' => $userPermission 
-        ]);
     }
 }

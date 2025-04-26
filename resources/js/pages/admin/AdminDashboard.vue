@@ -2,20 +2,38 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head, usePage } from '@inertiajs/vue3';
-import PlaceholderPattern from '../components/PlaceholderPattern.vue';
-import CreateForm from '../components/barangay-officials/CreateForm.vue';
-import MoodTracker from '../components/Moodtracker.vue';
-import RequestSummary from '../components/barangay-officials/RequestSummary.vue';
+import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
+import ActiveUser from '@/components/admin/CurrentUsers.vue';
+import UserStats from '@/components/admin/UserStats.vue';
+import UserRoleDistribution from '@/components/admin/UserRoleDistribution.vue';
+import MoodTracker from '@/components/Moodtracker.vue';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Dashboard',
-        href: '/dashboard',
+        href: '/admin/dashboard',
     },
 ];
 
-const page = usePage();
-const { auth, activeUsers, requestStats } = page.props;
+defineProps<{
+    activeUsers: Array<{
+        id: number;
+        name: string;
+        role: string;
+        status: string;
+        last_active: string;
+    }>;
+    userStats: {
+        total: number;
+        active: number;
+        inactive: number;
+        roles: {
+            [key: string]: number;
+        };
+    };
+}>();
+
+const { auth } = usePage().props;
 </script>
 
 <template>
@@ -26,18 +44,16 @@ const { auth, activeUsers, requestStats } = page.props;
             <div class="grid  gap-6 md:grid-cols-3 relative">
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
                      <div class="flex-1 w-full">
-                        <CreateForm 
-                          class="h-full"
-                          :active-users="activeUsers"
-                        />
+                        <UserStats 
+                        :total="userStats.total"
+                        :active="userStats.active"
+                        :inactive="userStats.inactive"
+                    />
                      </div>
                 </div>
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
                      <div class="flex-1 w-full ">
-                        <RequestSummary 
-                            :request-stats="requestStats"
-                            class="h-full"
-                        />
+                        <UserRoleDistribution :roles="userStats.roles" class="h-full" />
                      </div>
                 </div>
                 <div class="flex rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border">
@@ -48,7 +64,7 @@ const { auth, activeUsers, requestStats } = page.props;
             </div>
             <div class="flex flex-1 rounded-xl relative border border-sidebar-border/70 dark:border-sidebar-border min-h-[500px] mb-2">
                 <div class="flex-1 w-full">
-                    <PlaceholderPattern class="h-full" />
+                    <ActiveUser :active-users="activeUsers" class="h-full"/>
                 </div>
             </div>
         </div>

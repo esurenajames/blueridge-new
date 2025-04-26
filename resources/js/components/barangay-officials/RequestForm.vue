@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/toast/use-toast';
 import { Users, Upload, FileText, X, Check, Eye, Edit2 } from 'lucide-vue-next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAvatarProps } from '@/utils/avatar';
+import { getDisplayRole } from '@/utils/roles';
 
 const props = defineProps<{
   show: boolean;
@@ -339,7 +340,7 @@ const onSubmit = () => {
                 </Avatar>
                 <div class="flex flex-col min-w-0">
                   <span class="text-sm font-medium truncate">{{ collaborator.name }}</span>
-                  <span class="text-xs text-muted-foreground capitalize">{{ collaborator.role }}</span>
+                  <span class="text-xs text-muted-foreground capitalize">{{ getDisplayRole(collaborator.role) }}</span>
                 </div>
               </div>
 
@@ -413,7 +414,7 @@ const onSubmit = () => {
               multiple
               @change.prevent="handleFileUpload"
             />
-                        <Upload class="size-8 mx-auto text-muted-foreground mb-4" />
+            <Upload class="size-8 mx-auto text-muted-foreground mb-4" />
             <div class="space-y-2">
               <Button 
                 type="button" 

@@ -1,40 +1,62 @@
 <?php
 
-use App\Http\Controllers\AdminDashboardController;
-use App\Http\Controllers\CaptainController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\RequestController;
-use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Captain\CaptainRequestController;
+use App\Http\Controllers\Captain\CaptainController;
+use App\Http\Controllers\Officials\OfficialDashboardController;
+use App\Http\Controllers\Officials\OfficialRequestController;
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
 Route::get('/', function () {
     return Inertia::render('Welcome');
 })->name('home');
 
-// Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
-//     // ...existing routes...
-//     Route::get('/active-users', [DashboardController::class, 'getActiveUsers'])->name('users.active');
-// });
+Route::get('unauthorized', function () {
+    return Inertia::render('Unauthorize');
+})->name('unauthorized');
 
-Route::get('dashboard', [DashboardController::class, 'index'])
+/*
+|--------------------------------------------------------------------------
+| Official Routes
+|--------------------------------------------------------------------------
+*/
+// Official Dashboard
+Route::get('dashboard', [OfficialDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:official'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'role:official' ])->group(function () {
-    Route::get('/requests/{tab?}', [RequestController::class, 'index'])->name('requests.index');
-    Route::post('/dashboard/store-request', [DashboardController::class, 'storeRequest'])->name('dashboard.store-request');
-    Route::get('/requests/view/{id}', [DashboardController::class, 'show'])->name('requests.view');
-    Route::post('/requests/{id}/process', [RequestController::class, 'process'])->name('requests.process');
-    Route::post('/requests/{id}/void', [RequestController::class, 'void'])->name('requests.void');
-    Route::get('requests/{id}/download/{filename}', [RequestController::class, 'downloadFile'])->name('requests.download-file');
-    Route::get('/requests/statistics', [RequestController::class, 'getStatistics'])->name('requests.statistics');
+Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
+    // Request Viewing and Creation
+    Route::get('/requests/{tab?}', [OfficialRequestController::class, 'index'])->name('requests.index');
+    Route::get('/requests/view/{id}', [OfficialRequestController::class, 'show'])->name('requests.view');
+    Route::post('/dashboard/store-request', [OfficialDashboardController::class, 'storeRequest'])->name('dashboard.store-request');
+    
+    // Request View Actions
+    Route::post('/requests/{id}', [OfficialRequestController::class, 'update'])->name('requests.update');
+    Route::post('/requests/{id}/process', [OfficialRequestController::class, 'process'])->name('requests.process');
+    Route::post('/requests/{id}/void', [OfficialRequestController::class, 'void'])->name('requests.void');
+    Route::get('requests/{id}/download/{filename}', [OfficialRequestController::class, 'downloadFile'])->name('requests.download-file'); 
 });
 
+/*
+|--------------------------------------------------------------------------
+| Admin Routes
+|--------------------------------------------------------------------------
+*/
+// Admin Dashboard
 Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:admin'])
     ->name('admin.dashboard');
 
+// User Management
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/users', [UserManagementController::class, 'create'])->name('admin.users.create');
@@ -43,28 +65,46 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::put('/users/{user}/password', [UserManagementController::class, 'updatePassword'])->name('admin.users.update-password');
 });
 
-
+/*
+|--------------------------------------------------------------------------
+| Captain Routes
+|--------------------------------------------------------------------------
+*/
 Route::get('captain/dashboard', [CaptainController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:captain'])
     ->name('captain.dashboard');
 
-
-
-// Route::get('secretary/dashboard', function () {
-//     return Inertia::render('SecretaryDashboard');
-// })->middleware(['auth', 'verified', 'role:secretary'])->name('secretary.dashboard');
-
-// Route::get('treasurer/dashboard', function () {
-//     return Inertia::render('TreasurerDashboard');
-// })->middleware(['auth', 'verified', 'role:treasurer'])->name('treasurer.dashboard');
-
-// Route::middleware(['auth', 'role:admin'])->group(function () {
-//     Route::get('/admin/active-users', [ActiveUserController::class, 'index'])->name('admin.active-users');
-// });
-
-Route::get('unauthorized', function () {
-    return Inertia::render('Unauthorize');
-})->name('unauthorized');
-
+/*
+|--------------------------------------------------------------------------
+| Additional Route Files
+|--------------------------------------------------------------------------
+*/
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Commented Routes (For Future Reference)
+|--------------------------------------------------------------------------
+*/
+// Secretary & Treasurer Routes (Currently Disabled)
+/*
+Route::get('secretary/dashboard', function () {
+    return Inertia::render('SecretaryDashboard');
+})->middleware(['auth', 'verified', 'role:secretary'])->name('secretary.dashboard');
+
+Route::get('treasurer/dashboard', function () {
+    return Inertia::render('TreasurerDashboard');
+})->middleware(['auth', 'verified', 'role:treasurer'])->name('treasurer.dashboard');
+*/
+
+// Active Users Routes (Currently Disabled)
+/*
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/admin/active-users', [ActiveUserController::class, 'index'])->name('admin.active-users');
+});
+
+Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
+    Route::get('/active-users', [DashboardController::class, 'getActiveUsers'])->name('users.active');
+});
+*/

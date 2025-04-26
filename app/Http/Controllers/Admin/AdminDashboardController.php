@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 
 class AdminDashboardController extends Controller
@@ -25,7 +26,7 @@ class AdminDashboardController extends Controller
             ->map(fn ($group) => $group->count())
             ->toArray();
 
-        return Inertia::render('AdminDashboard', [
+        return Inertia::render('admin/AdminDashboard', [
             'activeUsers' => $users,
             'userStats' => [
                 ...$userStats,
