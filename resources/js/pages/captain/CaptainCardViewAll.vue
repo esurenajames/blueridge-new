@@ -37,15 +37,8 @@ const viewRequest = (id: number) => {
     <template v-if="requests.length">
       <Card v-for="request in requests" :key="request.id" class="hover:bg-accent/5">
         <CardHeader>
-          <div class="flex justify-between items-center">
+          <div class="flex items-center">
             <CardTitle class="text-lg">{{ request.title }}</CardTitle>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              @click="viewRequest(request.id)"
-            >
-              <Eye class="h-4 w-4" />
-            </Button>
           </div>
         </CardHeader>
         <CardContent>
