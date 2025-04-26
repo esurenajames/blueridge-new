@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Officials;
 use App\Http\Requests\RequestFormRequest;
 use App\Models\RequestFile;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Request as RequestModel;
@@ -142,6 +143,8 @@ class OfficialRequestController extends Controller
     {
         $request = RequestModel::findOrFail($id);
         $request->status = 'pending';
+        $request->processed_by = auth()->id();
+        $request->processed_at = now();
         $request->save();
     
         return back()->with([
@@ -164,28 +167,30 @@ class OfficialRequestController extends Controller
 
     public function show($id)
     {
-        $request = RequestModel::with(['creator', 'collaborators', 'files'])
-            ->findOrFail($id);
+    $request = RequestModel::with(['creator', 'collaborators', 'files', 'processor'])
+        ->findOrFail($id);
 
-        $userPermission = 'view';
-        
-        if ($request->created_by === auth()->id()) {
-            $userPermission = 'owner';
-        } else {
-            $collaborator = $request->collaborators->where('id', auth()->id())->first();
-            if ($collaborator) {
-                $userPermission = $collaborator->pivot->permission;
-            }
+    $userPermission = 'view';
+    
+    if ($request->created_by === auth()->id()) {
+        $userPermission = 'owner';
+    } else {
+        $collaborator = $request->collaborators->where('id', auth()->id())->first();
+        if ($collaborator) {
+            $userPermission = $collaborator->pivot->permission;
         }
+    }
 
-        // Filter out users who are already collaborators
-        $existingCollaboratorIds = $request->collaborators->pluck('id')->toArray();
-        $activeUsers = User::query()
-            ->where('status', 'active')
-            ->where('role', 'official')
-            ->whereNotIn('id', $existingCollaboratorIds)  // Exclude existing collaborators
-            ->select('id', 'name', 'role')
-            ->get();
+    $activeUsers = User::query()
+        ->where('status', 'active')
+        ->where('role', 'official')
+        ->whereNotIn('id', [
+            $request->created_by,  
+            auth()->id()         
+        ])
+        ->whereNotIn('id', $request->collaborators->pluck('id')) // Exclude existing collaborators
+        ->select('id', 'name', 'role')
+        ->get();
 
         return Inertia::render('officials/RequestView', [
             'request' => [
@@ -196,8 +201,10 @@ class OfficialRequestController extends Controller
                 'status' => $request->status,
                 'created_at' => $request->created_at->format('Y-m-d'),
                 'created_by' => $request->creator->name,
+                'processed_by' => $request->processor ? $request->processor->name : null,
+                'processed_at' => $request->processed_at ? Carbon::parse($request->processed_at)->format('Y-m-d') : null,
                 'collaborators' => $request->collaborators->map(fn($c) => [
-                    'id' => $c->id,  // Include the ID in collaborator data
+                    'id' => $c->id,  
                     'name' => $c->name,
                     'role' => $c->role,
                     'permission' => $c->pivot->permission

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('request_purchase_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('request_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['pending', 'approved', 'declined'])->default('pending');
+            $table->enum('status', ['pending', 'approved', 'declined', 'returned'])->default('pending');
             $table->unsignedBigInteger('processed_by')->nullable();
             $table->timestamp('processed_at')->nullable();
             $table->timestamps();

@@ -63,6 +63,8 @@ const props = defineProps<{
     status: 'draft' | 'pending' | 'approved' | 'declined' | 'voided' | 'completed';
     created_at: string;
     created_by: string;
+    processed_by?: string;
+    processed_at?: string;
     collaborators?: Array<{
       name: string;
       role: string;
@@ -434,28 +436,61 @@ const downloadFile = (file: { name: string }) => {
                 >
                   This request has been voided and cannot be modified.
                 </div>
-                <div 
-                  v-if="request.status === 'voided'"
-                  class="text-sm text-muted-foreground text-center p-2"
-                >
-                  This request has been voided and cannot be modified.
-                </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader class="pb-6">
-              <CardTitle>Timeline</CardTitle>
-              <CardDescription>Request created on {{ request.created_at }}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                <User class="h-4 w-4" />
-                <span>Created by {{ request.created_by }}</span>
+        <Card>
+          <CardHeader class="pb-6">
+            <CardTitle>Timeline</CardTitle>
+            <CardDescription>Request activity history</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-px before:bg-muted">
+              <!-- Created Event -->
+              <div class="relative flex items-start gap-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
+                  <User class="h-4 w-4 text-primary" />
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <p class="text-sm font-medium">Request Created</p>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-muted-foreground">by {{ request.created_by }} - {{ request.created_at }}</span>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+
+              <div 
+                v-if="request.processed_by && request.processed_at" 
+                class="relative flex items-start gap-4"
+              >
+                <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
+                  <Clock class="h-4 w-4 text-primary" />
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <p class="text-sm font-medium">Request Processed</p>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-muted-foreground">by {{ request.processed_by }} - {{ request.processed_at }} </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="relative flex items-start gap-4">
+                <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
+                  <component 
+                    :is="statusConfig.icon" 
+                    class="h-4 w-4"
+                    :class="statusConfig.iconClass"
+                  />
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <p class="text-sm font-medium capitalize">Status: {{ request.status }}</p>
+                  <span class="text-xs text-muted-foreground">{{ statusConfig.message }}</span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
         </div>
       </div>
     </div>

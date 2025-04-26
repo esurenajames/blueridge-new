@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Captain\CaptainDashboardController;
 use App\Http\Controllers\Captain\CaptainRequestController;
-use App\Http\Controllers\Captain\CaptainController;
 use App\Http\Controllers\Officials\OfficialDashboardController;
 use App\Http\Controllers\Officials\OfficialRequestController;
 
@@ -70,9 +70,17 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 | Captain Routes
 |--------------------------------------------------------------------------
 */
-Route::get('captain/dashboard', [CaptainController::class, 'index'])
-    ->middleware(['auth', 'verified', 'role:captain'])
-    ->name('captain.dashboard');
+Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
+    // Captain Dashboard
+    Route::get('/captain/dashboard', [CaptainDashboardController::class, 'index'])
+        ->name('captain.dashboard');
+    
+    // Request Management
+    Route::get('/captain/requests', [CaptainRequestController::class, 'index'])
+        ->name('captain.requests');
+    Route::get('/captain/requests/{id}', [CaptainRequestController::class, 'show'])
+        ->name('captain.requests.view');
+});
 
 /*
 |--------------------------------------------------------------------------

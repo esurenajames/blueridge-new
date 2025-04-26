@@ -16,7 +16,8 @@ return new class extends Migration
             $table->string('name');
             $table->string('category');
             $table->text('description')->nullable();
-            $table->enum('status', ['draft', 'pending', 'approved', 'declined', 'voided'])->default('draft');
+            $table->enum('status', ['draft','pending','approved','declined','voided', 'returned'])->default('draft');
+            $table->boolean('is_completed')->default(false);
             $table->unsignedBigInteger('created_by');
             $table->timestamps();
     

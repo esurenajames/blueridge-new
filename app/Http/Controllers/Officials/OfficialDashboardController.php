@@ -15,7 +15,8 @@ class OfficialDashboardController extends Controller
     {
         $users = User::query()
             ->where('status', 'active')
-            ->where('role', 'official')  
+            ->where('role', 'official')
+            ->where('id', '!=', auth()->id())  
             ->get();
     
         $myRequests = RequestModel::where('created_by', auth()->id())
