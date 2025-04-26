@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'View All Requests',
-        href: '/admin/requests',
+        href: route('requests.index'),  // Changed from '/admin/requests'
     },
 ];
 
@@ -42,7 +42,6 @@ interface RequestsByTab {
     history: Request[];
 }
 
-// Accept initialTab from backend
 const { requests, initialTab } = usePage().props as {
     requests: RequestsByTab;
     initialTab: string;
@@ -84,6 +83,13 @@ watch(currentTab, (newTab) => {
     if (newTab !== initialTab) {
         router.visit(route('requests.index', { tab: newTab }), { replace: true, preserveState: true });
     }
+});
+
+const page = usePage();
+const user = computed(() => {
+    console.log('Full auth props:', page.props.auth);
+    console.log('User object:', page.props.auth?.user);
+    return page.props.auth.user;
 });
 </script>
 

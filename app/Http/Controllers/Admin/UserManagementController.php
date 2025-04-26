@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\UserRequest;
 use App\Http\Resources\UserManagementResource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -15,7 +16,7 @@ class UserManagementController extends Controller
     {
         $users = User::orderBy('created_at', 'desc')->get();
     
-        return Inertia::render('UserManagement', [
+        return Inertia::render('admin/UserManagement', [
             'users' => UserManagementResource::collection($users)->toArray(request()),
         ]);
     }

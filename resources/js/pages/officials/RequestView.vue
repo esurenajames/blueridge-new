@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, Edit2, CheckCircle2, XCircle, User, Calendar, CheckCircle, AlertCircle, Circle, Check, Circle as Dot, FileText, Download, RefreshCw } from 'lucide-vue-next';
@@ -12,15 +12,18 @@ import Confirmation from '@/components/Confirmation.vue';
 import { getDisplayRole } from '@/utils/roles';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAvatarProps } from '@/utils/avatar';
+import EditRequestForm  from '@/components/barangay-officials/EditRequestForm.vue';
 
 const { toast } = useToast();
-
+const showEditModal = ref(false);
 const confirmationState = ref({
   show: false,
   title: '',
   description: '',
   action: null as (() => void) | null
 });
+const page = usePage();
+const activeUsers = page.props.activeUsers;
 
 const showConfirmation = (title: string, description: string, action: () => void) => {
   confirmationState.value = {
@@ -40,6 +43,15 @@ const handleConfirm = () => {
 
 const handleCancel = () => {
   confirmationState.value.show = false;
+};
+
+const handleEdit = () => {
+  showEditModal.value = true;
+};
+
+// Add this method to handle form close
+const handleEditClose = () => {
+  showEditModal.value = false;
 };
 
 const props = defineProps<{
@@ -228,6 +240,14 @@ const downloadFile = (file: { name: string }) => {
         @confirm="handleConfirm"
         @cancel="handleCancel"
       />
+      <EditRequestForm
+        v-if="showEditModal"
+        :show="showEditModal"
+        :request="request"
+        :active-users="activeUsers ?? []"
+        @close="handleEditClose"
+      />
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card class="md:col-span-2">
           <CardHeader class="pb-6">
@@ -245,7 +265,7 @@ const downloadFile = (file: { name: string }) => {
                 v-if="request.status === 'draft' && canEdit"
                 variant="default"
                 class="gap-2"
-               
+                @click="handleEdit"
               >
                 <component :is="Edit2" class="h-4 w-4" />
                 Edit Request
