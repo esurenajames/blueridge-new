@@ -16,16 +16,25 @@ class CaptainRequestController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($request) {
-                $progress = 25; // Start with form completion (25%)
+                $progress = 0; // Start with 0 progress for pending requests
                 
-                if ($request->quotation) {
+                // Only add progress if request is not pending and has related records
+                if ($request->status !== 'pending') {
+                    // Form completion
                     $progress += 25;
-                }
-                if ($request->purchaseRequest) {
-                    $progress += 25;
-                }
-                if ($request->purchaseOrder) {
-                    $progress += 25;
+                    
+                    // Check for actual quotation record
+                    if ($request->quotation()->exists()) {
+                        $progress += 25;
+                    }
+                    
+                    if ($request->purchaseRequest()->exists()) {
+                        $progress += 25;
+                    }
+                    
+                    if ($request->purchaseOrder()->exists()) {
+                        $progress += 25;
+                    }
                 }
     
                 return [
@@ -38,10 +47,10 @@ class CaptainRequestController extends Controller
                     'created_by' => $request->creator ? $request->creator->name : 'Unknown User',
                     'progress' => $progress,
                     'stages' => [
-                        'form' => true, // Always true since it exists
-                        'quotation' => (bool)$request->quotation,
-                        'purchaseRequest' => (bool)$request->purchaseRequest,
-                        'purchaseOrder' => (bool)$request->purchaseOrder,
+                        'form' => $request->status !== 'pending', // Only true if not pending
+                        'quotation' => $request->quotation()->exists(),
+                        'purchaseRequest' => $request->purchaseRequest()->exists(),
+                        'purchaseOrder' => $request->purchaseOrder()->exists(),
                     ],
                     'collaborators' => $request->collaborators->map(fn($c) => [
                         'id' => $c->id,
@@ -69,7 +78,7 @@ class CaptainRequestController extends Controller
         return Inertia::render('captain/RequestView', [
             'request' => [
                 'id' => $request->id,
-                'title' => $request->name, // Changed from title to name
+                'title' => $request->name, 
                 'category' => $request->category,
                 'description' => $request->description,
                 'status' => $request->status,

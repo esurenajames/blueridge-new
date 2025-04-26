@@ -148,7 +148,7 @@ const user = computed(() => {
                                         <div class="flex items-center justify-between">
                                             <div class="flex flex-col space-y-1.5">
                                                 <div class="flex items-center gap-2">
-                                                    <CardTitle class="text-lg font-semibold">{{ request.name }}</CardTitle>
+                                                    <CardTitle class="text-lg font-semibold">{{ request.title }}</CardTitle>
                                                     <Badge variant="outline" class="capitalize text-xs font-medium">
                                                         {{ request.category }}
                                                     </Badge>

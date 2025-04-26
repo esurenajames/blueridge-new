@@ -37,7 +37,6 @@ const viewRequest = (id: number) => {
         <TableHead>Status</TableHead>
         <TableHead>Created By</TableHead>
         <TableHead>Created At</TableHead>
-        <TableHead class="w-[100px]">Actions</TableHead>
       </TableRow>
     </TableHeader>
     <TableBody>
@@ -69,15 +68,6 @@ const viewRequest = (id: number) => {
         </TableCell>
         <TableCell>{{ request.created_by }}</TableCell>
         <TableCell>{{ request.created_at }}</TableCell>
-        <TableCell>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            @click="viewRequest(request.id)"
-          >
-            <Eye class="h-4 w-4" />
-          </Button>
-        </TableCell>
       </TableRow>
        </template>
        <template v-else>
