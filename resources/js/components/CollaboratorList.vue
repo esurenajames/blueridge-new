@@ -54,6 +54,13 @@ const removeCollaborator = (index: number) => {
   updatedCollaborators.splice(index, 1);
   emit('update:modelValue', updatedCollaborators);
 };
+
+const hasAvailableUsers = computed(() => {
+  return props.activeUsers.some(user => 
+    !props.modelValue.some(collaborator => collaborator.id === user.id)
+  );
+});
+
 </script>
 
 <template>
@@ -69,17 +76,27 @@ const removeCollaborator = (index: number) => {
           <SelectValue placeholder="Select team member" />
         </SelectTrigger>
         <SelectContent class="min-w-[200px]">
-          <SelectItem 
-            v-for="user in activeUsers" 
-            :key="user.id" 
-            :value="user.id.toString()"
+          <template v-if="hasAvailableUsers">
+            <SelectItem 
+              v-for="user in activeUsers" 
+              :key="user.id" 
+              :value="user.id.toString()"
+              v-show="!modelValue.some(c => c.id === user.id)"
+            >
+              {{ user.name }}
+            </SelectItem>
+          </template>
+          <div 
+            v-else 
+            class="relative flex items-center justify-center gap-2 py-6 px-2"
           >
-            {{ user.name }}
-          </SelectItem>
+            <Users class="h-4 w-4 text-muted-foreground/70" />
+            <span class="text-sm text-muted-foreground">No more users available</span>
+          </div>
         </SelectContent>
       </Select>
     </div>
-
+    
     <div v-if="modelValue.length > 0" class="space-y-2">
       <div v-for="(collaborator, index) in modelValue" 
         :key="index"

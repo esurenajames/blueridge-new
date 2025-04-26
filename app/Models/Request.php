@@ -16,8 +16,15 @@ class Request extends Model
         'category',
         'description',
         'status',
-        'created_by'
+        'created_by',
+        'processed_by',
+        'processed_at'
     ];
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function creator(): BelongsTo
     {
@@ -49,5 +56,10 @@ class Request extends Model
         return $this->belongsToMany(User::class, 'request_collaborators')
             ->withPivot('permission')
             ->withTimestamps();
+    }
+
+    public function processor()
+    {
+    return $this->belongsTo(User::class, 'processed_by');
     }
 }

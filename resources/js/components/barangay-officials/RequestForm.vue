@@ -9,10 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/toast/use-toast';
-import { Users, Upload, FileText, X, Check, Eye, Edit2 } from 'lucide-vue-next';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getAvatarProps } from '@/utils/avatar';
-import { getDisplayRole } from '@/utils/roles';
+import { Users, Upload, FileText, Check } from 'lucide-vue-next';
+import FileUpload from '@/components/FileUpload.vue';
+import CollaboratorList from '@/components/CollaboratorList.vue';
 
 const props = defineProps<{
   show: boolean;
@@ -61,8 +60,8 @@ const { value: categoryValue, errorMessage: categoryError } = useField<string>('
 const { value: descriptionValue, errorMessage: descriptionError } = useField<string>('description');
 
 const { toast } = useToast();
-const fileInputRef = ref<HTMLInputElement | null>(null);
 const uploadedFiles = ref<File[]>([]);
+const selectedCollaborators = ref<Array<{ id: string; name: string; role: string; permission: 'view' | 'edit' }>>([]);
 
 const isStep1Valid = ref(false);
 
@@ -97,48 +96,6 @@ const handleStepChange = (step: number) => {
   } else {
     currentStep.value = step;
   }
-};
-
-const handleFileUpload = (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  if (input.files) {
-    const newFiles = Array.from(input.files);
-    uploadedFiles.value = [...uploadedFiles.value, ...newFiles];
-  }
-};
-
-const removeFile = (index: number) => {
-  uploadedFiles.value.splice(index, 1);
-};
-
-interface Collaborator {
-  id: string;
-  name: string;
-  role: string;
-  permission: 'view' | 'edit';
-}
-
-const selectedCollaborators = ref<Collaborator[]>([]);
-
-const addCollaborator = (userId: string) => {
-  const user = props.activeUsers.find(u => u.id.toString() === userId);
-  if (user && !selectedCollaborators.value.some(c => c.id === user.id.toString())) {
-    const newCollaborator = {
-      id: user.id.toString(),
-      name: user.name,
-      role: user.role,
-      permission: 'view' as const
-    };
-    selectedCollaborators.value.push(newCollaborator);
-  }
-};
-
-const updatePermission = (index: number, permission: 'view' | 'edit') => {
-  selectedCollaborators.value[index].permission = permission;
-};
-
-const removeCollaborator = (index: number) => {
-  selectedCollaborators.value.splice(index, 1);
 };
 
 const form = useForm({
@@ -188,7 +145,6 @@ const onSubmit = () => {
         description: "Request created successfully",
         variant: "success",
       });
-      // Use page.props.request.id instead of response.request.id
       window.location.href = route('requests.view', { id: page.props.request.id });
     },
     onError: (errors) => {
@@ -218,44 +174,37 @@ const onSubmit = () => {
       </DialogHeader>
       
       <form @submit.prevent="onSubmit" class="space-y-4">
-      <div class="flex justify-center">
-        <Stepper v-model="currentStep" class="max-w-[600px]">
-          <StepperItem
-            v-for="item in steps"
-            :key="item.step"
-            class="basis-1/3"
-            :step="item.step"
-          >
-            <StepperTrigger 
-              class="select-none cursor-default pointer-events-none"
+        <div class="flex justify-center">
+          <Stepper v-model="currentStep" class="max-w-[600px]">
+            <StepperItem
+              v-for="item in steps"
+              :key="item.step"
+              class="basis-1/3"
+              :step="item.step"
             >
-              <StepperIndicator>
-                <component 
-                  :is="currentStep > item.step && isStepValid ? Check : item.icon" 
-                  class="w-4 h-4"
-                />
-              </StepperIndicator>
-              <div class="flex flex-col">
-                <StepperTitle>
-                  {{ item.title }}
-                </StepperTitle>
-                <StepperDescription>
-                  {{ item.description }}
-                </StepperDescription>
-              </div>
-            </StepperTrigger>
-            <StepperSeparator
-              v-if="item.step !== steps[steps.length - 1].step"
-              class="w-full h-px"
-            />
-          </StepperItem>
-        </Stepper>
-      </div>
+              <StepperTrigger class="select-none cursor-default pointer-events-none">
+                <StepperIndicator>
+                  <component 
+                    :is="currentStep > item.step && isStepValid ? Check : item.icon" 
+                    class="w-4 h-4"
+                  />
+                </StepperIndicator>
+                <div class="flex flex-col">
+                  <StepperTitle>{{ item.title }}</StepperTitle>
+                  <StepperDescription>{{ item.description }}</StepperDescription>
+                </div>
+              </StepperTrigger>
+              <StepperSeparator
+                v-if="item.step !== steps[steps.length - 1].step"
+                class="w-full h-px"
+              />
+            </StepperItem>
+          </Stepper>
+        </div>
 
-      <div class="mt-8">
-        <!-- Step 1: Request Info -->
-        <div v-if="currentStep === 1" class="space-y-4">
-          <div class="space-y-4">
+        <div class="mt-8">
+          <!-- Step 1: Request Info -->
+          <div v-if="currentStep === 1" class="space-y-4">
             <div class="grid gap-4">
               <div class="space-y-2">
                 <label class="text-sm font-medium">Name of Request</label>
@@ -296,165 +245,26 @@ const onSubmit = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Step 2: Collaborators -->
-        <div v-if="currentStep === 2" class="space-y-4">
-          <div class="space-y-2">
-            <label class="text-sm font-medium">Add Team Members
-              <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
-                Optional
-              </span>
-            </label>
-            <Select @update:modelValue="addCollaborator">
-              <SelectTrigger class="h-9">
-                <SelectValue placeholder="Select team member" />
-              </SelectTrigger>
-              <SelectContent class="min-w-[200px]">
-                <SelectItem 
-                  v-for="user in activeUsers" 
-                  :key="user.id" 
-                  :value="user.id.toString()"
-                >
-                  {{ user.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div v-if="selectedCollaborators.length > 0" class="space-y-2">
-            <div v-for="(collaborator, index) in selectedCollaborators" 
-              :key="index"
-              class="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
-            >
-              <div class="flex items-center gap-3 flex-1">
-                <Avatar class="h-8 w-8">
-                  <AvatarImage 
-                    v-if="getAvatarProps(collaborator).showAvatar" 
-                    :src="getAvatarProps(collaborator).src" 
-                    :alt="getAvatarProps(collaborator).alt" 
-                  />
-                  <AvatarFallback class="bg-primary/10">
-                    {{ getAvatarProps(collaborator).fallback }}
-                  </AvatarFallback>
-                </Avatar>
-                <div class="flex flex-col min-w-0">
-                  <span class="text-sm font-medium truncate">{{ collaborator.name }}</span>
-                  <span class="text-xs text-muted-foreground capitalize">{{ getDisplayRole(collaborator.role) }}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <Select 
-                  :model-value="collaborator.permission"
-                  @update:modelValue="(value) => updatePermission(index, value as 'view' | 'edit')"
-                >
-                  <SelectTrigger class="h-8 w-[100px]">
-                    <SelectValue>
-                      <div class="flex items-center gap-1.5">
-                        <Eye v-if="collaborator.permission === 'view'" class="size-3.5" />
-                        <Edit2 v-else class="size-3.5" />
-                        <span class="capitalize text-xs">{{ collaborator.permission }}</span>
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="view">
-                      <div class="flex items-center gap-1.5">
-                        <Eye class="size-3.5" />
-                        <span>View</span>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="edit">
-                      <div class="flex items-center gap-1.5">
-                        <Edit2 class="size-3.5" />
-                        <span>Edit</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
-                  @click="removeCollaborator(index)"
-                >
-                  <X class="size-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div 
-            v-if="!selectedCollaborators.length" 
-            class="text-sm text-muted-foreground text-center p-6 bg-muted/50 rounded-lg"
-          >
-            <Users class="h-8 w-8 mx-auto mb-3 text-muted-foreground/50" />
-            <p>No collaborators added yet</p>
-          </div>
-        </div>
-
-        <!-- Step 3: Documents -->
-        <div v-if="currentStep === 3" class="space-y-4">
-          <label class="text-sm font-medium">Supporting Documents
-            <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
-              Optional
-            </span>
-          </label>
-          <div
-            class="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors"
-            @dragover.prevent
-            @drop.prevent="handleFileUpload"
-          >
-            <input
-              type="file"
-              ref="fileInputRef"
-              class="hidden"
-              multiple
-              @change.prevent="handleFileUpload"
+          <!-- Step 2: Collaborators -->
+          <div v-if="currentStep === 2">
+            <CollaboratorList
+              v-model="selectedCollaborators"
+              :active-users="activeUsers"
+              :errors="form.errors.collaborators"
             />
-            <Upload class="size-8 mx-auto text-muted-foreground mb-4" />
-            <div class="space-y-2">
-              <Button 
-                type="button" 
-                variant="link" 
-                @click.prevent="(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  fileInputRef?.click();
-                }"
-              >
-                Upload files
-              </Button>
-              <p class="text-sm text-muted-foreground">
-                or drag and drop your files here
-              </p>
-            </div>
           </div>
 
-          <div v-if="uploadedFiles.length > 0" class="space-y-2">
-            <div v-for="(file, index) in uploadedFiles" 
-              :key="index"
-              class="flex items-center gap-2 p-2 bg-muted rounded-md">
-              <FileText class="size-4" />
-              <span class="text-sm">{{ file.name }}</span>
-              <span class="text-xs text-muted-foreground">
-                {{ Math.round(file.size / 1024) }}KB
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="ml-auto h-8 w-8"
-                @click="removeFile(index)"
-              >
-                <X class="size-4" />
-              </Button>
-            </div>
+          <!-- Step 3: Documents -->
+          <div v-if="currentStep === 3">
+            <FileUpload
+              v-model="uploadedFiles"
+              :errors="form.errors.files"
+            />
           </div>
         </div>
-      </div>
-      <div class="flex justify-between mt-6">
+
+        <div class="flex justify-between mt-6">
           <Button
             type="button"
             variant="outline"
@@ -463,24 +273,24 @@ const onSubmit = () => {
           >
             Previous
           </Button>
-        <div class="flex gap-2">
-          <Button
-            v-if="currentStep < steps.length"
-            type="button"
-            @click="handleStepChange(currentStep + 1)"
-            :disabled="currentStep === 1 && !isStep1Valid"
-          >
-            Next
-          </Button>
-          <Button
-            v-if="currentStep === steps.length"
-            type="submit"
-          >
-            Submit Request
-          </Button>
+          <div class="flex gap-2">
+            <Button
+              v-if="currentStep < steps.length"
+              type="button"
+              @click="handleStepChange(currentStep + 1)"
+              :disabled="currentStep === 1 && !isStep1Valid"
+            >
+              Next
+            </Button>
+            <Button
+              v-if="currentStep === steps.length"
+              type="submit"
+            >
+              Submit Request
+            </Button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
     </DialogContent>
   </Dialog>
 </template>

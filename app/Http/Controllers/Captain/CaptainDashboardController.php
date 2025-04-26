@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
 
-class CaptainController extends Controller
+class CaptainDashboardController extends Controller
 {
     function index()
     {
