@@ -12,15 +12,31 @@ use Inertia\Inertia;
 
 class UserManagementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $query = User::query();
+    
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%");
+            });
+        }
+    
+        $users = $query->orderBy('created_at', 'desc')->paginate(10);
     
         return Inertia::render('admin/UserManagement', [
-            'users' => UserManagementResource::collection($users)->toArray(request()),
+            'users' => [
+                'data' => UserManagementResource::collection($users)->resolve(),
+                'current_page' => $users->currentPage(),
+                'last_page' => $users->lastPage(),
+                'per_page' => $users->perPage(),
+                'total' => $users->total(),
+            ],
         ]);
     }
-
     public function update(UserRequest $request, User $user)
     {
         $validated = $request->validated();

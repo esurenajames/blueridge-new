@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Captain;
 
 use App\Http\Controllers\Controller;
 use App\Models\Request;
+use Carbon\Carbon;
 use Inertia\Inertia;
+use App\Models\Request as RequestModel;
 
 class CaptainRequestController extends Controller
 {
@@ -43,7 +45,7 @@ class CaptainRequestController extends Controller
                     'category' => $request->category,
                     'status' => $request->status,
                     'description' => $request->description,
-                    'created_at' => $request->created_at->format('M d, Y'),
+                    'created_at' => $request->created_at->format('Y-m-d'),
                     'created_by' => $request->creator ? $request->creator->name : 'Unknown User',
                     'progress' => $progress,
                     'stages' => [
@@ -60,7 +62,7 @@ class CaptainRequestController extends Controller
                     'files' => $request->files->map(fn($f) => [
                         'name' => $f->name,
                         'size' => $f->size,
-                        'uploaded_at' => $f->created_at->format('M d, Y'),
+                        'uploaded_at' => $f->created_at->format('Y-m-d'),
                     ]),
                 ];
             });
@@ -72,22 +74,24 @@ class CaptainRequestController extends Controller
 
     public function show($id)
     {
-        $request = Request::with(['creator:id,name', 'files', 'collaborators.user:id,name,role'])
-            ->findOrFail($id);
+        $request = RequestModel::with(['creator', 'collaborators', 'files', 'processor'])
+        ->findOrFail($id);
 
-        return Inertia::render('captain/RequestView', [
+        return Inertia::render('captain/CaptainRequestView', [
             'request' => [
                 'id' => $request->id,
                 'title' => $request->name, 
                 'category' => $request->category,
                 'description' => $request->description,
                 'status' => $request->status,
-                'created_at' => $request->created_at->format('M d, Y'),
+                'created_at' => $request->created_at->format('Y-m-d'),
                 'created_by' => $request->creator ? $request->creator->name : 'Unknown User',
+                'processed_by' => $request->processor ? $request->processor->name : null,
+                'processed_at' => $request->processed_at ? Carbon::parse($request->processed_at)->format('Y-m-d') : null,
                 'files' => $request->files->map(fn($f) => [
                     'name' => $f->name,
                     'size' => $f->size,
-                    'uploaded_at' => $f->created_at->format('M d, Y'),
+                    'uploaded_at' => $f->created_at->format('Y-m-d'),
                 ]),
                 'collaborators' => $request->collaborators->map(fn($c) => [
                     'id' => $c->id,

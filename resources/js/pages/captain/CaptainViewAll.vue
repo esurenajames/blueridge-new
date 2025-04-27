@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LayoutGrid, LayoutList } from 'lucide-vue-next';
 import { ref } from 'vue';
-import CaptainTableView from './CaptainTableViewAll.vue';
-import CaptainCardView from './CaptainCardViewAll.vue';
+import CaptainCardView from '@/components/captain/CaptainCardViewAll.vue';
+import CaptainTableView from '@/components/captain/CaptainTableViewAll.vue';
 
 const isTableView = ref(true);
 
