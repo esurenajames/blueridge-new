@@ -13,6 +13,7 @@ import { object, string, array } from 'yup';
 import { Check, FileText, Users, Upload } from 'lucide-vue-next';
 import FileUpload from '@/components/FileUpload.vue';
 import CollaboratorsList from '@/components/CollaboratorList.vue';
+import { Textarea } from '@/components/ui/textarea';
 
 const props = defineProps<{
   show: boolean;
@@ -255,7 +256,7 @@ const prevStep = () => {
             
             <div class="space-y-2">
               <Label for="description">Description</Label>
-              <Input
+              <Textarea
                 id="description"
                 v-model="descriptionValue"
                 placeholder="Describe your request"

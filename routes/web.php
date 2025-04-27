@@ -82,6 +82,9 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     // Request Management
     Route::get('/captain/requests', [CaptainRequestController::class, 'index'])->name('captain.requests');
     Route::get('/captain/requests/{id}', [CaptainRequestController::class, 'show'])->name('captain.requests.view');
+    Route::post('/requests/{id}/approve', [CaptainRequestController::class, 'approve'])->name('requests.approve');
+    Route::post('/requests/{id}/decline', [CaptainRequestController::class, 'decline'])->name('requests.decline');
+    Route::post('/requests/{id}/return', [CaptainRequestController::class, 'return'])->name('requests.return');
 });
 
 /*

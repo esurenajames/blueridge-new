@@ -15,6 +15,7 @@ class Request extends Model
         'name',
         'category',
         'description',
+        'progress',
         'status',
         'created_by',
         'processed_by',
@@ -61,5 +62,14 @@ class Request extends Model
     public function processor()
     {
     return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function approver() {
+        return $this->belongsTo(User::class, 'approver_id');
+    }
+
+    public function timelines(): HasMany
+    {
+        return $this->hasMany(RequestTimeline::class)->orderBy('approved_date', 'desc');
     }
 }

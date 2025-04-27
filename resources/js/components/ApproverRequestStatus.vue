@@ -51,8 +51,8 @@ const statusConfig = computed(() => {
     case 'returned':
       return {
         icon: RotateCcw,
-        class: 'bg-blue-50 dark:bg-blue-900/20',
-        iconClass: 'text-blue-600 dark:text-blue-400',
+        class: 'bg-orange-500 dark:bg-orange-500/20',
+        iconClass: 'text-orage-600 dark:text-orange-50',
         badge: 'default',
         message: 'This request has been returned for revision.'
       };

@@ -35,14 +35,12 @@ export interface User {
     updated_at: string;
 }
 
-export interface Request {
+interface Request {
     id: number;
     title: string;
     category: string;
-    status: string;
     description: string;
-    created_at: string;
-    created_by: string;
+    status: string;
     progress: number;
     stages: {
       form: boolean;
@@ -50,21 +48,29 @@ export interface Request {
       purchaseRequest: boolean;
       purchaseOrder: boolean;
     };
-    collaborators: {
+    created_at: string;
+    created_by: string;
+    processed_by?: string;
+    processed_at?: string;
+    collaborators?: Array<{
       id: number;
       name: string;
+      role: string;
       permission: string;
-    }[];
-    files: {
+    }>;
+    files?: Array<{
       name: string;
       size: number;
       uploaded_at: string;
-    }[];
-    activeUsers: Array<{ 
-        id: number;
-        name: string;
-        role: string;
-      }>;
-  }
+    }>;
+    timelines?: Array<{
+      id: number;
+      approver_name: string;
+      approved_date: string;
+      approved_progress: string;
+      approved_status: string;
+      remarks?: string;
+    }>;
+}
 
 export type BreadcrumbItemType = BreadcrumbItem;

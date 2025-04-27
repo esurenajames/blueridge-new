@@ -12,6 +12,7 @@ import { useToast } from '@/components/ui/toast/use-toast';
 import { Users, Upload, FileText, Check } from 'lucide-vue-next';
 import FileUpload from '@/components/FileUpload.vue';
 import CollaboratorList from '@/components/CollaboratorList.vue';
+import { Textarea } from '@/components/ui/textarea';
 
 const props = defineProps<{
   show: boolean;
@@ -234,9 +235,8 @@ const onSubmit = () => {
               
               <div class="space-y-2">
                 <label class="text-sm font-medium">Description</label>
-                <Input
+                <Textarea
                   v-model="descriptionValue"
-                  type="textarea"
                   placeholder="Describe your request"
                   class="h-24"
                   :class="{ 'border-red-500': descriptionError }"
