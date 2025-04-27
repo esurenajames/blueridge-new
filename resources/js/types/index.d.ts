@@ -35,4 +35,36 @@ export interface User {
     updated_at: string;
 }
 
+export interface Request {
+    id: number;
+    title: string;
+    category: string;
+    status: string;
+    description: string;
+    created_at: string;
+    created_by: string;
+    progress: number;
+    stages: {
+      form: boolean;
+      quotation: boolean;
+      purchaseRequest: boolean;
+      purchaseOrder: boolean;
+    };
+    collaborators: {
+      id: number;
+      name: string;
+      permission: string;
+    }[];
+    files: {
+      name: string;
+      size: number;
+      uploaded_at: string;
+    }[];
+    activeUsers: Array<{ 
+        id: number;
+        name: string;
+        role: string;
+      }>;
+  }
+
 export type BreadcrumbItemType = BreadcrumbItem;

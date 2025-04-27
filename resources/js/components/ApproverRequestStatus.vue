@@ -59,9 +59,9 @@ const statusConfig = computed(() => {
     case 'voided':
       return {
         icon: XCircle,
-        class: 'bg-slate-50 dark:bg-slate-900/20',
-        iconClass: 'text-slate-600 dark:text-slate-400',
-        badge: 'secondary',
+        class: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400',
+        iconClass: 'text-red-600 dark:text-red-400',
+        badge: 'destructive',
         message: 'This request has been voided.'
       };
     default:
