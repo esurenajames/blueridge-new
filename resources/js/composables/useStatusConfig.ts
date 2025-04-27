@@ -20,7 +20,7 @@ export function useStatusConfig() {
         return {
           icon: XCircle,
           variant: 'destructive',
-          class: 'text-red-600 dark:text-red-400',
+          class: 'text-gray-50',
         };
       case 'returned':
         return {

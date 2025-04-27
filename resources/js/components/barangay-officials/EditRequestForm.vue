@@ -202,7 +202,7 @@ const prevStep = () => {
               <StepperIndicator>
                 <component 
                   :is="currentStep > item.step && isStepValid ? Check : item.icon" 
-                  class="w-4 w-4"
+                  class="w-4"
                 />
               </StepperIndicator>
               <div class="flex flex-col">

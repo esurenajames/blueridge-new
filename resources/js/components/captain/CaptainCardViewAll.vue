@@ -6,24 +6,34 @@ import { Progress } from '@/components/ui/progress';
 import { Eye, InboxIcon } from 'lucide-vue-next';
 import { useStatusConfig } from '@/composables/useStatusConfig';
 import { router } from '@inertiajs/vue3';
+import { type Request } from '@/types/request';
+import DataTablePagination from '@/components/DataTablePagination.vue';
 
 const props = defineProps<{
-  requests: Array<{
-    id: number;
-    title: string;
-    category: string;
-    status: string;
-    created_at: string;
-    created_by: string;
-    progress: number;
-    stages: {
-      form: boolean;
-      quotation: boolean;
-      purchaseRequest: boolean;
-      purchaseOrder: boolean;
+  requests: {
+    data: Request[];
+    meta: {
+      current_page: number;
+      last_page: number;
+      per_page: number;
+      total: number;
     };
-  }>;
+    links: {
+      first: string;
+      last: string;
+      prev: string | null;
+      next: string | null;
+    };
+  };
 }>();
+
+const emit = defineEmits<{
+  (e: 'pageChange', page: number): void;
+}>();
+
+const handlePageChange = (page: number) => {
+  emit('pageChange', page);
+};
 
 const { getStatusConfig } = useStatusConfig();
 
@@ -33,17 +43,25 @@ const viewRequest = (id: number) => {
 </script>
 
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <template v-if="requests.length">
-      <Card v-for="request in requests" :key="request.id" class="cursor-pointer hover:bg-muted/50 transition-colors" @click="viewRequest(request.id)">
-        <CardHeader>
-          <div class="flex items-center">
-            <CardTitle class="text-lg">{{ request.title }}</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div class="space-y-4">
-            <!-- Progress Section -->
+  <div class="rounded-md border overflow-x-auto p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <template v-if="requests.data.length">
+        <Card 
+          v-for="request in requests.data" 
+          :key="request.id" 
+          class="relative overflow-hidden hover:shadow-lg duration-300 cursor-pointer hover:bg-muted/50 transition-colors"
+          @click="viewRequest(request.id)"
+        >
+          <CardHeader class="pb-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <CardTitle class="text-lg font-semibold">{{ request.title }}</CardTitle>
+                <span class="text-sm text-muted-foreground">#{{ request.id }}</span>
+              </div>
+            </div>
+          </CardHeader>
+
+          <CardContent class="space-y-6">
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-muted-foreground">Progress</span>
@@ -52,68 +70,94 @@ const viewRequest = (id: number) => {
               <Progress :value="request.progress" class="h-2" />
             </div>
 
-            <!-- Stages Section -->
-            <div class="grid grid-cols-2 gap-2">
-              <div v-for="(completed, stage) in request.stages" 
-                   :key="stage"
-                   class="flex items-center gap-2"
+            <div class="grid grid-cols-4 gap-2 w-full text-xs">
+              <Badge 
+                variant="outline" 
+                :class="[
+                  'flex-1 justify-center',
+                  request.stages.form ? 'bg-primary/10 border-primary' : 'opacity-50'
+                ]"
               >
-                <Badge 
-                  :variant="completed ? 'default' : 'secondary'"
-                  class="w-full flex items-center gap-2"
-                >
-                  {{ stage }}
-                </Badge>
-              </div>
+                Form
+              </Badge>
+              <Badge 
+                variant="outline" 
+                :class="[
+                  'flex-1 justify-center',
+                  request.stages.quotation ? 'bg-primary/10 border-primary' : 'opacity-50'
+                ]"
+              >
+                Quotation
+              </Badge>
+              <Badge 
+                variant="outline" 
+                :class="[
+                  'flex-1 justify-center',
+                  request.stages.purchaseRequest ? 'bg-primary/10 border-primary' : 'opacity-50'
+                ]"
+              >
+                PR
+              </Badge>
+              <Badge 
+                variant="outline" 
+                :class="[
+                  'flex-1 justify-center',
+                  request.stages.purchaseOrder ? 'bg-primary/10 border-primary' : 'opacity-50'
+                ]"
+              >
+                PO
+              </Badge>
             </div>
 
             <!-- Basic Info -->
-            <div class="space-y-2">
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">ID:</span>
-                <span>{{ request.id }}</span>
-              </div>
+            <div class="grid gap-3">
               <div class="flex justify-between items-center">
                 <span class="text-sm text-muted-foreground">Category:</span>
-                <Badge variant="secondary">{{ request.category }}</Badge>
+                <Badge variant="secondary" class="capitalize">{{ request.category }}</Badge>
               </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-muted-foreground">Status:</span>
-                <Badge 
-                  :variant="getStatusConfig(request.status).variant"
-                  class="flex items-center gap-1"
-                >
-                  <component 
-                    :is="getStatusConfig(request.status).icon" 
-                    class="h-3 w-3"
-                    :class="getStatusConfig(request.status).class" 
-                  />
-                  {{ request.status }}
-                </Badge>
-              </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm text-muted-foreground">Status:</span>
+                  <Badge 
+                    :variant="getStatusConfig(request.status).variant"
+                    class="flex items-center gap-1"
+                  >
+                    <component 
+                      :is="getStatusConfig(request.status).icon" 
+                      class="h-3 w-3"
+                      :class="getStatusConfig(request.status).class" 
+                    />
+                    {{ request.status }}
+                  </Badge>
+                </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-muted-foreground">Created By:</span>
-                <span>{{ request.created_by }}</span>
+                <span class="text-sm font-medium">{{ request.created_by }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-muted-foreground">Created At:</span>
-                <span>{{ request.created_at }}</span>
+                <span class="text-sm">{{ request.created_at }}</span>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </template>
-<template v-else>
-  <Card class="col-span-full">
-    <CardContent class="h-32 flex flex-col items-center justify-center gap-4">
-      <InboxIcon class="h-8 w-8 text-muted-foreground/50" />
-      <div class="flex flex-col items-center gap-1">
-        <span class="text-muted-foreground font-medium">No requests found</span>
-        <span class="text-sm text-muted-foreground/70">Requests will appear here once created</span>
-      </div>
-    </CardContent>
-  </Card>
-</template>
+          </CardContent>
+        </Card>
+      </template>
+      <template v-else>
+        <Card class="col-span-full">
+          <CardContent class="h-32 flex flex-col items-center justify-center gap-4">
+            <InboxIcon class="h-8 w-8 text-muted-foreground/50" />
+            <div class="flex flex-col items-center gap-1">
+              <span class="text-muted-foreground font-medium">No requests found</span>
+              <span class="text-sm text-muted-foreground/70">Requests will appear here once created</span>
+            </div>
+          </CardContent>
+        </Card>
+      </template>
+    </div>
+        <DataTablePagination
+      v-if="requests.data.length > 0"
+      :current-page="requests.meta.current_page"
+      :total-pages="requests.meta.last_page"
+      :on-page-change="handlePageChange"
+    />
   </div>
 </template>

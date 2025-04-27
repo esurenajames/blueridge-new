@@ -15,6 +15,7 @@ import GenerateKey from './GenerateKey.vue';
 import { FileX } from 'lucide-vue-next'; 
 import { getDisplayRole } from '@/utils/roles';
 import { router } from '@inertiajs/vue3';
+import DataTablePagination from '@/components/DataTablePagination.vue';
 
 interface User {
   id: number;
@@ -238,33 +239,12 @@ const getStatusBadgeVariant = (status: string) => {
             </TableBody>
         </Table>
 
-        <div v-if="paginatedUsers.length > 0" class="flex justify-center p-2">
-            <Pagination>
-                <PaginationList class="flex items-center space-x-2">
-                    <PaginationFirst @click="goToPage(1)" :disabled="currentPage === 1" class="px-2" />
-                    <PaginationPrev @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="px-2" />
-                    <div class="flex items-center space-x-2">
-                        <template v-for="page in totalPages" :key="page">
-                            <PaginationListItem
-                                :value="String(page)"
-                                :disabled="false"
-                                @click="goToPage(page)"
-                                :active="currentPage === page"
-                                class="h-9 w-9 rounded-md text-sm transition-colors hover:bg-muted"
-                                :class="{
-                                    'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground': currentPage === page,
-                                    'hover:bg-transparent hover:text-primary': currentPage !== page
-                                }"
-                            >
-                                {{ page }}
-                            </PaginationListItem>
-                        </template>
-                    </div>
-                    <PaginationNext @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="px-2" />
-                    <PaginationLast @click="goToPage(totalPages)" :disabled="currentPage === totalPages" class="px-2" />
-                </PaginationList>
-            </Pagination>
-        </div>
+        <DataTablePagination
+            v-if="users.data.length > 0"
+            :current-page="users.current_page"
+            :total-pages="users.last_page"
+            :on-page-change="goToPage"
+        />
 
         <EditUser 
             v-if="selectedUser"
