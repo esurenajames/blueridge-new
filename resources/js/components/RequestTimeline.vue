@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Clock } from 'lucide-vue-next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { User, Clock, FileText, FileCheck, ShoppingCart, Package, MessageSquare } from 'lucide-vue-next';
 import { useStatusConfig } from '@/composables/useStatusConfig';
+import { ref } from 'vue';
+import { Button } from '@/components/ui/button';
 
 const { getStatusConfig } = useStatusConfig();
 
@@ -12,8 +15,31 @@ const props = defineProps<{
     created_at: string;
     processed_by?: string;
     processed_at?: string;
+    timelines: {
+      id: number;
+      approver_name: string;
+      approved_date: string;
+      approved_progress: string;
+      approved_status: string;
+      remarks?: string;
+    }[];
   };
 }>();
+
+const progressIcons = {
+  'Request Form': FileText,
+  'Quotation': FileCheck,
+  'Purchase Request': ShoppingCart,
+  'Purchase Order': Package
+};
+
+const selectedRemarks = ref('');
+const isDialogOpen = ref(false);
+
+const showRemarks = (remarks: string) => {
+  selectedRemarks.value = remarks;
+  isDialogOpen.value = true;
+};
 </script>
 
 <template>
@@ -23,7 +49,7 @@ const props = defineProps<{
       <CardDescription>Request activity history</CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-px before:bg-muted">
+      <div class="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-px before:bg-muted">
         <!-- Created Event -->
         <div class="relative flex items-start gap-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
@@ -37,22 +63,59 @@ const props = defineProps<{
           </div>
         </div>
 
-        <!-- Processed Event -->
-        <div 
-          v-if="request.processed_by && request.processed_at" 
-          class="relative flex items-start gap-4"
-        >
+        <!-- Processed Event (if available) -->
+        <div v-if="request.processed_by" class="relative flex items-start gap-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
-            <Clock class="h-4 w-4 text-primary" />
+            <Clock class="h-4 w-4 text-blue-500" />
           </div>
           <div class="flex flex-col gap-0.5">
             <p class="text-sm font-medium">Request Processed</p>
             <div class="flex items-center gap-2">
-              <span class="text-xs text-muted-foreground">by {{ request.processed_by }} - {{ request.processed_at }}</span>
+              <span class="text-xs text-muted-foreground">
+                by {{ request.processed_by }} - {{ request.processed_at }}
+              </span>
             </div>
           </div>
         </div>
-        
+
+        <!-- Timeline Events -->
+        <div 
+          v-for="timeline in request.timelines" 
+          :key="timeline.id"
+          class="relative flex items-start gap-4"
+        >
+          <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
+            <component 
+              :is="progressIcons[timeline.approved_progress]" 
+              class="h-4 w-4"
+              :class="{
+                'text-green-500': timeline.approved_status === 'approved',
+                'text-red-500': timeline.approved_status === 'declined',
+                'text-yellow-500': timeline.approved_status === 'returned'
+              }"
+            />
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm font-medium">{{ timeline.approved_progress }} {{ timeline.approved_status }}</p>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-muted-foreground">
+                by {{ timeline.approver_name }} - {{ timeline.approved_date }}
+              </span>
+            </div>
+             <div v-if="timeline.remarks" class="flex items-center gap-1 mt-2">
+              <Button 
+                @click="showRemarks(timeline.remarks!)"
+                variant="outline"
+                size="sm"
+                class="h-8 px-3"
+              >
+                <MessageSquare class="h-4 w-4 mr-2" />
+                View Remarks
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <!-- Status Event -->
         <div class="relative flex items-center gap-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
@@ -70,4 +133,16 @@ const props = defineProps<{
       </div>
     </CardContent>
   </Card>
+
+  <!-- Remarks Dialog -->
+  <Dialog v-model:open="isDialogOpen">
+    <DialogContent class="sm:max-w-[425px]">
+      <DialogHeader>
+        <DialogTitle>Remarks</DialogTitle>
+      </DialogHeader>
+      <div class="mt-4">
+        <p class="text-sm text-muted-foreground whitespace-pre-wrap">{{ selectedRemarks }}</p>
+      </div>
+    </DialogContent>
+  </Dialog>
 </template>

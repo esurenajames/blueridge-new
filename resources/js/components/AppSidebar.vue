@@ -58,11 +58,6 @@ const mainNavItems = computed(() => {
                     href: route('requests.index'),
                     icon: Folder
                 },
-                {
-                    title: 'Create Request',
-                    href: route('requests.index'),
-                    icon: FileText
-                }
             ]
         });
     }

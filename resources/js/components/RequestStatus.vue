@@ -8,6 +8,7 @@ import {
   XCircle, 
   RefreshCw, 
   Clock, 
+  RotateCcw,
   CheckCircle, 
   AlertCircle,
   MoreHorizontal 
@@ -63,6 +64,14 @@ const statusConfig = computed(() => {
         iconClass: 'text-red-600 dark:text-red-400',
         badge: 'destructive',
         message: 'This request has been declined.'
+      };
+    case 'returned':
+      return {
+        icon: RotateCcw,
+        class: 'bg-orange-500 dark:bg-orange-500/20',
+        iconClass: 'text-orage-600 dark:text-orange-50',
+        badge: 'default',
+        message: 'This request has been returned for revision.'
       };
     case 'voided':
       return {
