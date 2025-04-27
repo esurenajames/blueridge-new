@@ -22,7 +22,7 @@ const props = defineProps<{
 const { getStatusConfig } = useStatusConfig();
 
 const viewRequest = (id: number) => {
-  router.visit(route('admin.requests.view', { id }));
+  router.visit(route('captain.requests.view', { id }));
 };
 </script>
 
@@ -41,16 +41,21 @@ const viewRequest = (id: number) => {
     </TableHeader>
     <TableBody>
     <template v-if="requests.length">
-      <TableRow v-for="request in requests" :key="request.id">
+      <TableRow 
+        v-for="request in requests" 
+        :key="request.id"
+        class="cursor-pointer hover:bg-muted/50 transition-colors"
+        @click="viewRequest(request.id)"
+      >
         <TableCell>{{ request.id }}</TableCell>
         <TableCell class="font-medium">{{ request.title }}</TableCell>
         <TableCell>
           <Badge variant="secondary">{{ request.category }}</Badge>
         </TableCell>
         <TableCell class="w-[200px]">
-          <div class="space-y-1">
-            <Progress :value="request.progress" class="h-2" />
-            <div class="text-xs text-muted-foreground">{{ request.progress }}%</div>
+          <div class="flex items-center gap-2">
+            <Progress :value="request.progress" class="h-2 flex-1" />
+            <div class="text-xs text-muted-foreground whitespace-nowrap">{{ request.progress }}%</div>
           </div>
         </TableCell>
         <TableCell>

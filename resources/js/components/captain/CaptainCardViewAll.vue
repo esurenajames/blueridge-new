@@ -28,14 +28,14 @@ const props = defineProps<{
 const { getStatusConfig } = useStatusConfig();
 
 const viewRequest = (id: number) => {
-  router.visit(route('admin.requests.view', { id }));
+  router.visit(route('captain.requests.view', { id }));
 };
 </script>
 
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <template v-if="requests.length">
-      <Card v-for="request in requests" :key="request.id" class="hover:bg-accent/5">
+      <Card v-for="request in requests" :key="request.id" class="cursor-pointer hover:bg-muted/50 transition-colors" @click="viewRequest(request.id)">
         <CardHeader>
           <div class="flex items-center">
             <CardTitle class="text-lg">{{ request.title }}</CardTitle>

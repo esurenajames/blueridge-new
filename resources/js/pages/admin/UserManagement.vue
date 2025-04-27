@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search } from 'lucide-vue-next';
 import UsersTable from '@/components/admin/UsersTable.vue';
 import CreateUser from '@/components/admin/CreateUser.vue';
+import { router } from '@inertiajs/vue3';
 
 interface User {
   id: number;
@@ -29,7 +30,13 @@ const handleCloseCreate = () => {
 };
 
 const props = defineProps<{
-  users: User[];
+  users: {
+    data: User[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -43,13 +50,25 @@ const searchQuery = ref('');
 
 const filteredUsers = computed(() => {
     if (!searchQuery.value) return props.users;
-    
+
     const query = searchQuery.value.toLowerCase();
-    return props.users.filter(user => 
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.role.toLowerCase().includes(query)
-    );
+    return {
+        ...props.users,
+        data: props.users.data.filter(user =>
+            user.name.toLowerCase().includes(query) ||
+            user.email.toLowerCase().includes(query) ||
+            user.role.toLowerCase().includes(query)
+        ),
+        total: props.users.data.filter(user =>
+            user.name.toLowerCase().includes(query) ||
+            user.email.toLowerCase().includes(query) ||
+            user.role.toLowerCase().includes(query)
+        ).length,
+    };
+});
+
+watch(searchQuery, (query) => {
+  router.get(route('admin.users'), { search: query }, { preserveState: true, replace: true });
 });
 </script>
 
@@ -73,7 +92,7 @@ const filteredUsers = computed(() => {
                     Create New User
                 </Button>
             </div>
-            <UsersTable :users="filteredUsers" />
+            <UsersTable :users="props.users" />
         </div>
 
         <CreateUser 

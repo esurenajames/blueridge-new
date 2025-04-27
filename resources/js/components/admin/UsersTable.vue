@@ -14,6 +14,7 @@ import { useInitials } from '@/composables/useInitials';
 import GenerateKey from './GenerateKey.vue';
 import { FileX } from 'lucide-vue-next'; 
 import { getDisplayRole } from '@/utils/roles';
+import { router } from '@inertiajs/vue3';
 
 interface User {
   id: number;
@@ -25,23 +26,25 @@ interface User {
 }
 
 const props = defineProps<{
-  users: User[];
+  users: {
+    data: User[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
 }>();
 
 const { getInitials } = useInitials();
 
 const sortKey = ref<keyof User | null>(null);
 const sortOrder = ref<'asc' | 'desc'>('asc');
-const currentPage = ref(1);
-const itemsPerPage = ref(10);
 
 const sortedUsers = computed(() => {
-  if (!sortKey.value) return props.users;
-  
-  return [...props.users].sort((a, b) => {
+  if (!sortKey.value) return props.users.data;
+  return [...props.users.data].sort((a, b) => {
     const valueA = a[sortKey.value!];
     const valueB = b[sortKey.value!];
-
     if (typeof valueA === 'string' && typeof valueB === 'string') {
       return sortOrder.value === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
     }
@@ -51,6 +54,11 @@ const sortedUsers = computed(() => {
     return 0;
   });
 });
+
+const paginatedUsers = computed(() => sortedUsers.value);
+
+const totalPages = computed(() => props.users.last_page);
+const currentPage = computed(() => props.users.current_page);
 
 const showEditDialog = ref(false);
 const showDeleteDialog = ref(false);
@@ -87,14 +95,6 @@ const handleCloseGenerateKey = () => {
   selectedUser.value = null;
 };
 
-const paginatedUsers = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return sortedUsers.value.slice(start, end);
-});
-
-const totalPages = computed(() => Math.ceil(props.users.length / itemsPerPage.value));
-
 const sortBy = (key: keyof User) => {
   if (sortKey.value === key) {
     sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
@@ -106,7 +106,7 @@ const sortBy = (key: keyof User) => {
 
 const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
+    router.get(route(route().current() as string), { page }, { preserveScroll: true, preserveState: true });
   }
 };
 
@@ -124,7 +124,6 @@ const getRoleBadgeVariant = (role: string) => {
 const getStatusBadgeVariant = (status: string) => {
   return status === 'active' ? 'secondary' : 'destructive';
 };
-
 </script>
 
 <template>
@@ -241,25 +240,28 @@ const getStatusBadgeVariant = (status: string) => {
 
         <div v-if="paginatedUsers.length > 0" class="flex justify-center p-2">
             <Pagination>
-                <PaginationList class="flex items-center space-x-1">
-                    <PaginationFirst @click="goToPage(1)" :disabled="currentPage === 1" />
-                    <PaginationPrev @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" />
-                    
-                    <div class="flex items-center space-x-1 px-1">
+                <PaginationList class="flex items-center space-x-2">
+                    <PaginationFirst @click="goToPage(1)" :disabled="currentPage === 1" class="px-2" />
+                    <PaginationPrev @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="px-2" />
+                    <div class="flex items-center space-x-2">
                         <template v-for="page in totalPages" :key="page">
                             <PaginationListItem
                                 :value="String(page)"
                                 :disabled="false"
                                 @click="goToPage(page)"
                                 :active="currentPage === page"
+                                class="h-9 w-9 rounded-md text-sm transition-colors hover:bg-muted"
+                                :class="{
+                                    'bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground': currentPage === page,
+                                    'hover:bg-transparent hover:text-primary': currentPage !== page
+                                }"
                             >
                                 {{ page }}
                             </PaginationListItem>
                         </template>
                     </div>
-
-                    <PaginationNext @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" />
-                    <PaginationLast @click="goToPage(totalPages)" :disabled="currentPage === totalPages" />
+                    <PaginationNext @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="px-2" />
+                    <PaginationLast @click="goToPage(totalPages)" :disabled="currentPage === totalPages" class="px-2" />
                 </PaginationList>
             </Pagination>
         </div>

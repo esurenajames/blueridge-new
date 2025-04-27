@@ -23,6 +23,11 @@ Route::get('unauthorized', function () {
     return Inertia::render('Unauthorize');
 })->name('unauthorized');
 
+// download file from request view
+Route::get('requests/{id}/download/{filename}', 
+    [OfficialRequestController::class, 'downloadFile'
+])->name('requests.download-file'); 
+
 /*
 |--------------------------------------------------------------------------
 | Official Routes
@@ -43,7 +48,6 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     Route::post('/requests/{id}', [OfficialRequestController::class, 'update'])->name('requests.update');
     Route::post('/requests/{id}/process', [OfficialRequestController::class, 'process'])->name('requests.process');
     Route::post('/requests/{id}/void', [OfficialRequestController::class, 'void'])->name('requests.void');
-    Route::get('requests/{id}/download/{filename}', [OfficialRequestController::class, 'downloadFile'])->name('requests.download-file'); 
 });
 
 /*
@@ -76,10 +80,8 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
         ->name('captain.dashboard');
     
     // Request Management
-    Route::get('/captain/requests', [CaptainRequestController::class, 'index'])
-        ->name('captain.requests');
-    Route::get('/captain/requests/{id}', [CaptainRequestController::class, 'show'])
-        ->name('captain.requests.view');
+    Route::get('/captain/requests', [CaptainRequestController::class, 'index'])->name('captain.requests');
+    Route::get('/captain/requests/{id}', [CaptainRequestController::class, 'show'])->name('captain.requests.view');
 });
 
 /*
