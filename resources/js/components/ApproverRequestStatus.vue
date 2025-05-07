@@ -4,12 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, RotateCcw, Clock, CheckCircle, AlertCircle } from 'lucide-vue-next';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal } from 'lucide-vue-next';
 
 const props = defineProps<{
@@ -54,7 +49,7 @@ const statusConfig = computed(() => {
     case 'returned':
       return {
         icon: RotateCcw,
-        class: 'bg-orange-500 dark:bg-orange-500/20',
+        class: 'bg-orange-500/20 dark:bg-orange-500/20',
         iconClass: 'text-orage-600 dark:text-orange-50',
         badge: 'default',
         message: 'This request has been returned for revision.'

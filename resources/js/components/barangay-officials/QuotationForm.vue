@@ -100,6 +100,11 @@ const validatePrice = (event: KeyboardEvent) => {
   }
 };
 
+const formatNumber = (num: number | null) => {
+  if (!num) return '0';
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+
 const validateQuantity = (event: KeyboardEvent) => {
   // Allow only numbers
   if (!/\d/.test(event.key)) {
@@ -271,9 +276,10 @@ const handleSubmit = () => {
                         />
                       </div>
                       <div class="space-y-2">
-                        <Label>Price</Label>
+                        <Label>Unit Price</Label>
                         <Input 
-                          v-model="item.price"
+                          :value="formatNumber(item.price)"
+                          @input="(e) => item.price = parseFloat((e.target as HTMLInputElement).value.replace(/,/g, ''))"
                           type="text"
                           inputmode="decimal"
                           placeholder="0.00"

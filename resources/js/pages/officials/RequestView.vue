@@ -4,7 +4,7 @@ import { type BreadcrumbItem, type Request } from '@/types';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit2, FileText, Download } from 'lucide-vue-next';
+import { Edit2, FileText, File, Download, ChevronDown } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch } from 'vue';
 import { useToast } from '@/components/ui/toast';
@@ -16,10 +16,14 @@ import EditRequestForm from '@/components/barangay-officials/EditRequestForm.vue
 import RequestTimeline from '@/components/RequestTimeline.vue';
 import RequestStatus from '@/components/RequestStatus.vue';
 import QuotationForm from '@/components/barangay-officials/QuotationForm.vue';
+import ViewQuotationDialog from '@/components/ViewQuotationDialog.vue';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
 
 const { toast } = useToast();
 const showEditModal = ref(false);
 const showQuotationModal = ref(false);
+const showQuotationDialog = ref(false);
 const confirmationState = ref({
   show: false,
   title: '',
@@ -70,6 +74,11 @@ const handleQuotationClose = () => {
 };
 
 const request = ref(props.request.data);
+
+const exportAsPDF = (type: 'quotation' | 'form' | 'request') => {
+  // TODO: Implement export functionality
+  console.log(`Exporting ${type} as PDF`);
+};
 
 watch(
   () => props.request.data,
@@ -239,6 +248,37 @@ const downloadFile = (file: { name: string }) => {
           @close="handleQuotationClose"
         />
 
+        <ViewQuotationDialog
+          v-if="request.quotation"
+          v-model:show="showQuotationDialog"
+          :quotation="request.quotation"
+        />
+
+                <div class="flex justify-end mb-6">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" class="gap-2">
+                <File class="h-4 w-4" />
+                Export as PDF
+                <ChevronDown class="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-[200px]">
+              <DropdownMenuItem @click="exportAsPDF('form')">
+                <File class="h-4 w-4 mr-2" />
+                  Request Form as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                v-if="request.quotation"
+                @click="exportAsPDF('quotation')"
+              >
+                <File class="h-4 w-4 mr-2" />
+                  Quotation as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card class="md:col-span-2">
             <CardHeader class="pb-6">
@@ -327,6 +367,42 @@ const downloadFile = (file: { name: string }) => {
                     </div>
                     <div v-if="!request.files?.length" class="text-sm text-muted-foreground">
                       No files attached
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quotation Section -->
+                <div v-if="request.quotation?.have_quotation === 'true'" class="grid gap-2">
+                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <FileText class="h-4 w-4" />
+                    Quotation Details
+                  </div>
+                  <div class="p-4 bg-muted rounded-md">
+                    <div class="flex flex-col gap-2">
+                      <div class="flex items-center justify-between">
+                        <div class="space-y-1">
+                          <p class="text-sm">Status: 
+                            <Badge :variant="request.quotation.status === 'pending' ? 'warning' : 'success'">
+                              {{ request.quotation.status }}
+                            </Badge>
+                          </p>
+                          <p class="text-xs text-muted-foreground">
+                            Processed by: {{ request.quotation.processed_by }}
+                          </p>
+                          <p class="text-xs text-muted-foreground">
+                            Date: {{ request.quotation.processed_at }}
+                          </p>
+                        </div>
+                        <Button 
+                          @click="showQuotationDialog = true"
+                          variant="outline"
+                          size="sm"
+                          class="gap-2"
+                        >
+                          <FileText class="h-4 w-4" />
+                          View Details
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

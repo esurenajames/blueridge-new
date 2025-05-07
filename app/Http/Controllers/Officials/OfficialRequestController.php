@@ -49,6 +49,7 @@ class OfficialRequestController extends Controller
                 // All requests (pending + draft)
                 'all' => RequestResource::collection(
                     (clone $baseQuery)
+                        ->whereNotIn('status', ['voided', 'declined'])
                         ->latest()
                         ->get()
                 ),
@@ -171,9 +172,11 @@ class OfficialRequestController extends Controller
             'files', 
             'processor',
             'timelines.approver',
-            'quotation',
+            'quotation.processor',
+            'quotation.details.company',
+            'quotation.details.items',
         ])->findOrFail($id);
-
+    
         $userPermission = 'view';
         
         if ($request->created_by === auth()->id()) {
@@ -184,7 +187,7 @@ class OfficialRequestController extends Controller
                 $userPermission = $collaborator->pivot->permission;
             }
         }
-
+    
         $activeUsers = User::query()
             ->where('status', 'active')
             ->where('role', 'official')
@@ -195,14 +198,13 @@ class OfficialRequestController extends Controller
             ->whereNotIn('id', $request->collaborators->pluck('id'))
             ->select('id', 'name', 'role')
             ->get();
-
+    
         return Inertia::render('officials/RequestView', [
             'request' => new RequestResource($request),
             'userPermission' => $userPermission,
             'activeUsers' => $activeUsers,
         ]);
     }
-
     public function update(RequestFormRequest $request, $id)
     {
         $requestModel = RequestModel::findOrFail($id);
@@ -263,14 +265,26 @@ class OfficialRequestController extends Controller
         $requestModel = RequestModel::findOrFail($id);
         $validated = $request->validated();
     
+        // Always update status to pending first
+        $requestModel->status = 'pending';
+        $requestModel->save();
+
+        $requestModel->timelines()->create([
+            'request_id' => $requestModel->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => $requestModel->progress,
+            'processed_status' => 'resubmitted',
+            'remarks' => $request->remarks ?? null
+        ]);
+    
         // Update basic info if request form stage
         if ($requestModel->progress === 'Request Form') {
             // Update request details
             $requestModel->update([
                 'name' => $validated['name'],
                 'category' => $validated['category'],
-                'description' => $validated['description'],
-                'status' => 'pending'
+                'description' => $validated['description']
             ]);
     
             // Update collaborators
