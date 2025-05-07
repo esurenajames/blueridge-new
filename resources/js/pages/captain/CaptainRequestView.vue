@@ -5,7 +5,7 @@ import type { Request } from '@/types';
 import { Head, router } from '@inertiajs/vue3';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, RotateCcw, FileText, Download, UserIcon } from 'lucide-vue-next';
+import { CheckCircle2, XCircle, RotateCcw, FileText, Download, UserIcon, File, ChevronDown } from 'lucide-vue-next';
 import { Badge } from '@/components/ui/badge';
 import { ref, watch } from 'vue';
 import { useToast } from '@/components/ui/toast';
@@ -17,10 +17,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getAvatarProps } from '@/utils/avatar';
 import { getDisplayRole } from '@/utils/roles';
 import ApproverRequestStatus from '@/components/ApproverRequestStatus.vue';
+import ViewQuotationDialog from '@/components/ViewQuotationDialog.vue';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import QuotationFormApprove from '@/components/captain/QuotationFormApprove.vue';
 
 const { toast } = useToast();
 const { getStatusConfig } = useStatusConfig();
-
+const showQuotationDialog = ref(false);
+const showQuotationApprove = ref(false);
 const confirmationState = ref({
   show: false,
   title: '',
@@ -86,6 +90,11 @@ const handleCancel = () => {
 };
 
 const handleStatusAction = (title: string, description: string, action: string) => {
+  if (action === 'approve' && request.value.quotation?.have_quotation === 'true') {
+    showQuotationApprove.value = true;
+    return;
+  }
+
   remarksState.value = {
     show: true,
     title,
@@ -127,6 +136,22 @@ const handleRemarksConfirm = (remarks: string) => {
   });
 };
 
+const handleQuotationApprove = (companyId: number) => {
+  const payload = { remarks: '', company_id: companyId };
+  
+  router.post(route('requests.approve', { id: request.value.id }), payload, {
+    preserveScroll: true,
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Request has been approved",
+        variant: "success",
+      });
+      showQuotationApprove.value = false;
+    },
+  });
+};
+
 const handleRemarksCancel = () => {
   remarksState.value.show = false;
 };
@@ -162,6 +187,45 @@ const downloadFile = (file: { name: string }) => {
           @confirm="handleRemarksConfirm"
           @cancel="handleRemarksCancel"
         />
+
+        <ViewQuotationDialog
+          v-if="request.quotation"
+          v-model:show="showQuotationDialog"
+          :quotation="request.quotation"
+        />
+
+        <QuotationFormApprove
+          v-if="showQuotationApprove"
+          :show="showQuotationApprove"
+          :quotation="request.quotation"
+          @close="showQuotationApprove = false"
+          @approve="handleQuotationApprove"
+        />
+
+        <div class="flex justify-end mb-6">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" class="gap-2">
+                <File class="h-4 w-4" />
+                Export as PDF
+                <ChevronDown class="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-[200px]">
+              <DropdownMenuItem @click="exportAsPDF('form')">
+                <File class="h-4 w-4 mr-2" />
+                  Request Form as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                v-if="request.quotation"
+                @click="exportAsPDF('quotation')"
+              >
+                <File class="h-4 w-4 mr-2" />
+                  Quotation as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card class="md:col-span-2">
@@ -238,6 +302,42 @@ const downloadFile = (file: { name: string }) => {
                     </div>
                     <div v-if="!request.files?.length" class="text-sm text-muted-foreground">
                       No files attached
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Quotation Section -->
+                <div v-if="request.quotation?.have_quotation === 'true'" class="grid gap-2">
+                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <FileText class="h-4 w-4" />
+                    Quotation Details
+                  </div>
+                  <div class="p-4 bg-muted rounded-md">
+                    <div class="flex flex-col gap-2">
+                      <div class="flex items-center justify-between">
+                        <div class="space-y-1">
+                          <p class="text-sm">Status: 
+                            <Badge :variant="request.quotation.status === 'pending' ? 'warning' : 'success'">
+                              {{ request.quotation.status }}
+                            </Badge>
+                          </p>
+                          <p class="text-xs text-muted-foreground">
+                            Processed by: {{ request.quotation.processed_by }}
+                          </p>
+                          <p class="text-xs text-muted-foreground">
+                            Date: {{ request.quotation.processed_at }}
+                          </p>
+                        </div>
+                        <Button 
+                          @click="showQuotationDialog = true"
+                          variant="outline"
+                          size="sm"
+                          class="gap-2"
+                        >
+                          <FileText class="h-4 w-4" />
+                          View Details
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

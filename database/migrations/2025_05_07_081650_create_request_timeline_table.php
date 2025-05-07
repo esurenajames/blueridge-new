@@ -37,7 +37,7 @@ return new class extends Migration
                 'Purchase Order'
             ])->nullable();
             $table->enum('processed_status', [
-                'resubmit',
+                'resubmitted',
                 'processed',
                 'voided'
             ])->nullable();

@@ -1,244 +1,222 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem
+} from '@/components/ui/dropdown-menu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Building, Check, ChevronDown, Mail, Phone, MapPin } from 'lucide-vue-next';
-
-interface Item {
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-}
-
-interface Company {
-  id: number;
-  companyName: string;
-  contactPerson: string;
-  address: string;
-  contactNumber: string;
-  email: string;
-  items: Item[];
-}
+import { ChevronDown, Check, MoreHorizontal, XCircle, RotateCcw } from 'lucide-vue-next';
+import { ref, computed } from 'vue';
+import type { Quotation } from '@/types';
 
 const props = defineProps<{
   show: boolean;
+  quotation: Quotation;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'approve', companyId: number): void;
+  (e: 'decline', companyId: number): void;
+  (e: 'return', companyId: number): void;
 }>();
 
 const selectedCompany = ref<number | null>(null);
 const expandedItems = ref<Set<number>>(new Set());
 
-const toggleExpand = (companyId: number) => {
-  expandedItems.value.has(companyId) 
-    ? expandedItems.value.delete(companyId)
-    : expandedItems.value.add(companyId);
+const toggleExpand = (index: number) => {
+  expandedItems.value.has(index) 
+    ? expandedItems.value.delete(index)
+    : expandedItems.value.add(index);
 };
 
-const getCompanyTotal = (company: Company) => {
-  return company.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+const formatNumber = (num: number) => {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
 
-const lowestBidder = computed(() => {
-  return companies.reduce((lowest, current) => {
-    const currentTotal = getCompanyTotal(current);
-    const lowestTotal = lowest ? getCompanyTotal(lowest) : Infinity;
-    return currentTotal < lowestTotal ? current : lowest;
-  }, null as Company | null);
+const calculateTotal = (items: Quotation['details'][0]['items']) => {
+  return items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+};
+
+const selectedCompanyName = computed(() => {
+  if (!selectedCompany.value) return '';
+  const company = props.quotation.details.find(d => d.company.id === selectedCompany.value);
+  return company?.company.company_name ?? '';
 });
 
-// Dummy data for demonstration
-const companies = [
-  {
-    id: 1,
-    companyName: 'Company A',
-    contactPerson: 'John Doe',
-    address: '123 Main St',
-    contactNumber: '123-456-7890',
-    email: 'company.a@example.com',
-    items: [
-      { name: 'Item 1', description: 'Description 1', price: 100, quantity: 2 },
-      { name: 'Item 2', description: 'Description 2', price: 200, quantity: 1 },
-    ]
-  },
-  {
-    id: 2,
-    companyName: 'Company B',
-    contactPerson: 'Jane Smith',
-    address: '456 Oak St',
-    contactNumber: '098-765-4321',
-    email: 'company.b@example.com',
-    items: [
-      { name: 'Item 1', description: 'Description 1', price: 150, quantity: 2 },
-      { name: 'Item 2', description: 'Description 2', price: 250, quantity: 1 },
-    ]
-  },
-  {
-    id: 3,
-    companyName: 'Company C',
-    contactPerson: 'Bob Wilson',
-    address: '789 Pine St',
-    contactNumber: '456-789-0123',
-    email: 'company.c@example.com',
-    items: [
-      { name: 'Item 1', description: 'Description 1', price: 120, quantity: 2 },
-      { name: 'Item 2', description: 'Description 2', price: 220, quantity: 1 },
-    ]
-  }
-];
+type ActionType = 'decline' | 'return';
+
+const handleAction = (action: ActionType) => {
+  if (!selectedCompany.value) return;
+  
+  const actionMessages = {
+    decline: {
+      title: 'Decline Quotation',
+      message: 'Are you sure you want to decline this quotation?'
+    },
+    return: {
+      title: 'Return Quotation',
+      message: 'Are you sure you want to return this quotation for revision?'
+    }
+  };
+
+  // Here you could add confirmation dialog if needed
+  emit(action, selectedCompany.value);
+};
 </script>
 
 <template>
   <Dialog :open="show" @update:open="emit('close')">
-    <DialogContent class="sm:max-w-[1000px] h-[88vh] flex flex-col">
-      <DialogHeader>
-        <DialogTitle class="flex items-center gap-2">
-          Approve Quotation
-        </DialogTitle>
+    <DialogContent class="max-w-4xl h-[80vh] flex flex-col overflow-hidden">
+      <DialogHeader class="pb-6 flex-none">
+        <DialogTitle>Approve Quotation</DialogTitle>
         <DialogDescription>
           Select a company quotation to approve
         </DialogDescription>
       </DialogHeader>
 
-      <ScrollArea class="flex-1">
-        <div class="px-1">
-          <Table>
-            <TableHeader>
-              <TableRow class="hover:bg-transparent">
-                <TableHead class="w-[250px]">Company</TableHead>
-                <TableHead class="w-[180px]">Contact Person</TableHead>
-                <TableHead>Contact Information</TableHead>
-                <TableHead class="text-right w-[200px]">Total Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <template v-for="company in companies" :key="company.id">
-                <TableRow 
-                  class="cursor-pointer transition-colors"
-                  :class="{ 'bg-blue-100 dark:bg-blue-500/10': selectedCompany === company.id }"
-                  @click="() => selectedCompany = company.id"
-                >
-                  <TableCell class="font-medium">
-                    <div class="flex items-center gap-2">
-                      <Building class="w-4 h-4" />
-                      <span>{{ company.companyName }}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span class="font-medium text-sm">{{ company.contactPerson }}</span>
-                  </TableCell>
-                  <TableCell>
-                    <div class="space-y-1">
-                      <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Mail class="w-3.5 h-3.5" />
-                        {{ company.email }}
-                      </div>
-                      <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone class="w-3.5 h-3.5" />
-                        {{ company.contactNumber }}
-                      </div>
-                      <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin class="w-3.5 h-3.5" />
-                        {{ company.address }}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell class="text-right">
-                    <div class="flex items-center justify-end gap-2">
-                      <span class="text-lg font-medium">
-                        ₱{{ getCompanyTotal(company).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
+      <ScrollArea class="flex-1 px-1 pb-6 h-full">
+        <div class="space-y-6 flex flex-col">
+          <div 
+            v-for="(detail, index) in quotation.details" 
+            :key="index" 
+            class="space-y-4 p-4 bg-muted rounded-md hover:bg-muted/80 cursor-pointer transition-colors relative overflow-hidden"
+            :class="{ 'border-t-4 border-blue-500': selectedCompany === detail.company.id }"
+          >
+            <div 
+              class="flex items-center justify-between"
+              @click="toggleExpand(index)"
+            >
+              <div class="space-y-2">
+                <div class="flex items-center gap-4">
+                  <div 
+                    class="h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors cursor-pointer"
+                    :class="selectedCompany === detail.company.id ? 'bg-primary border-primary' : 'border-muted-foreground'"
+                    @click.stop="selectedCompany = selectedCompany === detail.company.id ? null : detail.company.id"
+                  >
+                    <Check 
+                      v-if="selectedCompany === detail.company.id"
+                      class="h-4 w-4 text-primary-foreground"
+                    />
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <h4 class="text-base font-medium">{{ detail.company.company_name }}</h4>
+                    <div v-if="selectedCompany === detail.company.id" class="text-sm flex items-center gap-2">
+                      <span class="px-2 py-0.5 bg-primary/10 rounded-md text-xs font-medium text-primary">
+                        Selected
                       </span>
-                      <button 
-                        class="p-1 hover:bg-muted rounded-full"
-                        @click.stop="toggleExpand(company.id)"
-                      >
-                        <ChevronDown 
-                          class="w-4 h-4 transition-transform duration-200"
-                          :class="{ 'rotate-180': expandedItems.has(company.id) }"
-                        />
-                      </button>
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span class="text-muted-foreground">Contact Person:</span>
+                    <span class="ml-2">{{ detail.company.contact_person }}</span>
+                  </div>
+                  <div>
+                    <span class="text-muted-foreground">Email:</span>
+                    <span class="ml-2">{{ detail.company.email }}</span>
+                  </div>
+                  <div>
+                    <span class="text-muted-foreground">Contact:</span>
+                    <span class="ml-2">{{ detail.company.contact_number }}</span>
+                  </div>
+                  <div>
+                    <span class="text-muted-foreground">Address:</span>
+                    <span class="ml-2">{{ detail.company.address }}</span>
+                  </div>
+                </div>
+              </div>
+              <ChevronDown 
+                class="w-4 h-4 transition-transform duration-200 text-muted-foreground pointer-events-none"
+                :class="{ 'rotate-180': expandedItems.has(index) }"
+              />
+            </div>
 
-                <TableRow 
-                  v-if="expandedItems.has(company.id)"
-                  class="hover:bg-transparent"
-                  :class="{ 'bg-blue-50 dark:bg-blue-500/10': selectedCompany === company.id }"
-                >
-                  <TableCell colspan="4" class="p-0">
-                    <div class="bg-muted/30 px-4 py-3">
-                      <Table>
-                        <TableHeader>
-                          <TableRow class="hover:bg-transparent">
-                            <TableHead class="w-[200px]">Item</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead class="text-right w-[150px]">Unit Price</TableHead>
-                            <TableHead class="text-right w-[100px]">Quantity</TableHead>
-                            <TableHead class="text-right w-[150px]">Subtotal</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          <TableRow 
-                            v-for="(item, index) in company.items" 
-                            :key="index"
-                            class="transition-colors hover:bg-muted/50"
-                          >
-                            <TableCell class="font-medium">{{ item.name }}</TableCell>
-                            <TableCell>{{ item.description }}</TableCell>
-                            <TableCell class="text-right">
-                              ₱{{ item.price.toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-                            </TableCell>
-                            <TableCell class="text-right">{{ item.quantity }}</TableCell>
-                            <TableCell class="text-right font-medium">
-                              ₱{{ (item.price * item.quantity).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-                            </TableCell>
-                          </TableRow>
-                          <TableRow class="hover:bg-transparent border-t-2">
-                            <TableCell colspan="4" class="text-right font-medium">Total Amount:</TableCell>
-                            <TableCell class="text-right">
-                              <span class="text-lg font-medium">
-                                ₱{{ getCompanyTotal(company).toLocaleString('en-PH', { minimumFractionDigits: 2 }) }}
-                              </span>
-                            </TableCell>
-                          </TableRow>
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </template>
-            </TableBody>
-          </Table>
+            <!-- Items Table (Expandable) -->
+            <div v-if="expandedItems.has(index)" class="relative">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Unit Price</TableHead>
+                    <TableHead>Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow v-for="(item, itemIndex) in detail.items" :key="itemIndex">
+                    <TableCell>{{ item.item_name }}</TableCell>
+                    <TableCell>{{ item.description }}</TableCell>
+                    <TableCell>{{ item.quantity }}</TableCell>
+                    <TableCell>₱{{ formatNumber(item.price) }}</TableCell>
+                    <TableCell>₱{{ formatNumber(item.total) }}</TableCell>
+                  </TableRow>
+                  <TableRow class="font-medium">
+                    <TableCell colSpan="4" class="text-right">Total Amount:</TableCell>
+                    <TableCell>₱{{ formatNumber(calculateTotal(detail.items)) }}</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
+
+            <!-- Show total when collapsed -->
+            <div v-if="!expandedItems.has(index)" class="text-right text-sm font-medium">
+              Total Amount: ₱{{ formatNumber(calculateTotal(detail.items)) }}
+            </div>
+          </div>
         </div>
       </ScrollArea>
 
-      <div class="flex justify-between items-center gap-2 pt-4 border-t">
-        <div class="text-sm text-muted-foreground">
-          {{ selectedCompany ? 'Company selected for approval' : 'Select a company to approve' }}
+      <div class="flex items-center justify-between pt-4 border-t">
+        <div class="text-sm flex items-center gap-2">
+          <span class="text-muted-foreground">Selected Company:</span>
+          <span class="px-2 py-1 bg-primary/10 rounded-md font-medium">
+            {{ selectedCompanyName || 'None' }}
+          </span>
         </div>
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
           <Button
-            type="button"
             variant="outline"
             @click="emit('close')"
           >
             Cancel
           </Button>
           <Button
-            type="button"
+            variant="default"
             :disabled="!selectedCompany"
             @click="selectedCompany && emit('approve', selectedCompany)"
           >
             Approve Selected
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <MoreHorizontal class="h-4 w-4" />
+                <span class="sr-only">More actions</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" class="w-42">
+              <DropdownMenuItem
+                class="text-destructive"
+                @click="handleAction('decline')"
+              >
+                <XCircle class="h-4 w-4 mr-2" />
+                Decline Quotation
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                @click="handleAction('return')"
+              >
+                <RotateCcw class="h-4 w-4 mr-2" />
+                Return Quotation
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </DialogContent>

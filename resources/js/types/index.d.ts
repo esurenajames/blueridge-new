@@ -58,8 +58,21 @@ export interface Quotation {
   updated_at: string;
   details: Array<{
     id: number;
-    company: Company;
-    items: CompanyItem[];
+    company: {
+      id: number;
+      company_name: string;
+      contact_person: string;
+      contact_number: string;
+      email: string;
+      address: string;
+    };
+    items: Array<{
+      item_name: string;
+      description: string;
+      quantity: number;
+      price: number;
+      total: number;
+    }>;
   }>;
 }
 
