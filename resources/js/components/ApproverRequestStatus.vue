@@ -15,6 +15,9 @@ import { MoreHorizontal } from 'lucide-vue-next';
 const props = defineProps<{
   request: {
     status: 'draft' | 'pending' | 'approved' | 'declined' | 'returned' | 'voided';
+    quotation?: {
+      have_quotation: 'true' | 'false';
+    };
   };
 }>();
 
@@ -111,6 +114,7 @@ const handleAction = (title: string, description: string, action: string) => {
             <!-- Primary Action -->
             <Button 
               class="flex-1 gap-2"
+              :disabled="request.quotation?.have_quotation === 'false'"
               @click="handleAction(
                 'Approve Request',
                 'Are you sure you want to approve this request?',
@@ -118,9 +122,8 @@ const handleAction = (title: string, description: string, action: string) => {
               )"
             >
               <CheckCircle2 class="h-4 w-4" />
-              Approve Request
+              {{ request.quotation?.have_quotation === 'false' ? 'Waiting For Quotation...' : 'Approve Quotation' }}
             </Button>
-
             <!-- Secondary Actions Dropdown -->
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

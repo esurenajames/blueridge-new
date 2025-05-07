@@ -82,8 +82,8 @@ class OfficialDashboardController extends Controller
             }
         }
 
-        return to_route('requests.view', [
-            'id' => $newRequest->id
-        ])->with('success', 'Request created successfully');
+        return redirect()->route('requests.view', ['id' => $newRequest->id])->with([
+            'success' => 'Request created successfully'
+        ]);
     }
 }

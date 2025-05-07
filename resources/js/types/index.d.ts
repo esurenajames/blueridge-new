@@ -35,6 +35,34 @@ export interface User {
     updated_at: string;
 }
 
+export interface Company {
+  companyName: string;
+  contactPerson: string;
+  address: string;
+  contactNumber: string;
+  email: string;
+  items: CompanyItem[];
+}
+
+export interface CompanyItem {
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+}
+
+export interface Quotation {
+  id: number;
+  request_id: number;
+  created_at: string;
+  updated_at: string;
+  details: Array<{
+    id: number;
+    company: Company;
+    items: CompanyItem[];
+  }>;
+}
+
 interface Request {
     id: number;
     title: string;
@@ -71,6 +99,7 @@ interface Request {
       approved_status: string;
       remarks?: string;
     }>;
+    quotation?: Quotation;
 }
 
 export type BreadcrumbItemType = BreadcrumbItem;

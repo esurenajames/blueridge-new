@@ -22,6 +22,10 @@ const props = defineProps<{
       approved_progress: string;
       approved_status: string;
       remarks?: string;
+      processor_name?: string;
+      processed_date?: string;
+      processed_progress?: string;
+      processed_status?: string;
     }[];
   };
 }>();
@@ -64,7 +68,7 @@ const showRemarks = (remarks: string) => {
         </div>
 
         <!-- Processed Event (if available) -->
-        <div v-if="request.processed_by" class="relative flex items-start gap-4">
+        <!-- <div v-if="request.processed_by" class="relative flex items-start gap-4">
           <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
             <Clock class="h-4 w-4 text-blue-500" />
           </div>
@@ -76,42 +80,85 @@ const showRemarks = (remarks: string) => {
               </span>
             </div>
           </div>
-        </div>
+        </div> -->
 
+        <!-- Timeline Events -->
         <!-- Timeline Events -->
         <div 
           v-for="timeline in request.timelines" 
           :key="timeline.id"
-          class="relative flex items-start gap-4"
+          class="space-y-6"
         >
-          <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
-            <component 
-              :is="progressIcons[timeline.approved_progress]" 
-              class="h-4 w-4"
-              :class="{
-                'text-green-500': timeline.approved_status === 'approved',
-                'text-red-500': timeline.approved_status === 'declined',
-                'text-yellow-500': timeline.approved_status === 'returned'
-              }"
-            />
-          </div>
-          <div class="flex flex-col gap-0.5">
-            <p class="text-sm font-medium">{{ timeline.approved_progress }} {{ timeline.approved_status }}</p>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-muted-foreground">
-                by {{ timeline.approver_name }} - {{ timeline.approved_date }}
-              </span>
+          <!-- Processor Event -->
+         <div 
+            v-if="timeline.processor_name && timeline.processor_name !== 'N/A' && timeline.processed_date" 
+            class="relative flex items-start gap-4"
+          >
+            <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
+              <Clock 
+                class="h-4 w-4"
+                :class="{
+                  'text-blue-500': timeline.processed_status === 'processed',
+                  'text-red-500': timeline.processed_status === 'voided',
+                  'text-yellow-500': timeline.processed_status === 'resubmitted'
+                }"
+              />
             </div>
-             <div v-if="timeline.remarks" class="flex items-center gap-1 mt-2">
-              <Button 
-                @click="showRemarks(timeline.remarks!)"
-                variant="outline"
-                size="sm"
-                class="h-8 px-3"
-              >
-                <MessageSquare class="h-4 w-4 mr-2" />
-                View Remarks
-              </Button>
+            <div class="flex flex-col gap-0.5">
+              <p class="text-sm font-medium capitalize">{{ timeline.processed_progress }} {{ timeline.processed_status }}</p>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-muted-foreground">
+                  by {{ timeline.processor_name }} - {{ timeline.processed_date }}
+                </span>
+              </div>
+              <div v-if="timeline.remarks" class="flex items-center gap-1 mt-2">
+                <Button 
+                  @click="showRemarks(timeline.remarks!)"
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-3"
+                >
+                  <MessageSquare class="h-4 w-4 mr-2" />
+                  View Process Remarks
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Approver Event -->
+          <div 
+            v-if="timeline.approver_name && timeline.approver_name !== 'N/A' && timeline.approved_date" 
+            class="relative flex items-start gap-4"
+          >
+            <div class="flex h-10 w-10 items-center justify-center rounded-full border bg-background shadow">
+              <component 
+                :is="progressIcons[timeline.approved_progress]" 
+                class="h-4 w-4"
+                :class="{
+                  'text-green-500': timeline.approved_status === 'approved',
+                  'text-red-500': timeline.approved_status === 'declined',
+                  'text-yellow-500': timeline.approved_status === 'returned'
+                }"
+              />
+            </div>
+            <div class="flex flex-col gap-0.5">
+              <p class="text-sm font-medium capitalize">{{ timeline.approved_progress }} {{ timeline.approved_status }}</p>
+              <div class="flex items-center gap-2" v-if="timeline.approver_name && timeline.approved_date">
+                <span class="text-xs text-muted-foreground">
+                  by {{ timeline.approver_name }} - {{ timeline.approved_date }}
+                </span>
+              </div>
+              <div v-if="timeline.remarks" class="flex items-center gap-1 mt-2">
+                <Button 
+                  @click="showRemarks(timeline.remarks!)"
+                  variant="outline"
+                  size="sm"
+                  class="h-8 px-3"
+                >
+                  <MessageSquare class="h-4 w-4 mr-2" />
+                  View Approval Remarks
+                </Button>
+              </div>
             </div>
           </div>
         </div>

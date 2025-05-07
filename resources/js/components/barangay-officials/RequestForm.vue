@@ -13,6 +13,7 @@ import { Users, Upload, FileText, Check } from 'lucide-vue-next';
 import FileUpload from '@/components/FileUpload.vue';
 import CollaboratorList from '@/components/CollaboratorList.vue';
 import { Textarea } from '@/components/ui/textarea';
+import Confirmation from '@/components/Confirmation.vue';
 
 const props = defineProps<{
   show: boolean;
@@ -25,6 +26,8 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 const currentStep = ref(1);
+const showConfirmation = ref(false);
+const formValues = ref(null);
 
 const steps = [{
   step: 1,
@@ -131,22 +134,35 @@ const onSubmit = () => {
     permission: collaborator.permission
   }));
 
-  form.name = nameValue.value;
-  form.category = categoryValue.value;
-  form.description = descriptionValue.value;
-  form.collaborators = formattedCollaborators;
-  form.files = uploadedFiles.value;
+  formValues.value = {
+    name: nameValue.value,
+    category: categoryValue.value,
+    description: descriptionValue.value,
+    collaborators: formattedCollaborators,
+    files: uploadedFiles.value
+  };
+
+  showConfirmation.value = true;
+};
+
+const handleConfirm = () => {
+  const values = formValues.value;
+  
+  form.name = values.name;
+  form.category = values.category;
+  form.description = values.description;
+  form.collaborators = values.collaborators;
+  form.files = values.files;
 
   form.post(route('dashboard.store-request'), {
     preserveScroll: true,
     forceFormData: true,
-    onSuccess: (page) => {
+    onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Request created successfully",
-        variant: "success",
+          title: "Success",
+          description: "Request created successfully",
+          variant: "success",
       });
-      window.location.href = route('requests.view', { id: page.props.request.id });
     },
     onError: (errors) => {
       if (errors.name || errors.category || errors.description) {
@@ -161,6 +177,7 @@ const onSubmit = () => {
       });
     },
   });
+  showConfirmation.value = false;
 };
 </script>
 
@@ -203,7 +220,7 @@ const onSubmit = () => {
           </Stepper>
         </div>
 
-        <div class="mt-8">
+        <div class="mt-4">
           <!-- Step 1: Request Info -->
           <div v-if="currentStep === 1" class="space-y-4">
             <div class="grid gap-4">
@@ -291,6 +308,13 @@ const onSubmit = () => {
           </div>
         </div>
       </form>
+      <Confirmation
+        :show="showConfirmation"
+        title="Submit Request"
+        description="Are you sure you want to submit this request?"
+        @confirm="handleConfirm"
+        @cancel="showConfirmation = false"
+      />
     </DialogContent>
   </Dialog>
 </template>
