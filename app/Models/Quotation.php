@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quotation extends Model
 {
@@ -11,6 +12,7 @@ class Quotation extends Model
     protected $fillable = [
         'request_id',
         'status',
+        'have_quotation',
         'processed_by',
         'processed_at'
     ];
@@ -27,5 +29,10 @@ class Quotation extends Model
     public function processor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'processed_by');
+    }
+
+    public function details(): HasMany
+    {
+        return $this->hasMany(QuotationDetail::class, 'request_quotation_id');
     }
 }

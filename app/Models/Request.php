@@ -70,6 +70,7 @@ class Request extends Model
 
     public function timelines(): HasMany
     {
-        return $this->hasMany(RequestTimeline::class)->orderBy('approved_date', 'desc');
+        return $this->hasMany(RequestTimeline::class)
+            ->orderByRaw('COALESCE(processed_date, approved_date) DESC');
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Officials;
 
+use App\Http\Requests\QuotationFormRequest;
 use App\Http\Requests\RequestFormRequest;
+use App\Models\Company;
 use App\Models\RequestFile;
 use App\Models\User;
 use Carbon\Carbon;
@@ -11,20 +13,30 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Request as RequestModel;
 use Inertia\Inertia;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\RequestResource;
+use Illuminate\Http\Request as HttpRequest;
 
 class OfficialRequestController extends Controller
 {
 
     public function index($tab = 'all')
     {
+        // Get active users for collaborator selection
         $activeUsers = User::query()
             ->where('status', 'active')
             ->where('role', 'official')
             ->select('id', 'name', 'role')
             ->get();
-
+    
+        // Base query to get requests user has access to
         $baseQuery = RequestModel::query()
-            ->with(['creator', 'collaborators', 'quotation', 'purchaseRequest', 'purchaseOrder'])
+            ->with([
+                'creator', 
+                'collaborators', 
+                'files',
+                'timelines.approver',
+                'processor'
+            ])
             ->where(function ($query) {
                 $query->where('created_by', auth()->id())
                     ->orWhereHas('collaborators', function ($q) {
@@ -32,91 +44,59 @@ class OfficialRequestController extends Controller
                     });
             });
     
-        // Get all active requests including drafts for the 'all' tab
-        $allRequests = (clone $baseQuery)
-            ->whereIn('status', ['pending', 'draft'])
-            ->latest()
-            ->get();
-    
-        // Get requests that are in form stage (pending only, no entries in other tables)
-        $formRequests = (clone $baseQuery)
-            ->where('status', 'pending')
-            ->whereDoesntHave('quotation')
-            ->whereDoesntHave('purchaseRequest')
-            ->whereDoesntHave('purchaseOrder')
-            ->latest()
-            ->get();
-    
-        // Get requests that are in quotation stage
-        $quotationRequests = (clone $baseQuery)
-            ->whereHas('quotation', function($query) {
-                $query->where('status', 'pending');
-            })
-            ->latest()
-            ->get();
-    
-        // Get requests that are in purchase request stage
-        $purchaseRequestRequests = (clone $baseQuery)
-            ->whereHas('purchaseRequest', function($query) {
-                $query->where('status', 'pending');
-            })
-            ->latest()
-            ->get();
-    
-        // Get requests that are in purchase order stage
-        $purchaseOrderRequests = (clone $baseQuery)
-            ->whereHas('purchaseOrder', function($query) {
-                $query->where('status', 'pending');
-            })
-            ->latest()
-            ->get();
-    
-        // Get completed or voided requests
-        $historicalRequests = (clone $baseQuery)
-            ->whereIn('status', ['completed', 'voided'])
-            ->latest()
-            ->get();
-    
-        $transformedRequests = collect([
-            'all' => $allRequests,
-            'form' => $formRequests,
-            'quotation' => $quotationRequests,
-            'purchase-request' => $purchaseRequestRequests,
-            'purchase-order' => $purchaseOrderRequests,
-            'history' => $historicalRequests
-        ])->map(function ($requests) {  
-            return $requests->map(function ($request) {
-                return [
-                    'id' => $request->id,
-                    'title' => $request->name,
-                    'category' => $request->category,
-                    'status' => $request->status,
-                    'description' => $request->description,
-                    'created_at' => $request->created_at->format('Y-m-d'),
-                    'created_by' => $request->creator ? $request->creator->name : null,
-                    'collaborators' => $request->collaborators->map(fn($collaborator) => [
-                        'id' => $collaborator->id,
-                        'name' => $collaborator->name,
-                        'permission' => $collaborator->pivot->permission
-                    ]),
-                    'quotation' => $request->quotation ? [
-                        'remarks' => $request->quotation->remarks,
-                        'status' => $request->quotation->status
-                    ] : null,
-                    'purchase_request' => $request->purchaseRequest ? [
-                        'remarks' => $request->purchaseRequest->remarks,
-                        'status' => $request->purchaseRequest->status
-                    ] : null,
-                    'purchase_order' => $request->purchaseOrder ? [
-                        'remarks' => $request->purchaseOrder->remarks,
-                        'status' => $request->purchaseOrder->status
-                    ] : null
-                ];
-            });
-        });
-
         return Inertia::render('officials/RequestViewAll', [
-            'requests' => $transformedRequests,
+            'requests' => [
+                // All requests (pending + draft)
+                'all' => RequestResource::collection(
+                    (clone $baseQuery)
+                        ->latest()
+                        ->get()
+                ),
+                
+                // Request Form stage
+                'form' => RequestResource::collection(
+                    (clone $baseQuery)
+                        ->whereIn('status', ['pending', 'returned'])
+                        ->where('progress', 'Request Form')
+                        ->latest()
+                        ->get()
+                ),
+                
+                // Quotation stage
+                'quotation' => RequestResource::collection(
+                    (clone $baseQuery)
+                        ->whereIn('status', ['pending', 'returned'])
+                        ->where('progress', 'Quotation')
+                        ->latest()
+                        ->get()
+                ),
+                
+                // Purchase Request stage
+                'purchase-request' => RequestResource::collection(
+                    (clone $baseQuery)
+                        ->whereIn('status', ['pending', 'returned'])
+                        ->where('progress', 'Purchase Request')
+                        ->latest()
+                        ->get()
+                ),
+                
+                // Purchase Order stage
+                'purchase-order' => RequestResource::collection(
+                    (clone $baseQuery)
+                        ->whereIn('status', ['pending', 'returned'])
+                        ->where('progress', 'Purchase Order')
+                        ->latest()
+                        ->get()
+                ),
+                
+                // History (completed, voided, declined)
+                'history' => RequestResource::collection(
+                    (clone $baseQuery)
+                        ->whereIn('status', ['completed', 'voided', 'declined'])
+                        ->latest()
+                        ->get()
+                ),
+            ],
             'initialTab' => $tab,
             'auth' => [
                 'user' => auth()->user()->only(['id', 'name', 'email', 'role']),
@@ -139,13 +119,22 @@ class OfficialRequestController extends Controller
         return Storage::disk('private')->download($file->path, $file->name);
     }
 
-    public function process($id)
+    public function process(HttpRequest $httpRequest, $id)
     {
         $request = RequestModel::findOrFail($id);
         $request->status = 'pending';
         $request->processed_by = auth()->id();
         $request->processed_at = now();
         $request->save();
+
+        $request->timelines()->create([
+            'request_id' => $request->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => $request->progress,
+            'processed_status' => 'processed',
+            'remarks' => $httpRequest->remarks ?? null
+        ]);
     
         return back()->with([
             'success' => 'Request processed successfully',
@@ -153,11 +142,20 @@ class OfficialRequestController extends Controller
         ]);
     }
     
-    public function void($id)
+    public function void(HttpRequest $httpRequest, $id)
     {
         $request = RequestModel::findOrFail($id);
         $request->status = 'voided';
         $request->save();
+
+        $request->timelines()->create([
+            'request_id' => $request->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => $request->progress,
+            'processed_status' => 'voided',
+            'remarks' => $httpRequest->remarks ?? null
+        ]);
     
         return back()->with([
             'success' => 'Request voided successfully',
@@ -167,54 +165,39 @@ class OfficialRequestController extends Controller
 
     public function show($id)
     {
-    $request = RequestModel::with(['creator', 'collaborators', 'files', 'processor'])
-        ->findOrFail($id);
+        $request = RequestModel::with([
+            'creator', 
+            'collaborators', 
+            'files', 
+            'processor',
+            'timelines.approver',
+            'quotation',
+        ])->findOrFail($id);
 
-    $userPermission = 'view';
-    
-    if ($request->created_by === auth()->id()) {
-        $userPermission = 'owner';
-    } else {
-        $collaborator = $request->collaborators->where('id', auth()->id())->first();
-        if ($collaborator) {
-            $userPermission = $collaborator->pivot->permission;
+        $userPermission = 'view';
+        
+        if ($request->created_by === auth()->id()) {
+            $userPermission = 'owner';
+        } else {
+            $collaborator = $request->collaborators->where('id', auth()->id())->first();
+            if ($collaborator) {
+                $userPermission = $collaborator->pivot->permission;
+            }
         }
-    }
 
-    $activeUsers = User::query()
-        ->where('status', 'active')
-        ->where('role', 'official')
-        ->whereNotIn('id', [
-            $request->created_by,  
-            auth()->id()         
-        ])
-        ->whereNotIn('id', $request->collaborators->pluck('id')) // Exclude existing collaborators
-        ->select('id', 'name', 'role')
-        ->get();
+        $activeUsers = User::query()
+            ->where('status', 'active')
+            ->where('role', 'official')
+            ->whereNotIn('id', [
+                $request->created_by,  
+                auth()->id()         
+            ])
+            ->whereNotIn('id', $request->collaborators->pluck('id'))
+            ->select('id', 'name', 'role')
+            ->get();
 
         return Inertia::render('officials/RequestView', [
-            'request' => [
-                'id' => $request->id,
-                'title' => $request->name,
-                'category' => $request->category,
-                'description' => $request->description,
-                'status' => $request->status,
-                'created_at' => $request->created_at->format('Y-m-d'),
-                'created_by' => $request->creator->name,
-                'processed_by' => $request->processor ? $request->processor->name : null,
-                'processed_at' => $request->processed_at ? Carbon::parse($request->processed_at)->format('Y-m-d') : null,
-                'collaborators' => $request->collaborators->map(fn($c) => [
-                    'id' => $c->id,  
-                    'name' => $c->name,
-                    'role' => $c->role,
-                    'permission' => $c->pivot->permission
-                ]),
-                'files' => $request->files->map(fn($f) => [
-                    'name' => $f->name,
-                    'size' => $f->size,
-                    'uploaded_at' => $f->created_at->format('Y-m-d'),
-                ]),
-            ],
+            'request' => new RequestResource($request),
             'userPermission' => $userPermission,
             'activeUsers' => $activeUsers,
         ]);
@@ -224,14 +207,14 @@ class OfficialRequestController extends Controller
     {
         $requestModel = RequestModel::findOrFail($id);
         $validated = $request->validated();
-
+    
         // Update basic info
         $requestModel->update([
             'name' => $validated['name'],
             'category' => $validated['category'],
             'description' => $validated['description'],
         ]);
-
+    
         // Update collaborators
         if (isset($validated['collaborators'])) {
             $collaborators = collect($validated['collaborators'])->mapWithKeys(function ($collaborator) {
@@ -240,19 +223,19 @@ class OfficialRequestController extends Controller
             
             $requestModel->collaborators()->sync($collaborators);
         }
-
+    
         // Handle removed files
         if ($request->has('removedFiles')) {
             $filesToDelete = $requestModel->files()
                 ->whereIn('name', $request->removedFiles)
                 ->get();
-
+    
             foreach ($filesToDelete as $file) {
                 Storage::disk('private')->delete($file->path);
                 $file->delete();
             }
         }
-
+    
         // Handle new file uploads
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
@@ -265,32 +248,128 @@ class OfficialRequestController extends Controller
                 ]);
             }
         }
-
+    
         // Reload the request with relationships
-        $requestModel->load(['creator', 'collaborators', 'files']);
-
+        $requestModel->load(['creator', 'collaborators', 'files', 'timelines.approver', 'processor']);
+    
         return back()->with([
             'success' => 'Request updated successfully',
-            'request' => [
-                'id' => $requestModel->id,
-                'title' => $requestModel->name,
-                'category' => $requestModel->category,
-                'description' => $requestModel->description,
-                'status' => $requestModel->status,
-                'created_at' => $requestModel->created_at->format('Y-m-d'),
-                'created_by' => $requestModel->creator->name,
-                'collaborators' => $requestModel->collaborators->map(fn($c) => [
-                    'id' => $c->id,
-                    'name' => $c->name,
-                    'role' => $c->role,
-                    'permission' => $c->pivot->permission
-                ]),
-                'files' => $requestModel->files->map(fn($f) => [
-                    'name' => $f->name,
-                    'size' => $f->size,
-                    'uploaded_at' => $f->created_at->format('Y-m-d'),
-                ]),
+            'request' => new RequestResource($requestModel),
+        ]);
+    }
+
+    public function resubmit(RequestFormRequest $request, $id)
+    {
+        $requestModel = RequestModel::findOrFail($id);
+        $validated = $request->validated();
+    
+        // Update basic info if request form stage
+        if ($requestModel->progress === 'Request Form') {
+            // Update request details
+            $requestModel->update([
+                'name' => $validated['name'],
+                'category' => $validated['category'],
+                'description' => $validated['description'],
+                'status' => 'pending'
+            ]);
+    
+            // Update collaborators
+            if (isset($validated['collaborators'])) {
+                $collaborators = collect($validated['collaborators'])->mapWithKeys(function ($collaborator) {
+                    return [$collaborator['id'] => ['permission' => $collaborator['permission']]];
+                })->all();
+                
+                $requestModel->collaborators()->sync($collaborators);
+            }
+    
+            // Handle removed files
+            if ($request->has('removedFiles')) {
+                $filesToDelete = $requestModel->files()
+                    ->whereIn('name', $request->removedFiles)
+                    ->get();
+    
+                foreach ($filesToDelete as $file) {
+                    Storage::disk('private')->delete($file->path);
+                    $file->delete();
+                }
+            }
+    
+            if ($request->hasFile('files')) {
+                foreach ($request->file('files') as $file) {
+                    $path = $file->store('requests/' . $requestModel->id, 'private');
+                    
+                    $requestModel->files()->create([
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                        'size' => $file->getSize(),
+                    ]);
+                }
+            }
+        }
+    
+        $requestModel->load(['creator', 'collaborators', 'files', 'timelines.approver', 'processor']);
+    
+        return back()->with([
+            'success' => 'Request resubmitted successfully',
+            'request' => new RequestResource($requestModel),
+        ]);
+    }
+
+    public function submitQuotation(QuotationFormRequest $request, $id)
+    {
+        $requestModel = RequestModel::findOrFail($id);
+        
+        // Create or update quotation
+        $quotation = $requestModel->quotation()->updateOrCreate(
+            ['request_id' => $requestModel->id],
+            [
+                'status' => 'pending',
+                'processed_by' => auth()->id(),
+                'processed_at' => now(),
             ]
+        );
+
+        $quotation->have_quotation = true;
+        $quotation->save();
+
+        // Process each company
+        foreach ($request->validated()['companies'] as $companyData) {
+            // Create or update company
+            $company = Company::updateOrCreate(
+                ['email' => $companyData['email']],
+                [
+                    'company_name' => $companyData['companyName'],
+                    'contact_person' => $companyData['contactPerson'],
+                    'address' => $companyData['address'],
+                    'contact_number' => $companyData['contactNumber'],
+                ]
+            );
+
+            // Create quotation detail
+            $quotationDetail = $quotation->details()->create([
+                'company_id' => $company->id,
+                'is_selected' => false,
+            ]);
+
+            // Create items for this quotation detail
+            foreach ($companyData['items'] as $itemData) {
+                $quotationDetail->items()->create([
+                    'item_name' => $itemData['name'],
+                    'description' => $itemData['description'],
+                    'price' => $itemData['price'],
+                    'quantity' => $itemData['quantity'],
+                ]);
+            }
+        }
+
+        // Update request progress
+        $requestModel->update([
+            'status' => 'pending'
+        ]);
+
+        return back()->with([
+            'success' => 'Quotation submitted successfully',
+            'request' => new RequestResource($requestModel->load(['quotation.details.company', 'quotation.details.items']))
         ]);
     }
 }

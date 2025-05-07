@@ -15,6 +15,10 @@ class RequestTimeline extends Model
         'approved_date',
         'approved_progress',
         'approved_status',
+        'processor_id',
+        'processed_date',
+        'processed_progress',
+        'processed_status',
         'remarks'
     ];
 
@@ -30,5 +34,10 @@ class RequestTimeline extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approver_id');
+    }
+
+    public function processor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'processor_id');
     }
 }

@@ -57,7 +57,8 @@ class CaptainRequestController extends Controller
             'files', 
             'processor', 
             'approver',
-            'timelines.approver'
+            'timelines.approver',
+            'quotation',
         ])->findOrFail($id);
 
         return Inertia::render('captain/CaptainRequestView', [

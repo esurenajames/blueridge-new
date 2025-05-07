@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ref, computed, watch } from 'vue';
+import { type Request } from '@/types';
 import { Clock, CheckCircle, XCircle, AlertCircle, LayoutGrid, ClipboardList, FileSpreadsheet, ShoppingCart, ShoppingBag, History, Eye, Edit2, Trash2, MoreVertical } from 'lucide-vue-next';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -14,32 +15,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'View All Requests',
-        href: route('requests.index'),  // Changed from '/admin/requests'
+        href: route('requests.index'),
     },
 ];
 
-interface Request {
-    id: number;
-    name: string;
-    category: string;
-    status: string;
-    description: string;
-    created_at: string;
-    created_by: string;
-    collaborators?: Array<{
-        id: number;
-        name: string;
-        permission: string;
-    }>;
-}
-
 interface RequestsByTab {
-    all: Request[];
-    form: Request[];
-    quotation: Request[];
-    'purchase-request': Request[];
-    'purchase-order': Request[];
-    history: Request[];
+    all: { data: Request[] };
+    form: { data: Request[] };
+    quotation: { data: Request[] };
+    'purchase-request': { data: Request[] };
+    'purchase-order': { data: Request[] };
+    history: { data: Request[] };
 }
 
 const { requests, initialTab } = usePage().props as {
@@ -61,18 +47,18 @@ const getStatusConfig = (status: string) => {
 };
 
 const tabs = [
-    { id: 'all', label: 'View All', count: requests.all.length, icon: LayoutGrid },
-    { id: 'form', label: 'Request Form', count: requests.form.length, icon: ClipboardList },
-    { id: 'quotation', label: 'Quotation', count: requests.quotation.length, icon: FileSpreadsheet },
-    { id: 'purchase-request', label: 'Purchase Request', count: requests['purchase-request'].length, icon: ShoppingCart },
-    { id: 'purchase-order', label: 'Purchase Order', count: requests['purchase-order'].length, icon: ShoppingBag },
-    { id: 'history', label: 'History', count: requests.history.length, icon: History },
+    { id: 'all', label: 'View All', count: requests.all.data.length, icon: LayoutGrid },
+    { id: 'form', label: 'Request Form', count: requests.form.data.length, icon: ClipboardList },
+    { id: 'quotation', label: 'Quotation', count: requests.quotation.data.length, icon: FileSpreadsheet },
+    { id: 'purchase-request', label: 'Purchase Request', count: requests['purchase-request'].data.length, icon: ShoppingCart },
+    { id: 'purchase-order', label: 'Purchase Order', count: requests['purchase-order'].data.length, icon: ShoppingBag },
+    { id: 'history', label: 'History', count: requests.history.data.length, icon: History },
 ];
 
 const currentTab = ref(initialTab || 'all');
 
 const filteredRequests = computed(() => {
-    return requests[currentTab.value as keyof RequestsByTab];
+    return requests[currentTab.value as keyof RequestsByTab].data;
 });
 
 const handleCardClick = (requestId: number) => {
@@ -87,8 +73,6 @@ watch(currentTab, (newTab) => {
 
 const page = usePage();
 const user = computed(() => {
-    console.log('Full auth props:', page.props.auth);
-    console.log('User object:', page.props.auth?.user);
     return page.props.auth.user;
 });
 </script>
@@ -173,8 +157,8 @@ const user = computed(() => {
                                                 {{ request.description }}
                                             </p>
 
-                                            <!-- Collaborators with modern styling -->
-                                            <div class="flex items-center gap-3">
+                                            <!-- Collaborators section -->
+                                            <div class="flex items-center gap-3" v-if="request.collaborators?.length">
                                                 <div class="flex -space-x-2">
                                                     <div 
                                                         v-for="collaborator in request.collaborators" 
@@ -192,7 +176,7 @@ const user = computed(() => {
                                                 </span>
                                             </div>
 
-                                            <!-- Modern footer -->
+                                            <!-- Footer section -->
                                             <div class="flex items-center justify-between pt-4 border-t border-border/50">
                                                 <div class="flex items-center gap-2 text-xs text-muted-foreground/75">
                                                     <span>Created by {{ request.created_by }}</span>

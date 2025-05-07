@@ -40,14 +40,17 @@ Route::get('dashboard', [OfficialDashboardController::class, 'index'])
 
 Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     // Request Viewing and Creation
-    Route::get('/requests/{tab?}', [OfficialRequestController::class, 'index'])->name('requests.index');
-    Route::get('/requests/view/{id}', [OfficialRequestController::class, 'show'])->name('requests.view');
+    Route::get('/requests/view/{id}', [OfficialRequestController::class, 'show'])->name('requests.view');  // Move this route first
+    Route::get('/requests/{tab?}', [OfficialRequestController::class, 'index'])->name('requests.index');    // Move this route second
     Route::post('/dashboard/store-request', [OfficialDashboardController::class, 'storeRequest'])->name('dashboard.store-request');
     
     // Request View Actions
     Route::post('/requests/{id}', [OfficialRequestController::class, 'update'])->name('requests.update');
     Route::post('/requests/{id}/process', [OfficialRequestController::class, 'process'])->name('requests.process');
     Route::post('/requests/{id}/void', [OfficialRequestController::class, 'void'])->name('requests.void');
+    Route::post('/requests/{id}/resubmit', [OfficialRequestController::class, 'resubmit'])->name('requests.resubmit');
+
+    Route::post('/officials/requests/{id}/quotation', [OfficialRequestController::class, 'submitQuotation'])->name('officials.requests.quotation.submit');
 });
 
 /*
@@ -85,6 +88,8 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     Route::post('/requests/{id}/approve', [CaptainRequestController::class, 'approve'])->name('requests.approve');
     Route::post('/requests/{id}/decline', [CaptainRequestController::class, 'decline'])->name('requests.decline');
     Route::post('/requests/{id}/return', [CaptainRequestController::class, 'return'])->name('requests.return');
+
+    
 });
 
 /*

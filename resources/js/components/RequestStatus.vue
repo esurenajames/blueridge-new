@@ -3,32 +3,23 @@ import { computed } from 'vue';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle2, 
-  XCircle, 
-  RefreshCw, 
-  Clock, 
-  RotateCcw,
-  CheckCircle, 
-  AlertCircle,
-  MoreHorizontal 
-} from 'lucide-vue-next';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import { CheckCircle2, XCircle, RefreshCw, Clock, RotateCcw, CheckCircle, AlertCircle, MoreHorizontal, FileText } from 'lucide-vue-next';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const props = defineProps<{
   request: {
-    status: 'draft' | 'pending' | 'approved' | 'declined' | 'voided' | 'completed';
+    status: 'draft' | 'pending' | 'approved' | 'voided' | 'completed';
+  };
+  quotation?: {
+    have_quotation: 'true' | 'false';
   };
   canEdit: boolean;
 }>();
 
 const emit = defineEmits<{
-  'show-confirmation': [title: string, description: string, action: string]
+  'show-confirmation': [title: string, description: string, action: string];
+  'show-edit': [];
+  'show-quotation': [];
 }>();
 
 const statusConfig = computed(() => {
@@ -68,7 +59,7 @@ const statusConfig = computed(() => {
     case 'returned':
       return {
         icon: RotateCcw,
-        class: 'bg-orange-500 dark:bg-orange-500/20',
+        class: 'bg-orange-500/20 dark:bg-orange-500/20',
         iconClass: 'text-orage-600 dark:text-orange-50',
         badge: 'default',
         message: 'This request has been returned for revision.'
@@ -125,10 +116,33 @@ const handleAction = (title: string, description: string, action: string) => {
       <div class="flex flex-col gap-3 pt-2">
         <template v-if="canEdit">
           <div class="flex gap-2" v-if="request.status !== 'voided'">
-            <!-- Primary Action -->
+            <!-- Primary Actions -->
             <Button 
               class="flex-1 gap-2"
-              v-if="request.status !== 'declined' && request.status !== 'pending'"
+              v-if="request.status === 'returned'"
+              @click="emit('show-edit')"
+            >
+              <RefreshCw class="h-4 w-4" />
+              Resubmit Documents
+            </Button>
+
+            <Button 
+              v-else-if="request.quotation?.have_quotation === 'false'"
+              class="flex-1 gap-2"
+              @click="emit('show-confirmation', 
+                'Submit Quotation',
+                'Are you sure you want to submit quotation for this request?',
+                'show-quotation'
+              )"
+            >
+              <FileText class="h-4 w-4" />
+              Submit Quotation
+            </Button>
+
+            <Button 
+              v-else
+              class="flex-1 gap-2"
+              :disabled="request.status === 'pending'"
               @click="handleAction(
                 'Process Request',
                 'Are you sure you want to process this request?',
@@ -137,19 +151,6 @@ const handleAction = (title: string, description: string, action: string) => {
             >
               <CheckCircle2 class="h-4 w-4" />
               Process Request
-            </Button>
-
-            <Button 
-              class="flex-1 gap-2"
-              v-if="request.status === 'declined'"
-              @click="handleAction(
-                'Re-process Request',
-                'Are you sure you want to re-process this request?',
-                'reprocess'
-              )"
-            >
-              <CheckCircle2 class="h-4 w-4" />
-              Re-process Request
             </Button>
 
             <!-- Secondary Actions Dropdown -->
@@ -161,17 +162,6 @@ const handleAction = (title: string, description: string, action: string) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" class="w-42">
-                <DropdownMenuItem
-                  v-if="request.status === 'returned'"
-                  @click="handleAction(
-                    'Resubmit Documents',
-                    'Are you sure you want to resubmit the documents?',
-                    'resubmit'
-                  )"
-                >
-                  <RefreshCw class="h-4 w-4 mr-2" />
-                  Resubmit
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   class="text-destructive"
                   @click="handleAction(

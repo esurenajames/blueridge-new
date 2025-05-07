@@ -7,45 +7,36 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from '@inertiajs/vue3';
 import { useToast } from '@/components/ui/toast';
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useField, useForm as useVeeForm } from 'vee-validate';
 import { object, string, array } from 'yup';
 import { Check, FileText, Users, Upload } from 'lucide-vue-next';
 import FileUpload from '@/components/FileUpload.vue';
 import CollaboratorsList from '@/components/CollaboratorList.vue';
 import { Textarea } from '@/components/ui/textarea';
+import Confirmation from '@/components/Confirmation.vue';
+import type { Request } from '@/types';
 
 const props = defineProps<{
   show: boolean;
-  request: {
-    id: number;
-    title: string;
-    category: string;
-    description: string;
-    collaborators?: Array<{
-      id: number;
-      name: string;
-      permission: string;
-    }>;
-    files?: Array<{
-      name: string;
-      size: number;
-    }>;
-  };
+  request: Request;
   activeUsers: Array<{ 
     id: number;
     name: string;
     role: string;
   }>;
+  isResubmit?: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'update:request', value: any): void;
+  (e: 'update:request', value: { data: Request }): void;
 }>();
 
 const { toast } = useToast();
 const currentStep = ref(1);
+const showConfirmation = ref(false);
+const formValues = ref(null);
 
 const steps = [
   {
@@ -130,6 +121,12 @@ const isStepValid = computed(() => {
 });
 
 const onSubmit = handleSubmit((values) => {
+  formValues.value = values;
+  showConfirmation.value = true;
+});
+
+const handleConfirm = () => {
+  const values = formValues.value;
   const formData = new FormData();
   formData.append('name', values.name);
   formData.append('category', values.category);
@@ -141,14 +138,16 @@ const onSubmit = handleSubmit((values) => {
     formData.append('files[]', file);
   });
 
-  useForm(values).post(route('requests.update', { id: props.request.id }), {
+  const routeName = props.isResubmit ? 'requests.resubmit' : 'requests.update';
+
+  useForm(values).post(route(routeName, { id: props.request.id }), {
     preserveScroll: true,
     forceFormData: true,
     onSuccess: (page) => {
       emit('update:request', page.props.request);
       toast({
         title: "Success",
-        description: "Request updated successfully",
+        description: props.isResubmit ? "Request resubmitted successfully" : "Request updated successfully",
         variant: "success",
       });
       emit('close');
@@ -166,7 +165,8 @@ const onSubmit = handleSubmit((values) => {
       });
     },
   });
-});
+  showConfirmation.value = false;
+};
 
 const nextStep = () => {
   if (currentStep.value < steps.length && isStepValid.value) {
@@ -185,13 +185,13 @@ const prevStep = () => {
   <Dialog :open="show" @update:open="emit('close')">
     <DialogContent class="sm:max-w-[700px]">
       <DialogHeader>
-        <DialogTitle>Edit Request</DialogTitle>
+        <DialogTitle>{{ props.isResubmit ? 'Resubmit Request' : 'Edit Request' }}</DialogTitle>
         <DialogDescription>
-          Update your request details below
+          {{ props.isResubmit ? 'Update and resubmit your request' : 'Update your request details below' }}
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex justify-center mb-8">
+      <div class="flex justify-center mb-4">
         <Stepper v-model="currentStep" class="max-w-[600px]">
           <StepperItem
             v-for="item in steps"
@@ -320,11 +320,22 @@ const prevStep = () => {
               type="submit"
               :disabled="!isStepValid"
             >
-              Save Changes
+              {{ props.isResubmit ? 'Resubmit' : 'Save Changes' }}
             </Button>
           </div>
         </div>
       </form>
+
+      <!-- Confirmation Dialog -->
+      <Confirmation
+        :show="showConfirmation"
+        :title="props.isResubmit ? 'Resubmit Request' : 'Update Request'"
+        :description="props.isResubmit 
+          ? 'Are you sure you want to resubmit this request?' 
+          : 'Are you sure you want to update this request?'"
+        @confirm="handleConfirm"
+        @cancel="showConfirmation = false"
+      />
     </DialogContent>
   </Dialog>
 </template>
