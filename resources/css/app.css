@@ -8,6 +8,11 @@ html {
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+.remarks-dialog-z,
+.remarks-dialog-z + .dialog-overlay {
+  z-index: 1200 !important;
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;

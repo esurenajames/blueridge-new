@@ -30,7 +30,7 @@ const handleCancel = () => {
 
 <template>
   <Dialog :open="show" @update:open="handleCancel">
-    <DialogContent>
+    <DialogContent class="remarks-dialog-z">
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
         <DialogDescription v-if="description">

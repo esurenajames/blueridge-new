@@ -27,10 +27,6 @@ const props = defineProps<{
 
 const breadcrumbs: BreadcrumbItem[] = [
   {
-    title: 'Dashboard',
-    href: route('captain.dashboard'),
-  },
-  {
     title: 'Requests',
     href: route('captain.requests'),
   },

@@ -25,7 +25,8 @@ class RequestResource extends JsonResource
             'created_by' => $this->creator ? $this->creator->name : 'Unknown User',
             'processed_by' => $this->processor ? $this->processor->name : null,
             'processed_at' => $this->processed_at ? Carbon::parse($this->processed_at)->format('Y-m-d') : null,
-            'progress' => $this->progress, // just show the current progress value from the model
+            'progress' => $this->progress, 
+            'is_completed' => $this->is_completed,
             'stages' => [
                 'form' => in_array('Request Form', $approvedStages),
                 'quotation' => in_array('Quotation', $approvedStages),

@@ -39,6 +39,11 @@ const remarksState = ref({
   action: '' as 'approve' | 'decline' | 'return'
 });
 
+// --- Add these refs for quotation approve flow ---
+const quotationApproveCompanyId = ref<number | null>(null);
+const isQuotationApproveFlow = ref(false);
+// -------------------------------------------------
+
 const props = defineProps<{
   request: {
     data: Request;
@@ -55,10 +60,6 @@ watch(
 );
 
 const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'Dashboard',
-    href: route('captain.dashboard'),
-  },
   {
     title: 'Requests',
     href: route('captain.requests'),
@@ -105,10 +106,34 @@ const handleStatusAction = (title: string, description: string, action: string) 
 
 const handleRemarksConfirm = (remarks: string) => {
   remarksState.value.show = false;
-  
+
+  if (isQuotationApproveFlow.value && quotationApproveCompanyId.value !== null) {
+    showConfirmation(
+      'Confirm Approval',
+      'Are you sure you want to approve this quotation? Your remarks will be saved with this action.',
+      () => {
+        const payload = { remarks, company_id: quotationApproveCompanyId.value };
+        router.post(route('requests.approve', { id: request.value.id }), payload, {
+          preserveScroll: true,
+          onSuccess: () => {
+            toast({
+              title: "Success",
+              description: "Request has been approved",
+              variant: "success",
+            });
+            showQuotationApprove.value = false;
+          },
+        });
+        isQuotationApproveFlow.value = false;
+        quotationApproveCompanyId.value = null;
+      }
+    );
+    return;
+  }
+
   const title = 'Confirm Action';
   const description = `Are you sure you want to proceed? Your remarks will be saved with this action.`;
-  
+
   showConfirmation(title, description, () => {
     const payload = { remarks };
     const options = {
@@ -137,23 +162,20 @@ const handleRemarksConfirm = (remarks: string) => {
 };
 
 const handleQuotationApprove = (companyId: number) => {
-  const payload = { remarks: '', company_id: companyId };
-  
-  router.post(route('requests.approve', { id: request.value.id }), payload, {
-    preserveScroll: true,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Request has been approved",
-        variant: "success",
-      });
-      showQuotationApprove.value = false;
-    },
-  });
+  quotationApproveCompanyId.value = companyId;
+  isQuotationApproveFlow.value = true;
+  remarksState.value = {
+    show: true,
+    title: 'Approve Quotation',
+    description: 'Please provide remarks for this approval (optional).',
+    action: 'approve'
+  };
 };
 
 const handleRemarksCancel = () => {
   remarksState.value.show = false;
+  isQuotationApproveFlow.value = false;
+  quotationApproveCompanyId.value = null;
 };
 
 const downloadFile = (file: { name: string }) => {

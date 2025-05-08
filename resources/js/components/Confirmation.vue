@@ -16,7 +16,7 @@ const emit = defineEmits<{
 
 <template>
   <Dialog :open="show" @update:open="emit('cancel')">
-    <DialogContent>
+    <DialogContent class="remarks-dialog-z">
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
         <DialogDescription v-if="description">

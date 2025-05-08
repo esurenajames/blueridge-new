@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { Quotation } from '@/types';
 
 const props = defineProps<{
@@ -31,35 +31,44 @@ const toggleExpand = (index: number) => {
     ? expandedItems.value.delete(index)
     : expandedItems.value.add(index);
 };
+
+// Computed property for selected company
+const selectedDetail = computed(() =>
+  props.quotation.details.find(detail => detail.is_selected)
+);
 </script>
 
 <template>
   <Dialog :open="show" @update:open="(value) => emit('update:show', value)">
     <DialogContent class="max-w-3xl h-[70vh] flex flex-col overflow-hidden">
-    <DialogHeader class="pb-6 flex-none">
+      <DialogHeader class="pb-6 flex-none">
         <DialogTitle>Quotation Details</DialogTitle>
         <DialogDescription>
-        View quotation details from different companies
+          View quotation details from different companies
         </DialogDescription>
-    </DialogHeader>
+      </DialogHeader>
 
       <ScrollArea class="flex-1 px-1 pb-6 h-full">
         <div class="space-y-6 flex flex-col">
-            <div 
-                v-for="(detail, index) in quotation.details" 
-                :key="index" 
-                class="space-y-4 p-4 bg-muted rounded-md hover:bg-muted/80 cursor-pointer transition-colors"
-                @click="toggleExpand(index)"
-            >
+          <div 
+            v-for="(detail, index) in quotation.details" 
+            :key="index" 
+            class="space-y-4 p-4 rounded-md hover:bg-muted/80 cursor-pointer transition-colors"
+            :class="detail.is_selected ? 'border border-green-500 bg-green-50 dark:bg-green-900/20' : 'bg-muted'"
+            @click="toggleExpand(index)"
+          >
             <div class="flex items-center justify-between">
               <div class="space-y-2">
+                <div v-if="detail.is_selected" class="font-semibold text-green-700 dark:text-green-300">
+                  ** Selected Quotation
+                </div>
                 <h4 class="text-base font-medium">{{ detail.company.company_name }}</h4>
                 <div class="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span class="text-muted-foreground">Contact Person:</span>
                     <span class="ml-2">{{ detail.company.contact_person }}</span>
                   </div>
-                <div>
+                  <div>
                     <span class="text-muted-foreground">Email:</span>
                     <span class="ml-2">{{ detail.company.email }}</span>
                   </div>
@@ -106,14 +115,6 @@ const toggleExpand = (index: number) => {
                 </TableBody>
               </Table>
             </div>
-
-            <Badge 
-              v-if="detail.is_selected" 
-              class="w-fit"
-              variant="success"
-            >
-              Selected Quotation
-            </Badge>
           </div>
         </div>
       </ScrollArea>

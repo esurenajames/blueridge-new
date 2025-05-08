@@ -8,7 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 const props = defineProps<{
   request: {
-    status: 'draft' | 'pending' | 'approved' | 'voided' | 'completed';
+    status: 'draft' | 'pending' | 'approved' | 'voided' | 'declined' | 'returned';
+    is_completed?: boolean;
   };
   quotation?: {
     have_quotation: 'true' | 'false';
@@ -23,6 +24,15 @@ const emit = defineEmits<{
 }>();
 
 const statusConfig = computed(() => {
+  if (props.request.is_completed) {
+    return {
+      icon: CheckCircle,
+      class: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
+      iconClass: 'text-blue-600 dark:text-blue-400',
+      badge: 'success',
+      message: 'This request has been completed.'
+    };
+  }
   switch (props.request.status) {
     case 'draft':
       return {
@@ -104,8 +114,12 @@ const handleAction = (title: string, description: string, action: string) => {
         <component :is="statusConfig.icon" class="h-5 w-5 mt-0.5" :class="statusConfig.iconClass" />
         <div class="space-y-2">
           <div class="flex items-center gap-2">
-            <span class="font-medium capitalize">{{ request.status }}</span>
-            <Badge :variant="statusConfig.badge" class="capitalize">{{ request.status }}</Badge>
+            <span class="font-medium capitalize">
+              {{ props.request.is_completed ? 'completed' : request.status }}
+            </span>
+            <Badge :variant="statusConfig.badge" class="capitalize">
+              {{ props.request.is_completed ? 'completed' : request.status }}
+            </Badge>
           </div>
           <p class="text-sm text-muted-foreground">
             {{ statusConfig.message }}
@@ -114,8 +128,8 @@ const handleAction = (title: string, description: string, action: string) => {
       </div>
 
       <div class="flex flex-col gap-3 pt-2">
-        <template v-if="canEdit">
-          <div class="flex gap-2" v-if="request.status !== 'voided'">
+        <template v-if="canEdit && request.status !== 'voided' && request.status !== 'declined' && !request.is_completed">
+          <div class="flex gap-2">
             <!-- Primary Actions -->
             <Button 
               class="flex-1 gap-2"
@@ -179,7 +193,7 @@ const handleAction = (title: string, description: string, action: string) => {
         </template>
 
         <div 
-          v-if="!canEdit && request.status !== 'voided'"
+          v-if="!canEdit && request.status !== 'voided' && request.status !== 'declined' && !request.is_completed"
           class="text-sm text-muted-foreground text-center p-2"
         >
           You only have view access to this request.
@@ -190,6 +204,20 @@ const handleAction = (title: string, description: string, action: string) => {
           class="text-sm text-muted-foreground text-center p-2"
         >
           This request has been voided and cannot be modified.
+        </div>
+        
+        <div 
+          v-if="request.status === 'declined'"
+          class="text-sm text-muted-foreground text-center p-2"
+        >
+          This request has been declined and cannot be modified.
+        </div>
+
+        <div 
+          v-if="request.is_completed"
+          class="text-sm text-muted-foreground text-center p-2"
+        >
+          This request has been completed and cannot be modified.
         </div>
       </div>
     </CardContent>

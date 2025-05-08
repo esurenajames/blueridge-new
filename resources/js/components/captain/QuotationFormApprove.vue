@@ -64,8 +64,8 @@ const handleAction = (action: ActionType) => {
     }
   };
 
-  // Here you could add confirmation dialog if needed
-  emit(action, selectedCompany.value);
+  // // Here you could add confirmation dialog if needed
+  // emit(action, selectedCompany.value);
 };
 </script>
 
