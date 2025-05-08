@@ -42,6 +42,7 @@ php artisan key:generate
 5. Database Setup
 ```
 php artisan migrate
+php artisan migrate --seed (run this to create an admin account)
 ```
 ### 6. Git Branching
 
