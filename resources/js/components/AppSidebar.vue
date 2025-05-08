@@ -15,7 +15,7 @@ const user = computed(() => page.props.auth.user);
 
 const dashboardRoute = computed(() => {
     if (!user.value) return 'login';
-    
+
     switch (user.value.role) {
         case 'admin':
             return 'admin.dashboard';
@@ -32,7 +32,7 @@ const dashboardRoute = computed(() => {
 
 const mainNavItems = computed(() => {
     if (!dashboardRoute.value) return [];
-    
+
     const items: NavItem[] = [{
         title: 'Dashboard',
         href: route(dashboardRoute.value),
@@ -62,20 +62,35 @@ const mainNavItems = computed(() => {
         });
     }
 
-if (user.value?.role === 'captain') {
-    items.push({
-        title: 'Requests',
-        icon: FileText,
-        collapsible: true,
-        items: [
-            {
-                title: 'View All',
-                href: route('captain.requests'),
-                icon: Folder,
-            },
-        ]
-    });
-}
+    if (user.value?.role === 'captain') {
+        items.push({
+            title: 'Requests',
+            icon: FileText,
+            collapsible: true,
+            items: [
+                {
+                    title: 'View All',
+                    href: route('captain.requests'),
+                    icon: Folder,
+                },
+            ]
+        });
+    }
+
+    if (user.value?.role === 'treasurer') {
+        items.push({
+            title: 'Budget Management',
+            icon: FileText,
+            collapsible: true,
+            items: [
+                {
+                    title: 'Manage Budget',
+                    href: route('requests.index'),
+                    icon: Folder
+                },
+            ]
+        });
+    }
 
     return items;
 });

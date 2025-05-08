@@ -10,17 +10,10 @@ class RequestResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $progress = 0;
-        
         $approvedStages = $this->timelines
             ->where('approved_status', 'approved')
             ->pluck('approved_progress')
             ->toArray();
-        
-        if (in_array('Request Form', $approvedStages)) $progress += 25;
-        if (in_array('Quotation', $approvedStages)) $progress += 25;
-        if (in_array('Purchase Request', $approvedStages)) $progress += 25;
-        if (in_array('Purchase Order', $approvedStages)) $progress += 25;
 
         return [
             'id' => $this->id,
@@ -32,14 +25,14 @@ class RequestResource extends JsonResource
             'created_by' => $this->creator ? $this->creator->name : 'Unknown User',
             'processed_by' => $this->processor ? $this->processor->name : null,
             'processed_at' => $this->processed_at ? Carbon::parse($this->processed_at)->format('Y-m-d') : null,
-            'progress' => $progress,
+            'progress' => $this->progress, // just show the current progress value from the model
             'stages' => [
                 'form' => in_array('Request Form', $approvedStages),
                 'quotation' => in_array('Quotation', $approvedStages),
                 'purchaseRequest' => in_array('Purchase Request', $approvedStages),
                 'purchaseOrder' => in_array('Purchase Order', $approvedStages),
             ],
-           'quotation' => $this->when($this->relationLoaded('quotation'), function() {
+            'quotation' => $this->when($this->relationLoaded('quotation'), function() {
                 return [
                     'id' => $this->quotation?->id,
                     'status' => $this->quotation?->status,
@@ -90,13 +83,13 @@ class RequestResource extends JsonResource
                 'uploaded_at' => $f->created_at->format('Y-m-d'),
             ])),
             'timelines' => $this->whenLoaded('timelines', fn() => $this->timelines
-            ->sortBy(function($timeline) {
-                // Use the earliest date between processed_date and approved_date
-                if ($timeline->processed_date && $timeline->approved_date) {
-                    return min($timeline->processed_date, $timeline->approved_date);
-                }
-                return $timeline->processed_date ?? $timeline->approved_date;
-            })
+                ->sortBy(function($timeline) {
+                    // Use the earliest date between processed_date and approved_date
+                    if ($timeline->processed_date && $timeline->approved_date) {
+                        return min($timeline->processed_date, $timeline->approved_date);
+                    }
+                    return $timeline->processed_date ?? $timeline->approved_date;
+                })
                 ->values()
                 ->map(fn($t) => [
                     'id' => $t->id,

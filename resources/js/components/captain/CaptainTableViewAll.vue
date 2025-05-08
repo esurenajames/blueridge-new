@@ -40,6 +40,14 @@ const { getStatusConfig } = useStatusConfig();
 const viewRequest = (id: number) => {
   router.visit(route('captain.requests.view', { id }));
 };
+
+function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, status: string) {
+if (stages.purchaseOrder && status === 'completed') return 100;
+  if (stages.purchaseRequest) return 75;
+  if (stages.quotation) return 50;
+  if (stages.form) return 25;
+  return 0;
+}
 </script>
 
 <template>
@@ -58,8 +66,8 @@ const viewRequest = (id: number) => {
       </TableHeader>
       <TableBody>
       <template v-if="requests.data.length">
-        <TableRow 
-          v-for="request in requests.data" 
+        <TableRow
+          v-for="request in requests.data"
           :key="request.id"
           class="cursor-pointer hover:bg-muted/50 transition-colors"
           @click="viewRequest(request.id)"
@@ -73,26 +81,26 @@ const viewRequest = (id: number) => {
             <div class="space-y-2">
               <!-- Stages -->
               <div class="flex gap-2 text-xs">
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   :class="request.stages.form ? 'bg-primary/10 border-primary' : 'opacity-50'"
                 >
                   Form
                 </Badge>
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   :class="request.stages.quotation ? 'bg-primary/10 border-primary' : 'opacity-50'"
                 >
                   Quotation
                 </Badge>
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   :class="request.stages.purchaseRequest ? 'bg-primary/10 border-primary' : 'opacity-50'"
                 >
                   PR
                 </Badge>
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   :class="request.stages.purchaseOrder ? 'bg-primary/10 border-primary' : 'opacity-50'"
                 >
                   PO
@@ -100,20 +108,20 @@ const viewRequest = (id: number) => {
               </div>
               <!-- Progress Bar -->
               <div class="flex items-center gap-2">
-                <Progress :value="request.progress" class="h-2 flex-1" />
-                <div class="text-xs text-muted-foreground whitespace-nowrap">{{ request.progress }}%</div>
+                    <Progress :value="getProgressValue(request.stages)" class="h-2 flex-1" />
+                    <div class="text-xs text-muted-foreground whitespace-nowrap">{{ getProgressValue(request.stages) }}%</div>
               </div>
             </div>
           </TableCell>
           <TableCell>
-            <Badge 
+            <Badge
               :variant="getStatusConfig(request.status).variant"
               class="flex items-center w-fit gap-1"
             >
-              <component 
-                :is="getStatusConfig(request.status).icon" 
+              <component
+                :is="getStatusConfig(request.status).icon"
                 class="h-3 w-3"
-                :class="getStatusConfig(request.status).class" 
+                :class="getStatusConfig(request.status).class"
               />
               {{ request.status }}
             </Badge>
@@ -121,7 +129,7 @@ const viewRequest = (id: number) => {
           <TableCell>{{ request.created_by }}</TableCell>
           <TableCell>{{ request.created_at }}</TableCell>
         </TableRow>
-        
+
         </template>
         <template v-else>
           <TableRow>

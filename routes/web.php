@@ -24,9 +24,9 @@ Route::get('unauthorized', function () {
 })->name('unauthorized');
 
 // download file from request view
-Route::get('requests/{id}/download/{filename}', 
+Route::get('requests/{id}/download/{filename}',
     [OfficialRequestController::class, 'downloadFile'
-])->name('requests.download-file'); 
+])->name('requests.download-file');
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +43,7 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     Route::get('/requests/view/{id}', [OfficialRequestController::class, 'show'])->name('requests.view');  // Move this route first
     Route::get('/requests/{tab?}', [OfficialRequestController::class, 'index'])->name('requests.index');    // Move this route second
     Route::post('/dashboard/store-request', [OfficialDashboardController::class, 'storeRequest'])->name('dashboard.store-request');
-    
+
     // Request View Actions
     Route::post('/requests/{id}', [OfficialRequestController::class, 'update'])->name('requests.update');
     Route::post('/requests/{id}/process', [OfficialRequestController::class, 'process'])->name('requests.process');
@@ -81,15 +81,25 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     // Captain Dashboard
     Route::get('/captain/dashboard', [CaptainDashboardController::class, 'index'])
         ->name('captain.dashboard');
-    
+
     // Request Management
     Route::get('/captain/requests', [CaptainRequestController::class, 'index'])->name('captain.requests');
     Route::get('/captain/requests/{id}', [CaptainRequestController::class, 'show'])->name('captain.requests.view');
     Route::post('/requests/{id}/approve', [CaptainRequestController::class, 'approve'])->name('requests.approve');
     Route::post('/requests/{id}/decline', [CaptainRequestController::class, 'decline'])->name('requests.decline');
     Route::post('/requests/{id}/return', [CaptainRequestController::class, 'return'])->name('requests.return');
+});
 
-    
+/*
+|--------------------------------------------------------------------------
+| Treasurer Routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'verified', 'role:treasurer'])->group(function () {
+    // Captain Dashboard
+    Route::get('/treasurer/dashboard', [CaptainDashboardController::class, 'index'])
+        ->name('treasurer.dashboard');
+
 });
 
 /*

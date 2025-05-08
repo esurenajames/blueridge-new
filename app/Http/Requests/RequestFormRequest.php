@@ -71,7 +71,7 @@ class RequestFormRequest extends FormRequest
                 }
                 return null;
             })->filter(); // Remove any null values
-    
+
             $this->merge([
                 'collaborators' => $collaborators->toArray()
             ]);

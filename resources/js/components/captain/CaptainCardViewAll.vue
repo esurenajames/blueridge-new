@@ -40,15 +40,24 @@ const { getStatusConfig } = useStatusConfig();
 const viewRequest = (id: number) => {
   router.visit(route('captain.requests.view', { id }));
 };
+
+// Progress calculation based on stages
+function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, status: string) {
+if (stages.purchaseOrder && status === 'completed') return 100;
+  if (stages.purchaseRequest) return 75;
+  if (stages.quotation) return 50;
+  if (stages.form) return 25;
+  return 0;
+}
 </script>
 
 <template>
   <div class="rounded-md border overflow-x-auto p-4">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
     <template v-if="requests.data.length">
-        <Card 
-          v-for="request in requests.data" 
-          :key="request.id" 
+        <Card
+          v-for="request in requests.data"
+          :key="request.id"
           class="relative overflow-hidden hover:shadow-lg duration-300 cursor-pointer hover:bg-muted/50 transition-colors"
           @click="viewRequest(request.id)"
         >
@@ -65,14 +74,14 @@ const viewRequest = (id: number) => {
             <div class="space-y-2">
               <div class="flex justify-between text-sm">
                 <span class="text-muted-foreground">Progress</span>
-                <span class="font-medium">{{ request.progress }}%</span>
+                <span class="font-medium">{{ getProgressValue(request.stages) }}%</span>
               </div>
-              <Progress :value="request.progress" class="h-2" />
+              <Progress :value="getProgressValue(request.stages)" class="h-2" />
             </div>
 
             <div class="grid grid-cols-4 gap-2 w-full text-xs">
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 :class="[
                   'flex-1 justify-center',
                   request.stages.form ? 'bg-primary/10 border-primary' : 'opacity-50'
@@ -80,8 +89,8 @@ const viewRequest = (id: number) => {
               >
                 Form
               </Badge>
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 :class="[
                   'flex-1 justify-center',
                   request.stages.quotation ? 'bg-primary/10 border-primary' : 'opacity-50'
@@ -89,8 +98,8 @@ const viewRequest = (id: number) => {
               >
                 Quotation
               </Badge>
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 :class="[
                   'flex-1 justify-center',
                   request.stages.purchaseRequest ? 'bg-primary/10 border-primary' : 'opacity-50'
@@ -98,8 +107,8 @@ const viewRequest = (id: number) => {
               >
                 PR
               </Badge>
-              <Badge 
-                variant="outline" 
+              <Badge
+                variant="outline"
                 :class="[
                   'flex-1 justify-center',
                   request.stages.purchaseOrder ? 'bg-primary/10 border-primary' : 'opacity-50'
@@ -117,14 +126,14 @@ const viewRequest = (id: number) => {
               </div>
                 <div class="flex justify-between items-center">
                   <span class="text-sm text-muted-foreground">Status:</span>
-                  <Badge 
+                  <Badge
                     :variant="getStatusConfig(request.status).variant"
                     class="flex items-center gap-1"
                   >
-                    <component 
-                      :is="getStatusConfig(request.status).icon" 
+                    <component
+                      :is="getStatusConfig(request.status).icon"
                       class="h-3 w-3"
-                      :class="getStatusConfig(request.status).class" 
+                      :class="getStatusConfig(request.status).class"
                     />
                     {{ request.status }}
                   </Badge>
@@ -153,7 +162,7 @@ const viewRequest = (id: number) => {
         </Card>
       </template>
     </div>
-        <DataTablePagination
+    <DataTablePagination
       v-if="requests.data.length > 0"
       :current-page="requests.meta.current_page"
       :total-pages="requests.meta.last_page"
