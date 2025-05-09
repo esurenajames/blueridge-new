@@ -15,7 +15,7 @@ const openItems = ref<Record<string, boolean>>({});
 </script>
 
 <template>
-    <SidebarGroup class="px-3 py-2">
+    <SidebarGroup class="px-2 py-2">
         <SidebarGroupLabel class="text-sm mb-3">Platform</SidebarGroupLabel>
         <SidebarMenu class="">
             <SidebarMenuItem v-for="item in items" :key="item.title">

@@ -41,12 +41,21 @@ const viewRequest = (id: number) => {
   router.visit(route('captain.requests.view', { id }));
 };
 
-function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, status: string) {
-if (stages.purchaseOrder && status === 'completed') return 100;
-  if (stages.purchaseRequest) return 75;
-  if (stages.quotation) return 50;
-  if (stages.form) return 25;
-  return 0;
+function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, progress: string, isCompleted?: boolean): number {
+  switch (progress) {
+    case 'Form':
+      return 0;
+    case 'Quotation':
+      return 25;
+    case 'Purchase Request':
+    case 'PR':
+      return 50;
+    case 'Purchase Order':
+    case 'PO':
+      return isCompleted ? 100 : 75;
+    default:
+      return 0;
+  }
 }
 </script>
 
@@ -83,33 +92,47 @@ if (stages.purchaseOrder && status === 'completed') return 100;
               <div class="flex gap-2 text-xs">
                 <Badge
                   variant="outline"
-                  :class="request.stages.form ? 'bg-primary/10 border-primary' : 'opacity-50'"
+                  :class="[
+                    request.progress === 'Form' ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  ]"
                 >
                   Form
                 </Badge>
                 <Badge
                   variant="outline"
-                  :class="request.stages.quotation ? 'bg-primary/10 border-primary' : 'opacity-50'"
+                  :class="[
+                    request.progress === 'Quotation' ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  ]"
                 >
                   Quotation
                 </Badge>
                 <Badge
                   variant="outline"
-                  :class="request.stages.purchaseRequest ? 'bg-primary/10 border-primary' : 'opacity-50'"
+                  :class="[
+                    request.progress === 'PR' || request.progress === 'Purchase Request' ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  ]"
                 >
                   PR
                 </Badge>
                 <Badge
                   variant="outline"
-                  :class="request.stages.purchaseOrder ? 'bg-primary/10 border-primary' : 'opacity-50'"
+                  :class="[
+                    request.progress === 'PO' || request.progress === 'Purchase Order' ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  ]"
                 >
                   PO
                 </Badge>
               </div>
-              <!-- Progress Bar -->
               <div class="flex items-center gap-2">
-                    <Progress :value="getProgressValue(request.stages)" class="h-2 flex-1" />
-                    <div class="text-xs text-muted-foreground whitespace-nowrap">{{ getProgressValue(request.stages) }}%</div>
+                <div class="progress-bar">
+                  <div
+                    class="progress-value"
+                    :style="{ width: getProgressValue(request.stages, request.progress, request.is_completed) + '%' }"
+                  ></div>
+                </div>
+                <div class="text-xs text-muted-foreground whitespace-nowrap">
+                  {{ getProgressValue(request.stages, request.progress, request.is_completed) }}%
+                </div>
               </div>
             </div>
           </TableCell>

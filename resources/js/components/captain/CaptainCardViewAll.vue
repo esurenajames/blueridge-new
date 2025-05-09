@@ -41,13 +41,30 @@ const viewRequest = (id: number) => {
   router.visit(route('captain.requests.view', { id }));
 };
 
-// Progress calculation based on stages
-function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, status: string) {
-if (stages.purchaseOrder && status === 'completed') return 100;
-  if (stages.purchaseRequest) return 75;
-  if (stages.quotation) return 50;
-  if (stages.form) return 25;
-  return 0;
+const stageOrder = ['Form', 'Quotation', 'Purchase Request', 'Purchase Order'];
+function getCurrentStageIndex(progress: string) {
+  return stageOrder.findIndex(stage =>
+    stage === progress ||
+    (stage === 'Purchase Request' && progress === 'PR') ||
+    (stage === 'Purchase Order' && progress === 'PO')
+  );
+}
+
+function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, progress: string, isCompleted?: boolean): number {
+  switch (progress) {
+    case 'Form':
+      return 0;
+    case 'Quotation':
+      return 25;
+    case 'Purchase Request':
+    case 'PR':
+      return 50;
+    case 'Purchase Order':
+    case 'PO':
+      return isCompleted ? 100 : 75;
+    default:
+      return 0;
+  }
 }
 </script>
 
@@ -72,11 +89,17 @@ if (stages.purchaseOrder && status === 'completed') return 100;
 
           <CardContent class="space-y-6">
             <div class="space-y-2">
-              <div class="flex justify-between text-sm">
-                <span class="text-muted-foreground">Progress</span>
-                <span class="font-medium">{{ getProgressValue(request.stages) }}%</span>
+              <div class="flex items-center gap-2">
+                <div class="progress-bar">
+                  <div
+                    class="progress-value"
+                    :style="{ width: getProgressValue(request.stages, request.progress, request.is_completed) + '%' }"
+                  ></div>
+                </div>
+                <div class="text-xs text-muted-foreground whitespace-nowrap">
+                  {{ getProgressValue(request.stages, request.progress, request.is_completed) }}%
+                </div>
               </div>
-              <Progress :value="getProgressValue(request.stages)" class="h-2" />
             </div>
 
             <div class="grid grid-cols-4 gap-2 w-full text-xs">
@@ -84,7 +107,7 @@ if (stages.purchaseOrder && status === 'completed') return 100;
                 variant="outline"
                 :class="[
                   'flex-1 justify-center',
-                  request.stages.form ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  request.progress === 'Form' ? 'bg-primary/10 border-primary' : 'opacity-50'
                 ]"
               >
                 Form
@@ -93,7 +116,7 @@ if (stages.purchaseOrder && status === 'completed') return 100;
                 variant="outline"
                 :class="[
                   'flex-1 justify-center',
-                  request.stages.quotation ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  request.progress === 'Quotation' ? 'bg-primary/10 border-primary' : 'opacity-50'
                 ]"
               >
                 Quotation
@@ -102,7 +125,7 @@ if (stages.purchaseOrder && status === 'completed') return 100;
                 variant="outline"
                 :class="[
                   'flex-1 justify-center',
-                  request.stages.purchaseRequest ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  request.progress === 'PR' || request.progress === 'Purchase Request' ? 'bg-primary/10 border-primary' : 'opacity-50'
                 ]"
               >
                 PR
@@ -111,7 +134,7 @@ if (stages.purchaseOrder && status === 'completed') return 100;
                 variant="outline"
                 :class="[
                   'flex-1 justify-center',
-                  request.stages.purchaseOrder ? 'bg-primary/10 border-primary' : 'opacity-50'
+                  request.progress === 'PO' || request.progress === 'Purchase Order' ? 'bg-primary/10 border-primary' : 'opacity-50'
                 ]"
               >
                 PO

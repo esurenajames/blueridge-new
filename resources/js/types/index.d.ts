@@ -82,7 +82,7 @@ interface Request {
     category: string;
     description: string;
     status: string;
-    progress: number;
+    progress: string;
     stages: {
       form: boolean;
       quotation: boolean;

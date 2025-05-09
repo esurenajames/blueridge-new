@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FolderTree } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -72,6 +72,40 @@ const mainNavItems = computed(() => {
                     title: 'View All',
                     href: route('captain.requests'),
                     icon: Folder,
+                },
+            ]
+        });
+        items.push({
+            title: 'Fund Management',
+            icon: Wallet, // Add Wallet to your imports
+            collapsible: true,
+            items: [
+                {
+                    title: 'Fund Overview',
+                    href: route('captain.requests'),
+                    icon: ChartBar, 
+                },
+                {
+                    title: 'Manage Budget',
+                    href: route('captain.requests'),
+                    icon: Settings, 
+                },
+            ]
+        });
+        items.push({
+            title: 'Fund Categories',
+            icon: FileText,
+            collapsible: true,
+            items: [
+                {
+                    title: 'Add Category',
+                    href: route('captain.requests'),
+                    icon: FolderPlus,  
+                },
+                {
+                    title: 'Add Subcategory',
+                    href: route('captain.requests'),
+                    icon: FolderTree,  
                 },
             ]
         });
