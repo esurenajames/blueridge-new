@@ -10,9 +10,12 @@ const props = defineProps<{
   request: {
     status: 'draft' | 'pending' | 'approved' | 'voided' | 'declined' | 'returned';
     is_completed?: boolean;
-  };
-  quotation?: {
-    have_quotation: 'true' | 'false';
+    progress?: string;
+    data?: {
+      quotation?: {
+        have_quotation: string;
+      };
+    };
   };
   canEdit: boolean;
 }>();
@@ -93,6 +96,42 @@ const statusConfig = computed(() => {
   }
 });
 
+const showProcessButton = computed(() => {
+  return props.request.progress === 'Request Form' && props.request.status === 'draft';
+});
+
+const showSubmitQuotation = computed(() => {
+  return props.request.progress === 'Quotation' && 
+         (!props.request?.quotation?.have_quotation || props.request.quotation.have_quotation === 'false') && 
+         props.request.status !== 'returned';
+});
+
+const showResubmitDocument = computed(() => {
+  return props.request.progress === 'Quotation' && 
+         (!props.request?.quotation?.have_quotation || props.request.quotation.have_quotation === 'false') && 
+         props.request.status === 'returned';
+});
+
+const showResubmitQuotation = computed(() => {
+  return props.request.progress === 'Quotation' && 
+         props.request?.quotation?.have_quotation === 'true' && 
+         props.request.status === 'returned';
+});
+
+const showWaitingApproval = computed(() => {
+  if (props.request.progress === 'Request Form' && props.request.status === 'pending') {
+    return true;
+  }
+  
+  if (props.request.progress === 'Quotation' && 
+      props.request?.data?.quotation?.have_quotation === 'true' && 
+      props.request.status === 'pending') {
+    return true;
+  }
+  
+  return false;
+});
+
 const handleAction = (title: string, description: string, action: string) => {
   emit('show-confirmation', title, description, action);
 };
@@ -105,6 +144,7 @@ const handleAction = (title: string, description: string, action: string) => {
       <CardDescription>Current request status</CardDescription>
     </CardHeader>
     <CardContent class="space-y-6">
+      <!-- Status Display Section -->
       <div 
         :class="[
           'rounded-lg p-4 flex items-start gap-3',
@@ -115,7 +155,7 @@ const handleAction = (title: string, description: string, action: string) => {
         <div class="space-y-2">
           <div class="flex items-center gap-2">
             <span class="font-medium capitalize">
-              {{ props.request.is_completed ? 'completed' : request.status }}
+              {{ props.request.progress}}
             </span>
             <Badge :variant="statusConfig.badge" class="capitalize">
               {{ props.request.is_completed ? 'completed' : request.status }}
@@ -127,21 +167,27 @@ const handleAction = (title: string, description: string, action: string) => {
         </div>
       </div>
 
+      <!-- Actions Section -->
       <div class="flex flex-col gap-3 pt-2">
         <template v-if="canEdit && request.status !== 'voided' && request.status !== 'declined' && !request.is_completed">
           <div class="flex gap-2">
-            <!-- Primary Actions -->
+            <!-- Process Request -->
             <Button 
+              v-if="showProcessButton"
               class="flex-1 gap-2"
-              v-if="request.status === 'returned'"
-              @click="emit('show-edit')"
+              @click="handleAction(
+                'Process Request',
+                'Are you sure you want to process this request?',
+                'process'
+              )"
             >
-              <RefreshCw class="h-4 w-4" />
-              Resubmit Documents
+              <CheckCircle2 class="h-4 w-4" />
+              Process Request
             </Button>
 
+            <!-- Submit Quotation -->
             <Button 
-              v-else-if="request.quotation?.have_quotation === 'false'"
+              v-if="showSubmitQuotation"
               class="flex-1 gap-2"
               @click="emit('show-confirmation', 
                 'Submit Quotation',
@@ -153,21 +199,37 @@ const handleAction = (title: string, description: string, action: string) => {
               Submit Quotation
             </Button>
 
+            <!-- Resubmit Document -->
             <Button 
-              v-else
+              v-if="showResubmitDocument"
               class="flex-1 gap-2"
-              :disabled="request.status === 'pending'"
-              @click="handleAction(
-                'Process Request',
-                'Are you sure you want to process this request?',
-                'process'
-              )"
+              @click="emit('show-edit')"
             >
-              <CheckCircle2 class="h-4 w-4" />
-              Process Request
+              <RefreshCw class="h-4 w-4" />
+              Resubmit Documents
             </Button>
 
-            <!-- Secondary Actions Dropdown -->
+            <!-- Resubmit Quotation -->
+            <Button 
+              v-if="showResubmitQuotation"
+              class="flex-1 gap-2"
+              @click="emit('show-quotation', request.quotation)"
+            >
+              <RefreshCw class="h-4 w-4" />
+              Resubmit Quotation
+            </Button>
+
+            <!-- Waiting For Approval -->
+            <Button 
+              v-if="showWaitingApproval"
+              class="flex-1 gap-2"
+              disabled
+            >
+              <Clock class="h-4 w-4" />
+              Waiting For Approval...
+            </Button>
+
+            <!-- Void Action Dropdown -->
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -192,6 +254,7 @@ const handleAction = (title: string, description: string, action: string) => {
           </div>
         </template>
 
+        <!-- Status Messages -->
         <div 
           v-if="!canEdit && request.status !== 'voided' && request.status !== 'declined' && !request.is_completed"
           class="text-sm text-muted-foreground text-center p-2"

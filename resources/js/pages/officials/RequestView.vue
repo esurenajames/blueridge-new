@@ -381,11 +381,6 @@ const downloadFile = (file: { name: string }) => {
                     <div class="flex flex-col gap-2">
                       <div class="flex items-center justify-between">
                         <div class="space-y-1">
-                          <p class="text-sm">Status: 
-                            <Badge :variant="request.quotation.status === 'pending' ? 'warning' : 'success'">
-                              {{ request.quotation.status }}
-                            </Badge>
-                          </p>
                           <p class="text-xs text-muted-foreground">
                             Processed by: {{ request.quotation.processed_by }}
                           </p>

@@ -21,10 +21,9 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'approve', companyId: number): void;
-  (e: 'decline', companyId: number): void;
-  (e: 'return', companyId: number): void;
+  (e: 'decline'): void;
+  (e: 'return'): void;
 }>();
-
 const selectedCompany = ref<number | null>(null);
 const expandedItems = ref<Set<number>>(new Set());
 
@@ -48,24 +47,8 @@ const selectedCompanyName = computed(() => {
   return company?.company.company_name ?? '';
 });
 
-type ActionType = 'decline' | 'return';
-
-const handleAction = (action: ActionType) => {
-  if (!selectedCompany.value) return;
-  
-  const actionMessages = {
-    decline: {
-      title: 'Decline Quotation',
-      message: 'Are you sure you want to decline this quotation?'
-    },
-    return: {
-      title: 'Return Quotation',
-      message: 'Are you sure you want to return this quotation for revision?'
-    }
-  };
-
-  // // Here you could add confirmation dialog if needed
-  // emit(action, selectedCompany.value);
+const handleAction = (action: 'decline' | 'return') => {
+  emit(action);
 };
 </script>
 

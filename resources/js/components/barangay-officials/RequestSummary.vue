@@ -49,13 +49,13 @@ function goToTab(tab: string) {
           <TabsTrigger value="single" class="flex items-center justify-center">
             <div class="inline-flex items-center">
               <User class="h-4 w-4 mr-2" />
-              <span>My Requests</span>
+              <span>My Requests ({{ requestStats.single.total }})</span>
             </div>
           </TabsTrigger>
           <TabsTrigger value="collaborative" class="flex items-center justify-center">
             <div class="inline-flex items-center">
               <Users class="h-4 w-4 mr-2" />
-              <span>Shared With Me</span>
+              <span>Shared With Me ({{ requestStats.collaborative.total }})</span>
             </div>
           </TabsTrigger>
         </TabsList>

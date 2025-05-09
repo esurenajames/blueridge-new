@@ -39,10 +39,9 @@ const remarksState = ref({
   action: '' as 'approve' | 'decline' | 'return'
 });
 
-// --- Add these refs for quotation approve flow ---
+// Quotation flow refs
 const quotationApproveCompanyId = ref<number | null>(null);
 const isQuotationApproveFlow = ref(false);
-// -------------------------------------------------
 
 const props = defineProps<{
   request: {
@@ -141,9 +140,10 @@ const handleRemarksConfirm = (remarks: string) => {
       onSuccess: () => {
         toast({
           title: "Success",
-          description: `Request has been ${remarksState.value.action}d`,
+          description: `Request has been ${remarksState.value.action}ed`,
           variant: "success",
         });
+        showQuotationApprove.value = false;
       },
     };
 
@@ -169,6 +169,24 @@ const handleQuotationApprove = (companyId: number) => {
     title: 'Approve Quotation',
     description: 'Please provide remarks for this approval (optional).',
     action: 'approve'
+  };
+};
+
+const handleQuotationDecline = () => {
+  remarksState.value = {
+    show: true,
+    title: 'Decline Request',
+    description: 'Please provide remarks for declining this request.',
+    action: 'decline'
+  };
+};
+
+const handleQuotationReturn = () => {
+  remarksState.value = {
+    show: true,
+    title: 'Return Request',
+    description: 'Please provide remarks for returning this request.',
+    action: 'return'
   };
 };
 
@@ -222,6 +240,8 @@ const downloadFile = (file: { name: string }) => {
           :quotation="request.quotation"
           @close="showQuotationApprove = false"
           @approve="handleQuotationApprove"
+          @decline="handleQuotationDecline"
+          @return="handleQuotationReturn"
         />
 
         <div class="flex justify-end mb-6">
@@ -338,11 +358,6 @@ const downloadFile = (file: { name: string }) => {
                     <div class="flex flex-col gap-2">
                       <div class="flex items-center justify-between">
                         <div class="space-y-1">
-                          <p class="text-sm">Status: 
-                            <Badge :variant="request.quotation.status === 'pending' ? 'warning' : 'success'">
-                              {{ request.quotation.status }}
-                            </Badge>
-                          </p>
                           <p class="text-xs text-muted-foreground">
                             Processed by: {{ request.quotation.processed_by }}
                           </p>

@@ -166,5 +166,4 @@ class CaptainRequestController extends Controller
 
         return redirect()->back()->with('success', 'Request has been returned for revision.');
     }
-
 }

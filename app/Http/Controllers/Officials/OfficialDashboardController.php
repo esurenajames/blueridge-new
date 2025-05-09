@@ -12,43 +12,45 @@ use Inertia\Inertia;
 class OfficialDashboardController extends Controller
 {
     public function index()
-    {
-        $users = User::query()
-            ->where('status', 'active')
-            ->where('role', 'official')
-            ->where('id', '!=', auth()->id())  
-            ->get();
-    
-        $myRequests = RequestModel::where('created_by', auth()->id())
-            ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
-            ->withCount(['files'])
-            ->get();
-    
-        $collaborativeRequests = RequestModel::whereHas('collaborators', function($query) {
-            $query->where('user_id', auth()->id());
-        })
-            ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
-            ->withCount(['files'])
-            ->get();
-    
-        return Inertia::render('officials/Dashboard', [
-            'activeUsers' => $users,
-            'requestStats' => [
-                'single' => [
-                    'requestForms' => $myRequests->count(),
-                    'quotations' => $myRequests->where('category', 'quotation')->count(),
-                    'purchaseRequests' => $myRequests->where('category', 'purchase_request')->count(),
-                    'purchaseOrders' => $myRequests->where('category', 'purchase_order')->count(),
-                ],
-                'collaborative' => [
-                    'requestForms' => $collaborativeRequests->count(),
-                    'quotations' => $collaborativeRequests->where('category', 'quotation')->count(),
-                    'purchaseRequests' => $collaborativeRequests->where('category', 'purchase_request')->count(),
-                    'purchaseOrders' => $collaborativeRequests->where('category', 'purchase_order')->count(),
-                ]
+{
+    $users = User::query()
+        ->where('status', 'active')
+        ->where('role', 'official')
+        ->where('id', '!=', auth()->id())  
+        ->get();
+
+    $myRequests = RequestModel::where('created_by', auth()->id())
+        ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
+        ->withCount(['files'])
+        ->get();
+
+    $collaborativeRequests = RequestModel::whereHas('collaborators', function($query) {
+        $query->where('user_id', auth()->id());
+    })
+        ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
+        ->withCount(['files'])
+        ->get();
+
+    return Inertia::render('officials/Dashboard', [
+        'activeUsers' => $users,
+        'requestStats' => [
+            'single' => [
+                'requestForms' => $myRequests->where('progress', 'Request form')->count(),
+                'quotations' => $myRequests->where('progress', 'Quotation')->count(),
+                'purchaseRequests' => $myRequests->where('progress', 'Purchase Request')->count(),
+                'purchaseOrders' => $myRequests->where('progress', 'Purchase Order')->count(),
+                'total' => $myRequests->count()
+            ],
+            'collaborative' => [
+                'requestForms' => $collaborativeRequests->where('progress', 'Request Form')->count(),
+                'quotations' => $collaborativeRequests->where('progress', 'Quotation')->count(),
+                'purchaseRequests' => $collaborativeRequests->where('progress', 'Purchase Request')->count(),
+                'purchaseOrders' => $collaborativeRequests->where('progress', 'Purchase Order')->count(),
+                'total' => $collaborativeRequests->count()
             ]
-        ]);
-    }
+        ]
+    ]);
+}
     
     public function storeRequest(RequestFormRequest $request)
     {
