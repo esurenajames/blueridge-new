@@ -23,6 +23,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 const { toast } = useToast();
 const showEditModal = ref(false);
 const showQuotationModal = ref(false);
+const quotationData = ref(null);
 const showQuotationDialog = ref(false);
 const confirmationState = ref({
   show: false,
@@ -185,7 +186,7 @@ const voidRequest = () => {
   });
 };
 
-const handleStatusAction = (title: string, description: string, action: string) => {
+const handleStatusAction = (title: string, description: string, action: string, data?: any) => {
   switch (action) {
     case 'process':
       showConfirmation(title, description, processRequest);
@@ -202,6 +203,7 @@ const handleStatusAction = (title: string, description: string, action: string) 
       showConfirmation(title, description, voidRequest);
       break;
     case 'show-quotation':
+      quotationData.value = data;
       showQuotationModal.value = true;
       break;
   }
@@ -244,7 +246,8 @@ const downloadFile = (file: { name: string }) => {
         <QuotationForm
           v-if="showQuotationModal"
           :show="showQuotationModal"
-          :request-id="request.id" 
+          :request-id="request.id"
+          :quotation="quotationData" 
           @close="handleQuotationClose"
         />
 

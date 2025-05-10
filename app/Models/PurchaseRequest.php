@@ -11,6 +11,7 @@ class PurchaseRequest extends Model
     protected $fillable = [
         'request_id',
         'status',
+        'have_supplier_approval',
         'processed_by',
         'processed_at'
     ];

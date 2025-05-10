@@ -15,6 +15,23 @@ import type { Company, CompanyItem } from '@/types';
 const props = defineProps<{
   show: boolean;
   requestId: number;
+  quotation?: {
+    details: Array<{
+      company: {
+        company_name: string;
+        contact_person: string;
+        address: string;
+        contact_number: string;
+        email: string;
+      };
+      items: Array<{
+        item_name: string;
+        description: string;
+        price: string;
+        quantity: number;
+      }>;
+    }>;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -25,47 +42,61 @@ const { toast } = useToast();
 const currentStep = ref(1);
 
 // Initialize companies with 3 empty companies
-const companies = ref<Company[]>([
-  {
-    companyName: '',
-    contactPerson: '',
-    address: '',
-    contactNumber: '',
-    email: '',
-    items: [{
-      name: '',
-      description: '',
-      price: null,
-      quantity: null
-    }]
-  },
-  {
-    companyName: '',
-    contactPerson: '',
-    address: '',
-    contactNumber: '',
-    email: '',
-    items: [{
-      name: '',
-      description: '',
-      price: null,
-      quantity: null
-    }]
-  },
-  {
-    companyName: '',
-    contactPerson: '',
-    address: '',
-    contactNumber: '',
-    email: '',
-    items: [{
-      name: '',
-      description: '',
-      price: null,
-      quantity: null
-    }]
-  }
-]);
+const companies = ref<Company[]>(
+  props.quotation ? props.quotation.details.map(detail => ({
+    companyName: detail.company.company_name,
+    contactPerson: detail.company.contact_person,
+    address: detail.company.address,
+    contactNumber: detail.company.contact_number,
+    email: detail.company.email,
+    items: detail.items.map(item => ({
+      name: item.item_name,
+      description: item.description,
+      price: parseFloat(item.price),
+      quantity: item.quantity
+    }))
+  })) : [
+    {
+      companyName: '',
+      contactPerson: '',
+      address: '',
+      contactNumber: '',
+      email: '',
+      items: [{
+        name: '',
+        description: '',
+        price: null,
+        quantity: null
+      }]
+    },
+    {
+      companyName: '',
+      contactPerson: '',
+      address: '',
+      contactNumber: '',
+      email: '',
+      items: [{
+        name: '',
+        description: '',
+        price: null,
+        quantity: null
+      }]
+    },
+    {
+      companyName: '',
+      contactPerson: '',
+      address: '',
+      contactNumber: '',
+      email: '',
+      items: [{
+        name: '',
+        description: '',
+        price: null,
+        quantity: null
+      }]
+    }
+  ]
+);
 
 const steps = computed(() => [
   {
@@ -143,15 +174,20 @@ const handleNext = () => {
 };
 
 const handleSubmit = () => {
-  // Update form.companies with the latest companies data
   form.companies = companies.value;
 
-  form.post(route('officials.requests.quotation.submit', props.requestId), {
+  const routeName = props.quotation
+    ? 'officials.requests.quotation.resubmit'
+    : 'officials.requests.quotation.submit';
+
+  form.post(route(routeName, props.requestId), {
     onSuccess: () => {
       emit('close');
       toast({
         title: 'Success',
-        description: 'Quotation has been added successfully.',
+        description: props.quotation
+          ? 'Quotation has been resubmitted successfully.'
+          : 'Quotation has been added successfully.',
         variant: 'success'
       });
     },
@@ -278,12 +314,11 @@ const handleSubmit = () => {
                       <div class="space-y-2">
                         <Label>Unit Price</Label>
                         <Input 
-                          :value="formatNumber(item.price)"
-                          @input="(e) => item.price = parseFloat((e.target as HTMLInputElement).value.replace(/,/g, ''))"
-                          type="text"
+                          v-model.number="item.price"
                           inputmode="decimal"
                           placeholder="0.00"
                           @keypress="validatePrice"
+                          class="text-right"
                         />
                       </div>
                       <div class="space-y-2">
@@ -294,6 +329,7 @@ const handleSubmit = () => {
                           inputmode="numeric"
                           placeholder="0"
                           @keypress="validateQuantity"
+                          class="text-right"
                         />
                       </div>
                       <Button 

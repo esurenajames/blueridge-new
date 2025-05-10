@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { User, Clock, FileText, FileCheck, ShoppingCart, Package, MessageSquare } from 'lucide-vue-next';
 import { useStatusConfig } from '@/composables/useStatusConfig';
 import { ref } from 'vue';
@@ -187,9 +187,9 @@ const showRemarks = (remarks: string) => {
       <DialogHeader>
         <DialogTitle>Remarks</DialogTitle>
       </DialogHeader>
-      <div class="mt-4">
+      <DialogDescription>
         <p class="text-sm text-muted-foreground whitespace-pre-wrap">{{ selectedRemarks }}</p>
-      </div>
+      </DialogDescription>
     </DialogContent>
   </Dialog>
 </template>

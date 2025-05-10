@@ -329,6 +329,72 @@ class OfficialRequestController extends Controller
         ]);
     }
 
+    public function resubmitQuotation(QuotationFormRequest $request, $id)
+    {
+        $requestModel = RequestModel::findOrFail($id);
+    
+        $requestModel->status = 'pending';
+        $requestModel->save();
+
+        // Update quotation status
+        $quotation = $requestModel->quotation;
+        if ($quotation) {
+            $quotation->status = 'pending';
+            $quotation->processed_by = auth()->id();
+            $quotation->processed_at = now();
+            $quotation->save();
+    
+            // Remove old details and items
+            foreach ($quotation->details as $detail) {
+                $detail->items()->delete();
+                $detail->delete();
+            }
+        }
+    
+        // Process each company
+        foreach ($request->validated()['companies'] as $companyData) {
+            $company = Company::updateOrCreate(
+                ['email' => $companyData['email']],
+                [
+                    'company_name' => $companyData['companyName'],
+                    'contact_person' => $companyData['contactPerson'],
+                    'address' => $companyData['address'],
+                    'contact_number' => $companyData['contactNumber'],
+                ]
+            );
+    
+            // Create new quotation detail
+            $quotationDetail = $quotation->details()->create([
+                'company_id' => $company->id,
+                'is_selected' => false,
+            ]);
+    
+            // Create items for this quotation detail
+            foreach ($companyData['items'] as $itemData) {
+                $quotationDetail->items()->create([
+                    'item_name' => $itemData['name'],
+                    'description' => $itemData['description'],
+                    'price' => $itemData['price'],
+                    'quantity' => $itemData['quantity'],
+                ]);
+            }
+        }
+    
+        $requestModel->timelines()->create([
+            'request_id' => $requestModel->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => $requestModel->progress,
+            'processed_status' => 'resubmitted',
+            'remarks' => $request->remarks ?? null
+        ]);
+    
+        return back()->with([
+            'success' => 'Quotation resubmitted successfully',
+            'request' => new RequestResource($requestModel->load(['quotation.details.company', 'quotation.details.items']))
+        ]);
+    }
+
     public function submitQuotation(QuotationFormRequest $request, $id)
     {
         $requestModel = RequestModel::findOrFail($id);
@@ -379,6 +445,15 @@ class OfficialRequestController extends Controller
         // Update request progress
         $requestModel->update([
             'status' => 'pending'
+        ]);
+
+        $requestModel->timelines()->create([
+            'request_id' => $requestModel->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => $requestModel->progress,
+            'processed_status' => 'submitted',
+            'remarks' => $request->remarks ?? null
         ]);
 
         return back()->with([

@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     Route::post('/requests/{id}/resubmit', [OfficialRequestController::class, 'resubmit'])->name('requests.resubmit');
 
     Route::post('/officials/requests/{id}/quotation', [OfficialRequestController::class, 'submitQuotation'])->name('officials.requests.quotation.submit');
+    Route::post('/officials/requests/{id}/quotation/resubmit', [OfficialRequestController::class, 'resubmitQuotation'])->name('officials.requests.quotation.resubmit');
 });
 
 /*

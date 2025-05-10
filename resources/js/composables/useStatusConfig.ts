@@ -22,12 +22,12 @@ export function useStatusConfig() {
           variant: 'destructive',
           class: 'text-gray-50',
         };
-      case 'returned':
-        return {
-          icon: AlertCircle,
-          variant: 'default',
-          class: 'text-blue-600 dark:text-blue-400',
-        };
+        case 'returned':
+          return {
+            icon: AlertCircle,
+            variant: 'secondary',
+            class: 'text-orange-600 dark:text-orange-400',
+          };
       default:
         return {
           icon: AlertCircle,

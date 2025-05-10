@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Captain;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RequestResource;
+use App\Models\PurchaseRequest;
 use App\Models\Quotation;
 use App\Models\QuotationDetail;
 use App\Models\Request;
@@ -110,8 +111,15 @@ class CaptainRequestController extends Controller
                     'approved_status' => 'approved',
                     'remarks' => $httpRequest->remarks
                 ]);
-                $quotation->update(['progress' => 'Purchase Request']);
                 $request->update(['progress' => 'Purchase Request']);
+
+                PurchaseRequest::create([
+                    'request_id' => $request->id,
+                    'status' => 'pending',
+                    'processed_by' => null,
+                    'processed_at' => null,
+                ]);
+
                 return redirect()->back()->with('success', 'Quotation approved and company selected.');
 
             default:

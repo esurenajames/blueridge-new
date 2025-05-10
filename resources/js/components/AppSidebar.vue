@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FolderTree } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FolderTree, CreditCard } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -86,7 +86,12 @@ const mainNavItems = computed(() => {
                     icon: ChartBar, 
                 },
                 {
-                    title: 'Manage Budget',
+                    title: 'Bank Accounts',
+                    href: route('captain.requests'),
+                    icon: CreditCard, 
+                },
+                {
+                    title: 'Manage Funds',
                     href: route('captain.requests'),
                     icon: Settings, 
                 },
@@ -98,12 +103,12 @@ const mainNavItems = computed(() => {
             collapsible: true,
             items: [
                 {
-                    title: 'Add Category',
+                    title: 'Category',
                     href: route('captain.requests'),
                     icon: FolderPlus,  
                 },
                 {
-                    title: 'Add Subcategory',
+                    title: 'Subcategory',
                     href: route('captain.requests'),
                     icon: FolderTree,  
                 },

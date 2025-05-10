@@ -23,7 +23,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'show-confirmation': [title: string, description: string, action: string];
   'show-edit': [];
-  'show-quotation': [];
+  'show-quotation': [data: any];
 }>();
 
 const statusConfig = computed(() => {
@@ -124,7 +124,7 @@ const showWaitingApproval = computed(() => {
   }
   
   if (props.request.progress === 'Quotation' && 
-      props.request?.data?.quotation?.have_quotation === 'true' && 
+      props.request?.quotation?.have_quotation === 'true' && 
       props.request.status === 'pending') {
     return true;
   }
@@ -213,7 +213,12 @@ const handleAction = (title: string, description: string, action: string) => {
             <Button 
               v-if="showResubmitQuotation"
               class="flex-1 gap-2"
-              @click="emit('show-quotation', request.quotation)"
+              @click="emit('show-confirmation', 
+                'Resubmit Quotation',
+                'Are you sure you want to resubmit this quotation?',
+                'show-quotation',
+                request.quotation
+              )"
             >
               <RefreshCw class="h-4 w-4" />
               Resubmit Quotation
