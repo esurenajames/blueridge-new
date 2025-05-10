@@ -28,6 +28,10 @@ Route::get('requests/{id}/download/{filename}',
     [OfficialRequestController::class, 'downloadFile'
 ])->name('requests.download-file');
 
+Route::get('/requests/{id}/purchase-request-pdf', 
+    [OfficialRequestController::class, 'generatePurchaseRequestPDF'])
+    ->name('requests.purchase-request-pdf');
+
 /*
 |--------------------------------------------------------------------------
 | Official Routes

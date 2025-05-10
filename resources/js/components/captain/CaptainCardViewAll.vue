@@ -50,18 +50,23 @@ function getCurrentStageIndex(progress: string) {
   );
 }
 
-function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, progress: string, isCompleted?: boolean): number {
+function getProgressValue(
+  stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean },
+  progress: string,
+  isCompleted?: boolean
+): number {
+  if (isCompleted) return 100;
   switch (progress) {
     case 'Form':
       return 0;
     case 'Quotation':
-      return 25;
+      return 20;
     case 'Purchase Request':
     case 'PR':
-      return 50;
+      return 40;
     case 'Purchase Order':
     case 'PO':
-      return isCompleted ? 100 : 75;
+      return 80;
     default:
       return 0;
   }
@@ -81,7 +86,7 @@ function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseR
           <CardHeader class="pb-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <CardTitle class="text-lg font-semibold">{{ request.title }}</CardTitle>
+                <CardTitle class="text-lg">{{ request.title }}</CardTitle>
                 <span class="text-sm text-muted-foreground">#{{ request.id }}</span>
               </div>
             </div>
@@ -163,7 +168,7 @@ function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseR
                 </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-muted-foreground">Created By:</span>
-                <span class="text-sm font-medium">{{ request.created_by }}</span>
+                <span class="text-sm">{{ request.created_by }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm text-muted-foreground">Created At:</span>

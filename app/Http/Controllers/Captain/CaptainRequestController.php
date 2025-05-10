@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Captain;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RequestResource;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\Quotation;
 use App\Models\QuotationDetail;
@@ -12,7 +13,7 @@ use Carbon\Carbon;
 use Inertia\Inertia;
 use App\Models\Request as RequestModel;
 use Illuminate\Http\Request as HttpRequest;
-
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class CaptainRequestController extends Controller
 {
@@ -122,6 +123,28 @@ class CaptainRequestController extends Controller
                 ]);
 
                 return redirect()->back()->with('success', 'Quotation approved and company selected.');
+            
+            case 'Purchase Request':
+                $purchaseRequest = $request->purchaseRequest;
+                
+                $purchaseRequest->request->timelines()->create([
+                    'approver_id' => $httpRequest->user()->id,
+                    'approved_date' => now(),
+                    'approved_progress' => $currentProgress,
+                    'approved_status' => 'approved',
+                    'remarks' => $httpRequest->remarks
+                ]);
+
+                $request->update(['progress' => 'Purchase Order']);
+
+                PurchaseOrder::create([
+                    'request_id' => $request->id,
+                    'status' => 'pending',
+                    'processed_by' => null,
+                    'processed_at' => null,
+                ]);
+
+                return redirect()->back()->with('success', 'Purchase Request approved and progressed to Purchase Order.');
 
             default:
                 return redirect()->back()->with('error', 'Invalid progress step.');

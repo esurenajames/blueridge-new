@@ -15,6 +15,9 @@ const props = defineProps<{
     quotation?: {
       have_quotation: 'true' | 'false';
     };
+    purchaseRequest?: {
+      have_supplier_approval?: boolean;
+    };
   };
 }>();
 
@@ -94,7 +97,7 @@ const showRequestFormReturned = computed(() => {
          props.request.status === 'returned';
 });
 
-const showWaitingQuotation = computed(() => {
+const showQuotationWaiting = computed(() => {
   return props.request.progress === 'Quotation' && 
          (!props.request?.quotation?.have_quotation || 
           props.request.quotation.have_quotation === 'false') &&
@@ -112,8 +115,21 @@ const showQuotationReturned = computed(() => {
          props.request.status === 'returned';
 });
 
+const showPurchaseRequestWaiting = computed(() => {
+  return props.request.progress === 'Purchase Request' &&
+    props.request.purchaseRequest?.have_supplier_approval === false &&
+    props.request.status === 'pending';
+});
+
+const showPurchaseRequestApproval = computed(() => {
+  return props.request.progress === 'Purchase Request' &&
+    props.request.purchaseRequest?.have_supplier_approval === true &&
+    props.request.status === 'pending';
+});
+
 const showPurchaseOrder = computed(() => {
   return props.request.progress === 'Purchase Order';
+        props.request.status === 'pending';
 });
 
 const handleAction = (title: string, description: string, action: string) => {
@@ -138,7 +154,7 @@ const handleAction = (title: string, description: string, action: string) => {
         <div class="space-y-2">
           <div class="flex items-center gap-2">
             <span class="font-medium capitalize">
-              {{ request.is_completed ? 'completed' : request.status }}
+              {{ request.progress }}
             </span>
             <Badge :variant="statusConfig.badge" class="capitalize">
               {{ request.is_completed ? 'completed' : request.status }}
@@ -187,24 +203,46 @@ const handleAction = (title: string, description: string, action: string) => {
                   <Clock class="h-4 w-4" />
                   Waiting for Resubmission...
                 </Button>
-                <Button variant="destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
-                  <XCircle class="h-4 w-4" />
-                  Decline Request
-                </Button>
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Request
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </template>
 
             <!-- Quotation - Waiting -->
-            <template v-if="showWaitingQuotation">
+            <template v-if="showQuotationWaiting">
               <div class="flex gap-2">
                 <Button class="flex-1 gap-2" disabled>
                   <Clock class="h-4 w-4" />
                   Waiting for Quotation...
                 </Button>
-                <Button variant="destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
-                  <XCircle class="h-4 w-4" />
-                  Decline Request
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Request
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Return Request', 'Are you sure you want to return this request?', 'return')">
+                      <RotateCcw class="h-4 w-4 mr-2" />
+                      Return Request
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </template>
 
@@ -242,7 +280,76 @@ const handleAction = (title: string, description: string, action: string) => {
                   <Clock class="h-4 w-4" />
                   Waiting for Quotation...
                 </Button>
-                   <DropdownMenu>
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Quotation', 'Are you sure you want to decline this quotation?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Quotation
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </template>
+
+            <!-- Purchase Request -->
+            <template v-if="showPurchaseRequestWaiting">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" disabled>
+                  <Clock class="h-4 w-4" />
+                  Waiting for Purchase Request...
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Purchase Request', 'Are you sure you want to decline this request?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Purchase Request
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </template>
+
+            <!-- Purchase Request - Approve/Decline -->
+            <template v-if="showPurchaseRequestApproval">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" @click="handleAction('Approve Purchase Request', 'Are you sure you want to approve this purchase request?', 'approve')">
+                  <CheckCircle2 class="h-4 w-4" />
+                  Approve Purchase Request
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Purchase Request', 'Are you sure you want to decline this request?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Purchase Request
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </template>
+
+            <!-- Purchase Order -->
+            <template v-if="showPurchaseOrder">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" @click="handleAction('Approve Purchase Order', 'Are you sure you want to approve this purchase order?', 'approve')">
+                  <CheckCircle2 class="h-4 w-4" />
+                  Approve Purchase Order
+                </Button>
+                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon">
                       <MoreHorizontal class="h-4 w-4" />
@@ -259,24 +366,6 @@ const handleAction = (title: string, description: string, action: string) => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-            </template>
-
-            <!-- Purchase Order -->
-            <template v-if="showPurchaseOrder">
-              <div class="flex gap-2">
-                <Button class="flex-1 gap-2" @click="handleAction('Approve Purchase Order', 'Are you sure you want to approve this purchase order?', 'approve')">
-                  <CheckCircle2 class="h-4 w-4" />
-                  Approve Purchase Order
-                </Button>
-                <Button class="flex-1 gap-2" disabled>
-                  <Clock class="h-4 w-4" />
-                  Waiting for Order...
-                </Button>
-                <Button variant="destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
-                  <XCircle class="h-4 w-4" />
-                  Decline Request
-                </Button>
               </div>
             </template>
           </template>

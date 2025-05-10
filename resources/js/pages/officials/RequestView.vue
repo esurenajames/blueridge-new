@@ -233,6 +233,11 @@ const downloadFile = (file: { name: string }) => {
   const url = route('requests.download-file', { id: request.value.id, filename: file.name });
   window.open(url, '_blank');
 };
+
+const downloadPurchaseRequestPDF = () => {
+  const url = route('requests.purchase-request-pdf', { id: request.value.id });
+  window.open(url, '_blank');
+};
 </script>
 
 <template>
@@ -277,7 +282,7 @@ const downloadFile = (file: { name: string }) => {
           :quotation="request.quotation"
         />
 
-                <div class="flex justify-end mb-6">
+        <div class="flex justify-end mb-6">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" class="gap-2">
@@ -424,6 +429,32 @@ const downloadFile = (file: { name: string }) => {
                     </div>
                   </div>
                 </div>
+
+                <div v-if="request.purchaseRequest?.have_supplier_approval === true" class="grid gap-2">
+                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <FileText class="h-4 w-4" />
+                    Purchase Request Details
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText class="h-4 w-4 text-primary ml-2" />
+                      <div class="flex-1">
+                        <span class="text-sm">Purchase-request.pdf</span>
+                        <span class="text-xs text-muted-foreground ml-2">(System Generated)</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        class="h-8 w-8 ml-auto" 
+                        @click="downloadPurchaseRequestPDF"
+                      >
+                        <Download class="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                
               </div>
             </CardContent>
           </Card>

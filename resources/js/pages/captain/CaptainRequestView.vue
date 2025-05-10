@@ -89,18 +89,53 @@ const handleCancel = () => {
   confirmationState.value.show = false;
 };
 
-const handleStatusAction = (title: string, description: string, action: string) => {
-  if (action === 'approve' && request.value.quotation?.have_quotation === 'true') {
-    showQuotationApprove.value = true;
-    return;
-  }
+const handleStatusAction = (title: string, description: string, action: string, data?: any) => {
+  switch (action) {
+    case 'approve':
+      if (request.value.progress === 'Quotation' && request.value.quotation?.have_quotation === 'true') {
+        showQuotationApprove.value = true;
+        return;
+      }
+      remarksState.value = {
+        show: true,
+        title: `Approve ${request.value.progress}`,
+        description: 'Please provide remarks for this approval (optional).',
+        action: 'approve'
+      };
+      break;
 
-  remarksState.value = {
-    show: true,
-    title,
-    description,
-    action: action as 'approve' | 'decline' | 'return'
-  };
+    case 'decline':
+      remarksState.value = {
+        show: true,
+        title: 'Decline Request',
+        description: 'Please provide remarks for declining this request.',
+        action: 'decline'
+      };
+      break;
+
+    case 'return':
+      remarksState.value = {
+        show: true,
+        title: 'Return Request',
+        description: 'Please provide remarks for returning this request.',
+        action: 'return'
+      };
+      break;
+
+    case 'show-quotation':
+      quotationData.value = data;
+      showQuotationDialog.value = true;
+      break;
+
+    default:
+      remarksState.value = {
+        show: true,
+        title,
+        description,
+        action: action as 'approve' | 'decline' | 'return'
+      };
+      break;
+  }
 };
 
 const handleRemarksConfirm = (remarks: string) => {
@@ -198,6 +233,11 @@ const handleRemarksCancel = () => {
 
 const downloadFile = (file: { name: string }) => {
   const url = route('requests.download-file', { id: request.value.id, filename: file.name });
+  window.open(url, '_blank');
+};
+
+const downloadPurchaseRequestPDF = () => {
+  const url = route('requests.purchase-request-pdf', { id: request.value.id });
   window.open(url, '_blank');
 };
 </script>
@@ -375,6 +415,30 @@ const downloadFile = (file: { name: string }) => {
                           View Details
                         </Button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="request.progress === 'Purchase Order'" class="grid gap-2">
+                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <FileText class="h-4 w-4" />
+                    Purchase Request Details
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText class="h-4 w-4 text-primary ml-2" />
+                      <div class="flex-1">
+                        <span class="text-sm">Purchase-request.pdf</span>
+                        <span class="text-xs text-muted-foreground ml-2">(System Generated)</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        class="h-8 w-8 ml-auto" 
+                        @click="downloadPurchaseRequestPDF"
+                      >
+                        <Download class="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>

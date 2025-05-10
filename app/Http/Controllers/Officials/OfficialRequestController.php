@@ -7,6 +7,7 @@ use App\Http\Requests\RequestFormRequest;
 use App\Models\Company;
 use App\Models\RequestFile;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -492,5 +493,61 @@ class OfficialRequestController extends Controller
             'success' => 'Quotation submitted successfully',
             'request' => new RequestResource($requestModel->load(['quotation.details.company', 'quotation.details.items']))
         ]);
+    }
+
+    public function generatePurchaseRequestPDF($id)
+    {
+        $request = RequestModel::with([
+            'quotation.details.company',
+            'quotation.details.items',
+            'timelines.approver'
+        ])->findOrFail($id);
+    
+        // Get selected quotation details
+        $selectedQuotation = $request->quotation->details()
+            ->where('is_selected', true)
+            ->with(['company', 'items'])
+            ->first();
+    
+        if (!$selectedQuotation) {
+            abort(404, 'No selected quotation found');
+        }
+    
+        // Get PR number from created_at and id
+        $createdAt = $request->created_at;
+        $prNumber = sprintf(
+            '%s-%s-%s',
+            $createdAt->format('Y'),
+            $createdAt->format('m'),
+            $request->id
+        );
+    
+        // Find the timeline with approved status and progress = Purchase Request
+        $approvedTimeline = $request->timelines
+            ->where('approved_status', 'approved')
+            ->where('approved_progress', 'Purchase Request')
+            ->sortByDesc('approved_date')
+            ->first();
+    
+        $date = $approvedTimeline
+            ? Carbon::parse($approvedTimeline->approved_date)->format('Y-m-d')
+            : null;
+    
+        // Get treasurer and captain
+        $treasurer = User::where('role', 'treasurer')->first();
+        $captain = User::where('role', 'captain')->first();
+    
+        $data = [
+            'request' => $request,
+            'date' => $date,
+            'selectedQuotation' => $selectedQuotation,
+            'prNumber' => $prNumber,
+            'treasurer' => $treasurer,
+            'captain' => $captain
+        ];
+    
+        $pdf = Pdf::loadView('purchase-request', $data);
+    
+        return $pdf->download("purchase-request-{$prNumber}.pdf");
     }
 }

@@ -41,18 +41,23 @@ const viewRequest = (id: number) => {
   router.visit(route('captain.requests.view', { id }));
 };
 
-function getProgressValue(stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean }, progress: string, isCompleted?: boolean): number {
+function getProgressValue(
+  stages: { form: boolean, quotation: boolean, purchaseRequest: boolean, purchaseOrder: boolean },
+  progress: string,
+  isCompleted?: boolean
+): number {
+  if (isCompleted) return 100;
   switch (progress) {
     case 'Form':
       return 0;
     case 'Quotation':
-      return 25;
+      return 20;
     case 'Purchase Request':
     case 'PR':
-      return 50;
+      return 40;
     case 'Purchase Order':
     case 'PO':
-      return isCompleted ? 100 : 75;
+      return 80;
     default:
       return 0;
   }
