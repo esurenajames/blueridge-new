@@ -87,7 +87,7 @@ const mainNavItems = computed(() => {
                 },
                 {
                     title: 'Bank Accounts',
-                    href: route('captain.requests'),
+                    href: route('captain.bank-accounts'),
                     icon: CreditCard, 
                 },
                 {

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
+use App\Http\Controllers\Captain\CaptainBankController;
 use App\Http\Controllers\Captain\CaptainDashboardController;
 use App\Http\Controllers\Captain\CaptainRequestController;
 use App\Http\Controllers\Officials\OfficialDashboardController;
@@ -29,8 +30,8 @@ Route::get('requests/{id}/download/{filename}',
 ])->name('requests.download-file');
 
 Route::get('/requests/{id}/purchase-request-pdf', 
-    [OfficialRequestController::class, 'generatePurchaseRequestPDF'])
-    ->name('requests.purchase-request-pdf');
+    [OfficialRequestController::class, 'generatePurchaseRequestPDF'
+])->name('requests.purchase-request-pdf');
 
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +98,14 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     Route::post('/requests/{id}/approve', [CaptainRequestController::class, 'approve'])->name('requests.approve');
     Route::post('/requests/{id}/decline', [CaptainRequestController::class, 'decline'])->name('requests.decline');
     Route::post('/requests/{id}/return', [CaptainRequestController::class, 'return'])->name('requests.return');
+
+    // Fund Management
+
+    // Bank Accounts
+    Route::get('/captain/bank-accounts', [CaptainBankController::class, 'index'])->name('captain.bank-accounts');
+    Route::post('/captain/bank-accounts', [CaptainBankController::class, 'create'])->name('captain.bank-accounts.create');
+    Route::put('/captain/bank-accounts/{bankAccount}', [CaptainBankController::class, 'update'])->name('captain.bank-accounts.update');
+    Route::delete('/captain/bank-accounts/{bankAccount}', [CaptainBankController::class, 'destroy'])->name('captain.bank-accounts.destroy');
 });
 
 /*
