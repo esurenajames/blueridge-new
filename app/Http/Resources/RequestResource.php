@@ -72,6 +72,15 @@ class RequestResource extends JsonResource
                     }),
                 ];
             }),
+            'purchaseRequest' => $this->when($this->relationLoaded('purchaseRequest'), function() {
+                return [
+                    'id' => $this->purchaseRequest?->id,
+                    'status' => $this->purchaseRequest?->status,
+                    'have_supplier_approval' => (bool) $this->purchaseRequest?->have_supplier_approval,
+                    'processed_by' => $this->purchaseRequest?->processor?->name,
+                    'processed_at' => $this->purchaseRequest?->processed_at?->format('Y-m-d'),
+                ];
+            }),
             'collaborators' => $this->whenLoaded('collaborators', fn() => $this->collaborators->map(fn($c) => [
                 'id' => $c->id,
                 'name' => $c->name,

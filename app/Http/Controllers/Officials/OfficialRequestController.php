@@ -142,6 +142,37 @@ class OfficialRequestController extends Controller
             'request' => $request
         ]);
     }
+
+    public function processPurchaseRequest(HttpRequest $httpRequest, $id)
+    {
+        $request = RequestModel::findOrFail($id);
+        
+        // Update purchase request approval status
+        $purchaseRequest = $request->purchaseRequest;
+        $purchaseRequest->have_supplier_approval = true;
+        $purchaseRequest->save();
+    
+        // Update request status
+        $request->status = 'pending';
+        $request->processed_by = auth()->id();
+        $request->processed_at = now();
+        $request->save();
+    
+        // Create timeline entry
+        $request->timelines()->create([
+            'request_id' => $request->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => 'Purchase Request',
+            'processed_status' => 'processed',
+            'remarks' => $httpRequest->remarks ?? null
+        ]);
+    
+        return back()->with([
+            'success' => 'Purchase Request processed successfully',
+            'request' => new RequestResource($request->load(['purchaseRequest']))
+        ]);
+    }
     
     public function void(HttpRequest $httpRequest, $id)
     {
@@ -175,6 +206,7 @@ class OfficialRequestController extends Controller
             'quotation.processor',
             'quotation.details.company',
             'quotation.details.items',
+            'purchaseRequest',
         ])->findOrFail($id);
     
         $userPermission = 'view';

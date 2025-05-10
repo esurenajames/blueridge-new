@@ -50,8 +50,12 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     Route::post('/requests/{id}/void', [OfficialRequestController::class, 'void'])->name('requests.void');
     Route::post('/requests/{id}/resubmit', [OfficialRequestController::class, 'resubmit'])->name('requests.resubmit');
 
+    // Request Quotation Actions
     Route::post('/officials/requests/{id}/quotation', [OfficialRequestController::class, 'submitQuotation'])->name('officials.requests.quotation.submit');
     Route::post('/officials/requests/{id}/quotation/resubmit', [OfficialRequestController::class, 'resubmitQuotation'])->name('officials.requests.quotation.resubmit');
+
+    // Request Purchase Request Actions
+    Route::post('/requests/{id}/process-purchase', [OfficialRequestController::class, 'processPurchaseRequest'])->name('requests.process-purchase');
 });
 
 /*

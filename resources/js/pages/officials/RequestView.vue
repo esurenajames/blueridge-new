@@ -120,6 +120,23 @@ const processRequest = () => {
   });
 };
 
+const processPurchaseRequest = () => {
+  router.post(route('requests.process-purchase', { id: request.value.id }), {}, {
+    preserveScroll: true,
+    preserveState: true,
+    onSuccess: (page) => {
+      if (page.props.flash?.request?.data?.status) {
+        request.value = page.props.flash.request.data;
+      }
+      toast({
+        title: "Success",
+        description: page.props.flash?.success ?? "Purchase request processed successfully.",
+        variant: "success",
+      });
+    },
+  });
+};
+
 const reprocessRequest = () => {
   router.post(route('requests.reprocess', { id: request.value.id }), {}, {
     preserveScroll: true,
@@ -190,6 +207,9 @@ const handleStatusAction = (title: string, description: string, action: string, 
   switch (action) {
     case 'process':
       showConfirmation(title, description, processRequest);
+      break;
+    case 'process-purchase-request':
+      showConfirmation(title, description, processPurchaseRequest);
       break;
     case 'reprocess':
       showConfirmation(title, description, reprocessRequest);

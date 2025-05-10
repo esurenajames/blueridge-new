@@ -84,6 +84,38 @@ const statusConfig = computed(() => {
   }
 });
 
+const showApproveRequestForm = computed(() => {
+  return props.request.progress === 'Request Form' && 
+         props.request.status === 'pending';
+});
+
+const showRequestFormReturned = computed(() => {
+  return props.request.progress === 'Request Form' && 
+         props.request.status === 'returned';
+});
+
+const showWaitingQuotation = computed(() => {
+  return props.request.progress === 'Quotation' && 
+         (!props.request?.quotation?.have_quotation || 
+          props.request.quotation.have_quotation === 'false') &&
+         props.request.status !== 'returned';
+});
+
+const showQuotationApproval = computed(() => {
+  return props.request.progress === 'Quotation' && 
+         props.request.quotation?.have_quotation === 'true' &&
+         props.request.status === 'pending';
+});
+
+const showQuotationReturned = computed(() => {
+  return props.request.progress === 'Quotation' &&
+         props.request.status === 'returned';
+});
+
+const showPurchaseOrder = computed(() => {
+  return props.request.progress === 'Purchase Order';
+});
+
 const handleAction = (title: string, description: string, action: string) => {
   emit('show-confirmation', title, description, action);
 };
@@ -119,108 +151,163 @@ const handleAction = (title: string, description: string, action: string) => {
       </div>
 
       <div class="flex flex-col gap-3 pt-2">
-        <!-- Pending Status Actions (only if not completed) -->
-        <template v-if="request.status === 'pending' && !request.is_completed">
-          <div class="flex gap-2">
-            <template v-if="request.progress === 'Quotation'">
-              <Button
-                class="flex-1 gap-2"
-                :disabled="request.quotation?.have_quotation === 'false'"
-                @click="handleAction(
-                  'Approve Request',
-                  'Are you sure you want to approve this request?',
-                  'approve'
-                )"
-              >
-                <CheckCircle2 class="h-4 w-4" />
-                {{ request.quotation?.have_quotation === 'false' ? 'Waiting For Quotation...' : 'Approve Quotation' }}
-              </Button>
-            </template>
-            <template v-else>
-              <Button
-                class="flex-1 gap-2"
-                @click="handleAction(
-                  'Approve Request',
-                  'Are you sure you want to approve this request?',
-                  'approve'
-                )"
-              >
-                <CheckCircle2 class="h-4 w-4" />
-                Approve Request
-              </Button>
-            </template>
-            <!-- Secondary Actions Dropdown -->
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreHorizontal class="h-4 w-4" />
-                  <span class="sr-only">More actions</span>
+          <!-- Only show action buttons if not voided, declined, or completed -->
+          <template v-if="request.status !== 'voided' && request.status !== 'declined' && !request.is_completed">
+            <!-- Request Form - Pending -->
+            <template v-if="showApproveRequestForm">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" @click="handleAction('Approve Request', 'Are you sure you want to approve this request?', 'approve')">
+                  <CheckCircle2 class="h-4 w-4" />
+                  Approve Request
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" class="w-42">
-                <DropdownMenuItem
-                  class="text-destructive"
-                  @click="handleAction(
-                    'Decline Request',
-                    'Are you sure you want to decline this request?',
-                    'decline'
-                  )"
-                >
-                  <XCircle class="h-4 w-4 mr-2" />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Request
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Return Request', 'Are you sure you want to return this request?', 'return')">
+                      <RotateCcw class="h-4 w-4 mr-2" />
+                      Return Request
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </template>
+
+            <!-- Request Form - Returned -->
+            <template v-if="showRequestFormReturned">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" disabled>
+                  <Clock class="h-4 w-4" />
+                  Waiting for Resubmission...
+                </Button>
+                <Button variant="destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
+                  <XCircle class="h-4 w-4" />
                   Decline Request
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  @click="handleAction(
-                    'Return Request',
-                    'Are you sure you want to return this request for revision?',
-                    'return'
-                  )"
-                >
-                  <RotateCcw class="h-4 w-4 mr-2" />
-                  Return Request
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </template>
+                </Button>
+              </div>
+            </template>
 
-        <!-- Approved Status Actions -->
-        <template v-if="request.status === 'approved' && !request.is_completed">
-          <div class="text-sm text-muted-foreground text-center p-2">
-            You have approved this request
-          </div>
-        </template>
+            <!-- Quotation - Waiting -->
+            <template v-if="showWaitingQuotation">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" disabled>
+                  <Clock class="h-4 w-4" />
+                  Waiting for Quotation...
+                </Button>
+                <Button variant="destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
+                  <XCircle class="h-4 w-4" />
+                  Decline Request
+                </Button>
+              </div>
+            </template>
 
-        <!-- Declined Status Actions -->
-        <template v-if="request.status === 'declined' && !request.is_completed">
-          <div class="text-sm text-muted-foreground text-center p-2">
-            You have declined this request
-          </div>
-        </template>
+            <!-- Quotation - Approval -->
+            <template v-if="showQuotationApproval">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" @click="handleAction('Approve Quotation', 'Are you sure you want to approve this quotation?', 'approve')">
+                  <CheckCircle2 class="h-4 w-4" />
+                  Approve Quotation
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Quotation', 'Are you sure you want to decline this quotation?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Quotation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Return Quotation', 'Are you sure you want to return this quotation?', 'return')">
+                      <RotateCcw class="h-4 w-4 mr-2" />
+                      Return Quotation
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </template>
 
-        <!-- Returned Status Message -->
-        <template v-if="request.status === 'returned' && !request.is_completed">
-          <div class="text-sm text-muted-foreground text-center p-2">
-            This request has been returned for revision
-          </div>
-        </template>
+            <!-- Quotation - Returned -->
+            <template v-if="showQuotationReturned">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" disabled>
+                  <Clock class="h-4 w-4" />
+                  Waiting for Quotation...
+                </Button>
+                   <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <MoreHorizontal class="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" class="w-42">
+                    <DropdownMenuItem class="text-destructive" @click="handleAction('Decline Quotation', 'Are you sure you want to decline this quotation?', 'decline')">
+                      <XCircle class="h-4 w-4 mr-2" />
+                      Decline Quotation
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @click="handleAction('Return Quotation', 'Are you sure you want to return this quotation?', 'return')">
+                      <RotateCcw class="h-4 w-4 mr-2" />
+                      Return Quotation
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </template>
 
-        <!-- Voided Status Message -->
-        <div
-          v-if="request.status === 'voided'"
-          class="text-sm text-muted-foreground text-center p-2"
-        >
-          This request has been voided and cannot be modified.
+            <!-- Purchase Order -->
+            <template v-if="showPurchaseOrder">
+              <div class="flex gap-2">
+                <Button class="flex-1 gap-2" @click="handleAction('Approve Purchase Order', 'Are you sure you want to approve this purchase order?', 'approve')">
+                  <CheckCircle2 class="h-4 w-4" />
+                  Approve Purchase Order
+                </Button>
+                <Button class="flex-1 gap-2" disabled>
+                  <Clock class="h-4 w-4" />
+                  Waiting for Order...
+                </Button>
+                <Button variant="destructive" @click="handleAction('Decline Request', 'Are you sure you want to decline this request?', 'decline')">
+                  <XCircle class="h-4 w-4" />
+                  Decline Request
+                </Button>
+              </div>
+            </template>
+          </template>
+
+          <!-- Status Messages -->
+          <template v-if="request.status === 'approved' && !request.is_completed">
+            <div class="text-sm text-muted-foreground text-center p-2">
+              You have approved this request
+            </div>
+          </template>
+
+          <template v-if="request.status === 'declined' && !request.is_completed">
+            <div class="text-sm text-muted-foreground text-center p-2">
+              You have declined this request
+            </div>
+          </template>
+
+          <template v-if="request.status === 'returned' && !request.is_completed">
+            <div class="text-sm text-muted-foreground text-center p-2">
+              This request has been returned for revision
+            </div>
+          </template>
+
+          <div v-if="request.status === 'voided'" class="text-sm text-muted-foreground text-center p-2">
+            This request has been voided and cannot be modified.
+          </div>
+
+          <div v-if="request.is_completed" class="text-sm text-muted-foreground text-center p-2">
+            This request has been completed and cannot be modified.
+          </div>
         </div>
-
-        <!-- Completed Status Message -->
-        <div
-          v-if="request.is_completed"
-          class="text-sm text-muted-foreground text-center p-2"
-        >
-          This request has been completed and cannot be modified.
-        </div>
-      </div>
-    </CardContent>
+      </CardContent>
   </Card>
 </template>

@@ -63,6 +63,7 @@ class CaptainRequestController extends Controller
             'quotation.processor',
             'quotation.details.company',
             'quotation.details.items',
+            'purchaseRequest',
         ])->findOrFail($id);
 
         return Inertia::render('captain/CaptainRequestView', [

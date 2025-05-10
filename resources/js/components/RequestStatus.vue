@@ -11,10 +11,11 @@ const props = defineProps<{
     status: 'draft' | 'pending' | 'approved' | 'voided' | 'declined' | 'returned';
     is_completed?: boolean;
     progress?: string;
-    data?: {
-      quotation?: {
-        have_quotation: string;
-      };
+    purchaseRequest?: {
+      have_supplier_approval: boolean;
+    };
+    quotation?: {
+      have_quotation: string;
     };
   };
   canEdit: boolean;
@@ -107,15 +108,31 @@ const showSubmitQuotation = computed(() => {
 });
 
 const showResubmitDocument = computed(() => {
-  return props.request.progress === 'Quotation' && 
-         (!props.request?.quotation?.have_quotation || props.request.quotation.have_quotation === 'false') && 
-         props.request.status === 'returned';
+  // For Quotation progress
+  if (props.request.progress === 'Quotation' && 
+      (!props.request?.quotation?.have_quotation || props.request.quotation.have_quotation === 'false') && 
+      props.request.status === 'returned') {
+    return true;
+  }
+  
+  // For Request Form progress
+  if (props.request.progress === 'Request Form' && props.request.status === 'returned') {
+    return true;
+  }
+  
+  return false;
 });
 
 const showResubmitQuotation = computed(() => {
   return props.request.progress === 'Quotation' && 
          props.request?.quotation?.have_quotation === 'true' && 
          props.request.status === 'returned';
+});
+
+const showProcessPurchaseRequest = computed(() => {
+  return props.request.progress === 'Purchase Request' && 
+         props.request.status === 'pending' && 
+         props.request?.purchaseRequest?.have_supplier_approval === false;
 });
 
 const showWaitingApproval = computed(() => {
@@ -126,6 +143,12 @@ const showWaitingApproval = computed(() => {
   if (props.request.progress === 'Quotation' && 
       props.request?.quotation?.have_quotation === 'true' && 
       props.request.status === 'pending') {
+    return true;
+  }
+
+  if (props.request.progress === 'Purchase Request' && 
+      props.request.status === 'pending' && 
+      props.request?.purchaseRequest?.have_supplier_approval === true) {
     return true;
   }
   
@@ -222,6 +245,20 @@ const handleAction = (title: string, description: string, action: string) => {
             >
               <RefreshCw class="h-4 w-4" />
               Resubmit Quotation
+            </Button>
+
+            <!-- Purchase Request -->
+            <Button 
+              v-if="showProcessPurchaseRequest"
+              class="flex-1 gap-2"
+              @click="handleAction(
+                'Process Purchase Request',
+                'Are you sure you want to process this purchase request?',
+                'process-purchase-request'
+              )"
+            >
+              <CheckCircle2 class="h-4 w-4" />
+              Process Purchase Request
             </Button>
 
             <!-- Waiting For Approval -->
