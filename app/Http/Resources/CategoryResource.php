@@ -13,7 +13,7 @@ class CategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'position' => $this->position,
+            'group_name' => $this->group_name,
             'status' => $this->status,
             'subcategories_count' => $this->whenCounted('subcategories'),
             'subcategories' => $this->whenLoaded('subcategories', function() {

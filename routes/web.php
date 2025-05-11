@@ -102,6 +102,8 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     Route::post('/requests/{id}/return', [CaptainRequestController::class, 'return'])->name('requests.return');
 
     // Fund Management
+    Route::get('/captain/funds', function () { return Inertia::render('captain/CaptainBudget');})->name('captain.funds');
+     Route::get('/captain/manage-fund', function () { return Inertia::render('captain/CaptainManageFund');})->name('captain.manage.fund');
 
     // Bank Accounts
     Route::get('/captain/bank-accounts', [CaptainBankController::class, 'index'])->name('captain.bank-accounts');

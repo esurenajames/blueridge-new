@@ -82,7 +82,7 @@ const mainNavItems = computed(() => {
             items: [
                 {
                     title: 'Fund Overview',
-                    href: route('captain.requests'),
+                    href: route('captain.funds'),
                     icon: ChartBar, 
                 },
                 {

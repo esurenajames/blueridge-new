@@ -7,9 +7,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from '@inertiajs/vue3';
 import { useForm as useVeeForm, useField } from 'vee-validate';
-import { object, string, number } from 'yup';
+import { object, string } from 'yup';
 import Confirmation from '@/components/Confirmation.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
+
+const GROUP_NAMES = [
+  'Beginning Cash Balance',
+  'Receipts',
+  'Expenditures',
+  'MOOE'
+];
 
 const props = defineProps<{
   show: boolean;
@@ -17,7 +24,7 @@ const props = defineProps<{
     id: number;
     name: string;
     description: string;
-    position: number;
+    group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
     status: 'active' | 'inactive';
   };
 }>();
@@ -27,7 +34,7 @@ const emit = defineEmits(['close']);
 const validationSchema = object({
   name: string().required('Category name is required'),
   description: string().nullable(),
-  position: number().required('Position is required').min(0, 'Position cannot be negative'),
+  group_name: string().required('Group name is required'),
   status: string().required('Status is required'),
 });
 
@@ -37,13 +44,13 @@ const { handleSubmit: validateForm } = useVeeForm({
 
 const { value: name, errorMessage: nameError } = useField('name', undefined, { initialValue: props.category.name });
 const { value: description, errorMessage: descriptionError } = useField('description', undefined, { initialValue: props.category.description });
-const { value: position, errorMessage: positionError } = useField('position', undefined, { initialValue: props.category.position.toString() });
+const { value: group_name, errorMessage: groupNameError } = useField('group_name', undefined, { initialValue: props.category.group_name });
 const { value: status, errorMessage: statusError } = useField('status', undefined, { initialValue: props.category.status });
 
 const form = useForm({
   name: props.category.name,
   description: props.category.description,
-  position: props.category.position,
+  group_name: props.category.group_name,
   status: props.category.status,
 });
 
@@ -56,12 +63,12 @@ watch(() => props.show, (val) => {
   if (val) {
     name.value = props.category.name;
     description.value = props.category.description;
-    position.value = props.category.position.toString();
+    group_name.value = props.category.group_name;
     status.value = props.category.status;
     form.reset();
     form.name = props.category.name;
     form.description = props.category.description;
-    form.position = props.category.position;
+    form.group_name = props.category.group_name;
     form.status = props.category.status;
   }
 });
@@ -73,7 +80,7 @@ watch(isOpen, (val) => {
 const handleSubmit = validateForm((values) => {
   form.name = name.value;
   form.description = description.value;
-  form.position = Number(position.value);
+  form.group_name = group_name.value;
   form.status = status.value;
   showConfirmation.value = true;
 });
@@ -132,28 +139,16 @@ const confirmEdit = () => {
           <span v-if="descriptionError" class="text-sm text-red-500">{{ descriptionError }}</span>
         </div>
         <div>
-          <label class="block mb-1 text-sm">Position</label>
-          <Input 
-            v-model="position" 
-            type="number"
-            min="0"
-            placeholder="Enter position" 
-            :class="positionError ? 'border-red-500 focus-visible:ring-red-500' : ''"
-            @keypress="(e) => {
-              const charCode = (e.which) ? e.which : e.keyCode;
-              if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-                e.preventDefault();
-              }
-            }"
-            @paste="(e) => {
-              e.preventDefault();
-              const text = (e.clipboardData || window.clipboardData).getData('text');
-              if (!isNaN(text) && !isNaN(parseFloat(text))) {
-                position = text;
-              }
-            }"
-          />
-          <span v-if="positionError" class="text-sm text-red-500">{{ positionError }}</span>
+          <label class="block mb-1 text-sm">Category Group Name</label>
+          <Select v-model="group_name">
+            <SelectTrigger :class="groupNameError ? 'border-red-500 focus:ring-red-500' : ''">
+              <SelectValue placeholder="Select group name" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="g in GROUP_NAMES" :key="g" :value="g">{{ g }}</SelectItem>
+            </SelectContent>
+          </Select>
+          <span v-if="groupNameError" class="text-sm text-red-500">{{ groupNameError }}</span>
         </div>
         <div>
           <label class="block mb-1 text-sm">Status</label>
@@ -181,6 +176,6 @@ const confirmEdit = () => {
     title="Edit Category"
     description="Are you sure you want to save these changes?"
     @confirm="confirmEdit"
-    @cancel="showConfirmation = false"
+    @cancel="showConfirmation.value = false"
   />
 </template>

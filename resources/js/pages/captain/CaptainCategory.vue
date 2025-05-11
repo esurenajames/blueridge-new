@@ -18,7 +18,7 @@ interface Category {
   id: number;
   name: string;
   description: string;
-  position: number;
+  group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
   status: 'active' | 'inactive';
   created_at: string;
 }
@@ -144,7 +144,7 @@ const handlePageChange = (page: number) => {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
-              <TableHead>Position</TableHead>
+              <TableHead>Group Name</TableHead>
               <TableHead>Status</TableHead>
               <TableHead class="hidden lg:table-cell">Created At</TableHead>
               <TableHead class="w-[100px]">Actions</TableHead>
@@ -159,7 +159,7 @@ const handlePageChange = (page: number) => {
               >
                 <TableCell class="font-medium">{{ category.name }}</TableCell>
                 <TableCell>{{ category.description }}</TableCell>
-                <TableCell>{{ category.position }}</TableCell>
+                <TableCell>{{ category.group_name }}</TableCell>
                 <TableCell>
                   <Badge
                     :variant="category.status === 'active' ? 'success' : 'destructive'"

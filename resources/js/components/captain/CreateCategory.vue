@@ -8,8 +8,15 @@ import { useToast } from '@/components/ui/toast/use-toast';
 import Confirmation from '@/components/Confirmation.vue';
 import { useForm } from '@inertiajs/vue3';
 import { useForm as useVeeForm, useField } from 'vee-validate';
-import { object, string, number } from 'yup';
+import { object, string } from 'yup';
 import { Textarea } from '@/components/ui/textarea';
+
+const GROUP_NAMES = [
+  'Beginning Cash Balance',
+  'Receipts',
+  'Expenditures',
+  'MOOE'
+];
 
 const props = defineProps<{ show: boolean }>();
 const emit = defineEmits(['close']);
@@ -17,7 +24,7 @@ const emit = defineEmits(['close']);
 const validationSchema = object({
   name: string().required('Category name is required'),
   description: string().nullable(),
-  position: number().required('Position is required').min(0, 'Position cannot be negative'),
+  group_name: string().required('Group name is required'),
   status: string().required('Status is required'),
 });
 
@@ -27,8 +34,8 @@ const { handleSubmit: validateForm } = useVeeForm({
 
 const { value: name, errorMessage: nameError } = useField('name');
 const { value: description, errorMessage: descriptionError } = useField('description');
-const { value: position, errorMessage: positionError } = useField('position', undefined, {
-  initialValue: '0'
+const { value: group_name, errorMessage: groupNameError } = useField('group_name', undefined, {
+  initialValue: GROUP_NAMES[0]
 });
 const { value: status, errorMessage: statusError } = useField('status', undefined, {
   initialValue: 'active'
@@ -37,7 +44,7 @@ const { value: status, errorMessage: statusError } = useField('status', undefine
 const form = useForm({
   name: '',
   description: '',
-  position: 0,
+  group_name: GROUP_NAMES[0],
   status: 'active',
 });
 
@@ -50,7 +57,7 @@ watch(() => props.show, (val) => {
   if (val) {
     name.value = '';
     description.value = '';
-    position.value = '0';
+    group_name.value = GROUP_NAMES[0];
     status.value = 'active';
     form.reset();
   }
@@ -63,7 +70,7 @@ watch(isOpen, (val) => {
 const handleSubmit = validateForm((values) => {
   form.name = name.value;
   form.description = description.value;
-  form.position = Number(position.value);
+  form.group_name = group_name.value;
   form.status = status.value;
   showConfirmation.value = true;
 });
@@ -121,29 +128,17 @@ const confirmCreate = () => {
           />
           <span v-if="descriptionError" class="text-sm text-red-500">{{ descriptionError }}</span>
         </div>
-         <div>
-          <label class="block mb-1 text-sm">Position</label>
-          <Input 
-            v-model="position" 
-            type="number" 
-            min="0"
-            placeholder="Enter position" 
-            :class="positionError ? 'border-red-500 focus-visible:ring-red-500' : ''"
-            @keypress="(e) => {
-              const charCode = (e.which) ? e.which : e.keyCode;
-              if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-                e.preventDefault();
-              }
-            }"
-            @paste="(e) => {
-              e.preventDefault();
-              const text = (e.clipboardData || window.clipboardData).getData('text');
-              if (!isNaN(text) && !isNaN(parseFloat(text))) {
-                position = text;
-              }
-            }"
-          />
-          <span v-if="positionError" class="text-sm text-red-500">{{ positionError }}</span>
+        <div>
+          <label class="block mb-1 text-sm">Category Group Name</label>
+          <Select v-model="group_name">
+            <SelectTrigger :class="groupNameError ? 'border-red-500 focus:ring-red-500' : ''">
+              <SelectValue placeholder="Select group name" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="g in GROUP_NAMES" :key="g" :value="g">{{ g }}</SelectItem>
+            </SelectContent>
+          </Select>
+          <span v-if="groupNameError" class="text-sm text-red-500">{{ groupNameError }}</span>
         </div>
         <div>
           <label class="block mb-1 text-sm">Status</label>
@@ -171,6 +166,6 @@ const confirmCreate = () => {
     title="Create Category"
     description="Are you sure you want to create this category?"
     @confirm="confirmCreate"
-    @cancel="showConfirmation = false"
+    @cancel="showConfirmation.value = false"
   />
 </template>

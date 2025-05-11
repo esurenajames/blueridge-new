@@ -24,7 +24,8 @@ class CaptainCategoryController extends Controller
         }
     
         $categories = $query->with('subcategories')
-                          ->orderBy('position')
+                          ->orderBy('group_name')
+                          ->orderBy('name')
                           ->paginate(10);
     
         return Inertia::render('captain/CaptainCategory', [

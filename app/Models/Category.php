@@ -14,22 +14,17 @@ class Category extends Model
         'name',
         'description',
         'status',
-        'position'
+        'group_name'
     ];
 
     protected $casts = [
         'status' => 'string',
-        'position' => 'integer'
+        'group_name' => 'string'
     ];
 
     public function subcategories(): HasMany
     {
         return $this->hasMany(Subcategory::class)->orderBy('name');
-    }
-
-    public function scopeOrdered($query)
-    {
-        return $query->orderBy('position');
     }
 
     public function scopeActive($query)

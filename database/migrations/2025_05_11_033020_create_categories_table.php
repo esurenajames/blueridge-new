@@ -16,7 +16,12 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->integer('position')->default(0);  // Added this line
+            $table->enum('group_name', [
+                'Beginning Cash Balance',
+                'Receipts',
+                'Expenditures',
+                'MOOE'
+            ])->default('Beginning Cash Balance');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
             $table->softDeletes();
