@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, defineProps, defineEmits } from 'vue';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -107,25 +107,28 @@ const confirmEdit = () => {
     <DialogContent class="sm:max-w-[425px]">
       <DialogHeader>
         <DialogTitle>Edit Bank Account</DialogTitle>
+        <DialogDescription>
+          Fill out the form below to edit bank account.
+        </DialogDescription>
       </DialogHeader>
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div>
-          <label class="block mb-1 font-medium">Account Name</label>
+          <label class="block mb-1 text-sm">Account Name</label>
           <Input v-model="name" placeholder="Enter account name" :class="nameError ? 'border-red-500 focus-visible:ring-red-500' : ''" />
           <span v-if="nameError" class="text-sm text-red-500">{{ nameError }}</span>
         </div>
         <div>
-          <label class="block mb-1 font-medium">Bank Name</label>
+          <label class="block mb-1 text-sm">Bank Name</label>
           <Input v-model="bank" placeholder="Enter bank name" :class="bankError ? 'border-red-500 focus-visible:ring-red-500' : ''" />
           <span v-if="bankError" class="text-sm text-red-500">{{ bankError }}</span>
         </div>
         <div>
-          <label class="block mb-1 font-medium">Account Number</label>
+          <label class="block mb-1 text-sm">Account Number</label>
           <Input v-model="account_number" placeholder="Enter account number" :class="accountNumberError ? 'border-red-500 focus-visible:ring-red-500' : ''" />
           <span v-if="accountNumberError" class="text-sm text-red-500">{{ accountNumberError }}</span>
         </div>
         <div>
-          <label class="block mb-1 font-medium">Status</label>
+          <label class="block mb-1 text-sm">Status</label>
           <Select v-model="status">
             <SelectTrigger :class="statusError ? 'border-red-500 focus:ring-red-500' : ''">
               <SelectValue placeholder="Select status" />

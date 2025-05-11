@@ -3,8 +3,10 @@
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Captain\CaptainBankController;
+use App\Http\Controllers\Captain\CaptainCategoryController;
 use App\Http\Controllers\Captain\CaptainDashboardController;
 use App\Http\Controllers\Captain\CaptainRequestController;
+use App\Http\Controllers\Captain\CaptainSubcategoryController;
 use App\Http\Controllers\Officials\OfficialDashboardController;
 use App\Http\Controllers\Officials\OfficialRequestController;
 
@@ -106,6 +108,18 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     Route::post('/captain/bank-accounts', [CaptainBankController::class, 'create'])->name('captain.bank-accounts.create');
     Route::put('/captain/bank-accounts/{bankAccount}', [CaptainBankController::class, 'update'])->name('captain.bank-accounts.update');
     Route::delete('/captain/bank-accounts/{bankAccount}', [CaptainBankController::class, 'destroy'])->name('captain.bank-accounts.destroy');
+
+    // Category Management
+    Route::get('/captain/categories', [CaptainCategoryController::class, 'index'])->name('captain.categories');
+    Route::post('/captain/categories', [CaptainCategoryController::class, 'create'])->name('captain.categories.create');
+    Route::put('/captain/categories/{category}', [CaptainCategoryController::class, 'update'])->name('captain.categories.update');
+    Route::delete('/captain/categories/{category}', [CaptainCategoryController::class, 'destroy'])->name('captain.categories.destroy');
+
+    // Subcategory Management
+    Route::get('/captain/subcategories', [CaptainSubcategoryController::class, 'index'])->name('captain.subcategories');
+    Route::post('/captain/subcategories', [CaptainSubcategoryController::class, 'create'])->name('captain.subcategories.create');
+    Route::put('/captain/subcategories/{subcategory}', [CaptainSubcategoryController::class, 'update'])->name('captain.subcategories.update');
+    Route::delete('/captain/subcategories/{subcategory}', [CaptainSubcategoryController::class, 'destroy'])->name('captain.subcategories.destroy');
 });
 
 /*

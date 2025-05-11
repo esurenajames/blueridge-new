@@ -104,12 +104,12 @@ const mainNavItems = computed(() => {
             items: [
                 {
                     title: 'Category',
-                    href: route('captain.requests'),
+                    href: route('captain.categories'),
                     icon: FolderPlus,  
                 },
                 {
                     title: 'Subcategory',
-                    href: route('captain.requests'),
+                    href: route('captain.subcategories'),
                     icon: FolderTree,  
                 },
             ]
