@@ -47,9 +47,26 @@ class CaptainSubcategoryController extends Controller
     public function create(SubcategoryRequest $request)
     {
         $validated = $request->validated();
-        
         $subcategory = Subcategory::create($validated);
-    
+
+        $subcategory->budget()->create([
+            'proposed_budget' => 0,
+            'january' => 0,
+            'february' => 0,
+            'march' => 0,
+            'april' => 0,
+            'may' => 0,
+            'june' => 0,
+            'july' => 0,
+            'august' => 0,
+            'september' => 0,
+            'october' => 0,
+            'november' => 0,
+            'december' => 0,
+            'profit' => 0,
+            'balance' => 0,
+        ]);
+
         return redirect()->back()->with([
             'success' => 'Subcategory created successfully',
             'subcategory' => new SubcategoryResource($subcategory)

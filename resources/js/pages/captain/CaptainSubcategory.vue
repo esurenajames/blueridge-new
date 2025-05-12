@@ -13,6 +13,7 @@ import { ref, watch } from 'vue';
 import CreateSubcategory from '@/components/captain/CreateSubcategory.vue';
 import EditSubcategory from '@/components/captain/EditSubcategory.vue';
 import Confirmation from '@/components/Confirmation.vue';
+import { useToast } from '@/components/ui/toast/use-toast';
 
 interface Category {
   id: number;
@@ -55,6 +56,7 @@ const showCreateDialog = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirmation = ref(false);
 const selectedSubcategory = ref<Subcategory | null>(null);
+const { toast } = useToast();
 
 const form = useForm({});
 
@@ -78,7 +80,19 @@ const confirmDelete = () => {
       onSuccess: () => {
         showDeleteConfirmation.value = false;
         selectedSubcategory.value = null;
+        toast({
+          title: "Success",
+          description: "Subcategory deleted successfully",
+          variant: "success",
+        });
       },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to delete subcategory",
+          variant: "destructive",
+        });
+      }
     });
   }
 };

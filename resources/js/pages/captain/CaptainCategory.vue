@@ -13,12 +13,14 @@ import { ref, watch } from 'vue';
 import CreateCategory from '@/components/captain/CreateCategory.vue';
 import EditCategory from '@/components/captain/EditCategory.vue';
 import Confirmation from '@/components/Confirmation.vue';
+import { useToast } from '@/components/ui/toast/use-toast';
 
 interface Category {
   id: number;
   name: string;
   description: string;
   group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
+  position: number;
   status: 'active' | 'inactive';
   created_at: string;
 }
@@ -46,7 +48,7 @@ const showCreateDialog = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirmation = ref(false);
 const selectedCategory = ref<Category | null>(null);
-
+const { toast } = useToast();
 const form = useForm({});
 
 const handleCloseCreate = () => {
@@ -69,7 +71,19 @@ const confirmDelete = () => {
       onSuccess: () => {
         showDeleteConfirmation.value = false;
         selectedCategory.value = null;
+        toast({
+          title: "Success",
+          description: "Category deleted successfully",
+          variant: "success",
+        });
       },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to delete category",
+          variant: "destructive",
+        });
+      }
     });
   }
 };
@@ -145,6 +159,7 @@ const handlePageChange = (page: number) => {
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
               <TableHead>Group Name</TableHead>
+              <TableHead>Position</TableHead>
               <TableHead>Status</TableHead>
               <TableHead class="hidden lg:table-cell">Created At</TableHead>
               <TableHead class="w-[100px]">Actions</TableHead>
@@ -160,6 +175,7 @@ const handlePageChange = (page: number) => {
                 <TableCell class="font-medium">{{ category.name }}</TableCell>
                 <TableCell>{{ category.description }}</TableCell>
                 <TableCell>{{ category.group_name }}</TableCell>
+                <TableCell class="text-center">{{ category.position }}</TableCell>
                 <TableCell>
                   <Badge
                     :variant="category.status === 'active' ? 'success' : 'destructive'"
@@ -195,7 +211,7 @@ const handlePageChange = (page: number) => {
             </template>
             <template v-else>
               <TableRow>
-                <TableCell colspan="6" class="h-32">
+                <TableCell colspan="7" class="h-32">
                   <div class="flex flex-col items-center justify-center gap-4">
                     <InboxIcon class="h-8 w-8 text-muted-foreground/50" />
                     <div class="flex flex-col items-center gap-1">

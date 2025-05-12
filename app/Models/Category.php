@@ -14,6 +14,7 @@ class Category extends Model
         'name',
         'description',
         'status',
+        'position',
         'group_name'
     ];
 
@@ -30,5 +31,23 @@ class Category extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active');
+    }
+
+    public function scopeByGroup($query, string $groupName)
+    {
+        return $query->where('group_name', $groupName)->orderBy('position');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($category) {
+            if (!$category->position) {
+                $lastPosition = static::where('group_name', $category->group_name)
+                    ->max('position');
+                $category->position = ($lastPosition ?? 0) + 1;
+            }
+        });
     }
 }

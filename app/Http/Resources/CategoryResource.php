@@ -14,6 +14,7 @@ class CategoryResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'group_name' => $this->group_name,
+            'position' => $this->position,
             'status' => $this->status,
             'subcategories_count' => $this->whenCounted('subcategories'),
             'subcategories' => $this->whenLoaded('subcategories', function() {

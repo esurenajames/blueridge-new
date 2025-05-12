@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/toast/use-toast';
 import Confirmation from '@/components/Confirmation.vue';
 import { useForm } from '@inertiajs/vue3';
 import { useForm as useVeeForm, useField } from 'vee-validate';
-import { object, string } from 'yup';
+import { object, string, number } from 'yup';
 import { Textarea } from '@/components/ui/textarea';
 
 const GROUP_NAMES = [
@@ -25,6 +25,7 @@ const validationSchema = object({
   name: string().required('Category name is required'),
   description: string().nullable(),
   group_name: string().required('Group name is required'),
+  position: number().typeError('Position must be a number.').required('Position is required.').min(1, 'Position must be at least 1.'),
   status: string().required('Status is required'),
 });
 
@@ -37,6 +38,10 @@ const { value: description, errorMessage: descriptionError } = useField('descrip
 const { value: group_name, errorMessage: groupNameError } = useField('group_name', undefined, {
   initialValue: GROUP_NAMES[0]
 });
+const { value: position, errorMessage: positionError } = useField('position', undefined, {
+  initialValue: 1
+});
+
 const { value: status, errorMessage: statusError } = useField('status', undefined, {
   initialValue: 'active'
 });
@@ -45,6 +50,7 @@ const form = useForm({
   name: '',
   description: '',
   group_name: GROUP_NAMES[0],
+  position: 1,
   status: 'active',
 });
 
@@ -58,6 +64,7 @@ watch(() => props.show, (val) => {
     name.value = '';
     description.value = '';
     group_name.value = GROUP_NAMES[0];
+    position.value = 1;
     status.value = 'active';
     form.reset();
   }
@@ -71,6 +78,7 @@ const handleSubmit = validateForm((values) => {
   form.name = name.value;
   form.description = description.value;
   form.group_name = group_name.value;
+  form.position = position.value;
   form.status = status.value;
   showConfirmation.value = true;
 });
@@ -88,10 +96,13 @@ const confirmCreate = () => {
       showConfirmation.value = false;
       form.reset();
     },
-    onError: () => {
+    onError: (errors) => {
+      if (errors.position) {
+        positionError.value = errors.position;
+      }
       toast({
         title: "Error",
-        description: "Failed to create category",
+        description: errors.position || "Failed to create category",
         variant: "destructive",
       });
       showConfirmation.value = false;
@@ -139,6 +150,28 @@ const confirmCreate = () => {
             </SelectContent>
           </Select>
           <span v-if="groupNameError" class="text-sm text-red-500">{{ groupNameError }}</span>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm">Position</label>
+          <Input 
+            v-model="position" 
+            type="number"
+            min="1"
+            @keypress="(e) => {
+              if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+                e.preventDefault()
+              }
+            }"
+            @paste.prevent="(e) => {
+              const pastedValue = e.clipboardData?.getData('text')
+              if (pastedValue && /^\d+$/.test(pastedValue)) {
+                position = parseInt(pastedValue)
+              }
+            }"
+            placeholder="Enter position" 
+            :class="positionError ? 'border-red-500 focus-visible:ring-red-500' : ''" 
+          />
+          <span v-if="positionError" class="text-sm text-red-500">{{ positionError }}</span>
         </div>
         <div>
           <label class="block mb-1 text-sm">Status</label>

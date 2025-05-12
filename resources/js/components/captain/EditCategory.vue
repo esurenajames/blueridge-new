@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from '@inertiajs/vue3';
 import { useForm as useVeeForm, useField } from 'vee-validate';
-import { object, string } from 'yup';
+import { object, string, number } from 'yup';
 import Confirmation from '@/components/Confirmation.vue';
 import { useToast } from '@/components/ui/toast/use-toast';
 
@@ -25,6 +25,7 @@ const props = defineProps<{
     name: string;
     description: string;
     group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
+    position: number;
     status: 'active' | 'inactive';
   };
 }>();
@@ -35,6 +36,7 @@ const validationSchema = object({
   name: string().required('Category name is required'),
   description: string().nullable(),
   group_name: string().required('Group name is required'),
+  position: number().required('Position is required').min(1, 'Position must be at least 1'),
   status: string().required('Status is required'),
 });
 
@@ -46,11 +48,13 @@ const { value: name, errorMessage: nameError } = useField('name', undefined, { i
 const { value: description, errorMessage: descriptionError } = useField('description', undefined, { initialValue: props.category.description });
 const { value: group_name, errorMessage: groupNameError } = useField('group_name', undefined, { initialValue: props.category.group_name });
 const { value: status, errorMessage: statusError } = useField('status', undefined, { initialValue: props.category.status });
+const { value: position, errorMessage: positionError } = useField('position', undefined, { initialValue: props.category.position });
 
 const form = useForm({
   name: props.category.name,
   description: props.category.description,
   group_name: props.category.group_name,
+  position: props.category.position,
   status: props.category.status,
 });
 
@@ -64,11 +68,13 @@ watch(() => props.show, (val) => {
     name.value = props.category.name;
     description.value = props.category.description;
     group_name.value = props.category.group_name;
+    position.value = props.category.position;
     status.value = props.category.status;
     form.reset();
     form.name = props.category.name;
     form.description = props.category.description;
     form.group_name = props.category.group_name;
+    form.position = props.category.position;
     form.status = props.category.status;
   }
 });
@@ -81,6 +87,7 @@ const handleSubmit = validateForm((values) => {
   form.name = name.value;
   form.description = description.value;
   form.group_name = group_name.value;
+  form.position = position.value;
   form.status = status.value;
   showConfirmation.value = true;
 });
@@ -98,10 +105,13 @@ const confirmEdit = () => {
       showConfirmation.value = false;
       form.reset();
     },
-    onError: () => {
+    onError: (errors) => {
+      if (errors.position) {
+        positionError.value = errors.position;
+      }
       toast({
         title: "Error",
-        description: "Failed to update category",
+        description: errors.position || "Failed to update category",
         variant: "destructive",
       });
       showConfirmation.value = false;
@@ -149,6 +159,28 @@ const confirmEdit = () => {
             </SelectContent>
           </Select>
           <span v-if="groupNameError" class="text-sm text-red-500">{{ groupNameError }}</span>
+        </div>
+        <div>
+          <label class="block mb-1 text-sm">Position</label>
+           <Input 
+              v-model="position" 
+              type="number"
+              min="1"
+              @keypress="(e) => {
+                if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete') {
+                  e.preventDefault()
+                }
+              }"
+              @paste.prevent="(e) => {
+                const pastedValue = e.clipboardData?.getData('text')
+                if (pastedValue && /^\d+$/.test(pastedValue)) {
+                  position = parseInt(pastedValue)
+                }
+              }"
+              placeholder="Enter position" 
+              :class="positionError ? 'border-red-500 focus-visible:ring-red-500' : ''" 
+            />
+          <span v-if="positionError" class="text-sm text-red-500">{{ positionError }}</span>
         </div>
         <div>
           <label class="block mb-1 text-sm">Status</label>

@@ -13,6 +13,7 @@ import { ref, watch } from 'vue';
 import CreateBank from '@/components/captain/CreateBank.vue';
 import EditBank from '@/components/captain/EditBank.vue';
 import Confirmation from '@/components/Confirmation.vue';
+import { useToast } from '@/components/ui/toast/use-toast';
 
 interface BankAccount {
   id: number;
@@ -46,6 +47,7 @@ const showCreateDialog = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirmation = ref(false);
 const selectedBank = ref<BankAccount | null>(null);
+const { toast } = useToast();
 
 const form = useForm({});
 
@@ -69,7 +71,19 @@ const confirmDelete = () => {
       onSuccess: () => {
         showDeleteConfirmation.value = false;
         selectedBank.value = null;
+        toast({
+          title: "Success",
+          description: "Bank account deleted successfully",
+          variant: "success",
+        });
       },
+      onError: () => {
+        toast({
+          title: "Error",
+          description: "Failed to delete bank account",
+          variant: "destructive",
+        });
+      }
     });
   }
 };

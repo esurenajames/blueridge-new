@@ -31,4 +31,9 @@ class Subcategory extends Model
     {
         return $query->where('status', 'active');
     }
+
+    public function budget()
+    {
+        return $this->hasOne(Budget::class);
+    }
 }
