@@ -139,9 +139,9 @@ const totals = computed(() => {
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <div class="flex flex-col gap-3 p-6">
-      <div class="rounded-lg border shadow-sm overflow-x-auto bg-white">
+      <div class="rounded-lg border shadow-sm overflow-x-auto">
         <Table>
-          <TableHeader class="bg-gray-50 sticky top-0 z-10">
+          <TableHeader class="sticky top-0 z-10">
             <TableRow>
               <TableHead class="min-w-[200px]">Object of Expenditure</TableHead>
               <TableHead class="min-w-[150px] text-right">Proposed Budget</TableHead>
@@ -151,7 +151,6 @@ const totals = computed(() => {
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    class="hover:bg-primary/10" 
                     @click="expandedFirstHalf = !expandedFirstHalf"
                   >
                     <ChevronRight v-if="!expandedFirstHalf" class="h-4 w-4 transition-transform duration-200" />
@@ -172,8 +171,7 @@ const totals = computed(() => {
                   <span>2nd Half</span>
                   <Button 
                     variant="ghost" 
-                    size="icon"
-                    class="hover:bg-primary/10" 
+                    size="icon" 
                     @click="expandedSecondHalf = !expandedSecondHalf"
                   >
                     <ChevronRight v-if="!expandedSecondHalf" class="h-4 w-4 transition-transform duration-200" />
@@ -200,16 +198,16 @@ const totals = computed(() => {
             <template v-if="budgetGroups && budgetGroups.length">
               <template v-for="group in budgetGroups" :key="group.group_name">
                 <TableRow>
-                  <TableCell :colspan="18" class="bg-primary/5 text-primary">
+                  <TableCell :colspan="18" class="text-primary">
                     {{ group.group_name }}
                   </TableCell>
                 </TableRow>
                 <template v-for="category in group.categories" :key="category.id">
                   <TableRow 
-                    class="hover:bg-gray-50/50 transition-colors cursor-pointer" 
+                    class="cursor-pointer" 
                     @click="toggleCategory(category.id)"
                   >
-                    <TableCell :colspan="18" class="pl-6 bg-gray-50/50">
+                    <TableCell :colspan="18" class="pl-6">
                       <div class="flex items-center">
                         <ChevronRight 
                           v-if="!expandedCategories.has(category.id)" 
@@ -227,10 +225,9 @@ const totals = computed(() => {
                     <TableRow 
                       v-for="sub in category.subcategories" 
                       :key="sub.id"
-                      class="hover:bg-gray-50/30 transition-colors"
                     >
                       <TableCell 
-                        class="pl-12 text-gray-600 cursor-pointer hover:bg-gray-100" 
+                        class="pl-12 cursor-pointer" 
                         @click.stop="handleShowTransactions(sub)"
                       >
                         <div class="flex items-center gap-2">
@@ -248,7 +245,7 @@ const totals = computed(() => {
                         <TableCell 
                           v-for="month in ['january', 'february', 'march', 'april', 'may', 'june']" 
                           :key="month"
-                          class="tabular-nums text-gray-600 text-right"
+                          class="tabular-nums  text-right"
                         >
                           {{ parseFloat(sub[month]).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
                         </TableCell>
@@ -260,7 +257,7 @@ const totals = computed(() => {
                         <TableCell 
                           v-for="month in ['july', 'august', 'september', 'october', 'november', 'december']" 
                           :key="month"
-                          class="tabular-nums text-gray-600 text-right"
+                          class="tabular-nums  text-right"
                         >
                           {{ parseFloat(sub[month]).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
                         </TableCell>

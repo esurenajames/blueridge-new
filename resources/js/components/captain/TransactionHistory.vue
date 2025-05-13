@@ -102,9 +102,10 @@ const formatAmount = (amount: string) => {
         <div 
           ref="el" 
           class="overflow-y-auto flex-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+          style="max-height: 500px;" 
         >
           <Table>
-            <TableHeader class="sticky top-0 bg-white z-10">
+            <TableHeader class="sticky top-0 z-10">
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Type</TableHead>
@@ -118,7 +119,6 @@ const formatAmount = (amount: string) => {
                 <TableRow 
                   v-for="transaction in displayedTransactions" 
                   :key="transaction.id"
-                  class="hover:bg-gray-50/50 transition-colors"
                 >
                   <TableCell>
                     {{ new Date(transaction.date).toLocaleDateString('en-US', {
@@ -179,7 +179,7 @@ const formatAmount = (amount: string) => {
           </div>
         </div>
         
-        <div v-if="displayedTransactions.length > 0" class="py-3 px-4 border-t bg-gray-50/50">
+        <div v-if="displayedTransactions.length > 0" class="py-3 px-4 border-t">
           <p class="text-sm text-gray-500 text-center">
             Showing {{ displayedTransactions.length }} out of {{ props.transactions?.length || 0 }} transactions
           </p>
