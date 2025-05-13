@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ref, watch, watchEffect } from 'vue';
 import { useInfiniteScroll } from '@vueuse/core';
+import { Badge } from '@/components/ui/badge';
 
 interface Transaction {
   id: number;
@@ -128,16 +129,12 @@ const formatAmount = (amount: string) => {
                     }) }}
                   </TableCell>
                   <TableCell>
-                    <span 
-                      class="capitalize px-2 py-1 rounded-full text-xs"
-                      :class="{
-                        'bg-green-100 text-green-700': transaction.type === 'profit',
-                        'bg-red-100 text-red-700': transaction.type === 'expenses',
-                        'bg-blue-100 text-blue-700': transaction.type === 'proposed budget'
-                      }"
+                    <Badge
+                      :variant="transaction.type === 'profit' ? 'success' : transaction.type === 'expenses' ? 'destructive' : 'secondary'"
+                      class="capitalize"
                     >
                       {{ transaction.type }}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell class="text-right tabular-nums">
                     <span :class="{

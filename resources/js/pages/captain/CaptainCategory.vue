@@ -175,7 +175,7 @@ const handlePageChange = (page: number) => {
                 <TableCell class="font-medium">{{ category.name }}</TableCell>
                 <TableCell>{{ category.description }}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary" class="capitalize">
+                  <Badge variant="success" class="capitalize">
                     {{ category.group_name }}
                   </Badge>
                 </TableCell>

@@ -8,6 +8,7 @@ use App\Http\Controllers\Captain\CaptainDashboardController;
 use App\Http\Controllers\Captain\CaptainFundOverviewController;
 use App\Http\Controllers\Captain\CaptainRequestController;
 use App\Http\Controllers\Captain\CaptainSubcategoryController;
+use App\Http\Controllers\Captain\CaptainTransactionHistoryController;
 use App\Http\Controllers\Officials\OfficialDashboardController;
 use App\Http\Controllers\Officials\OfficialRequestController;
 
@@ -105,6 +106,7 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     // Fund Management
     Route::get('/captain/funds', [CaptainFundOverviewController::class, 'index'])->name('captain.funds');
     Route::post('/captain/funds/{budget}/profit', [CaptainFundOverviewController::class, 'addProfit'])->name('captain.funds.add-profit');
+    Route::get('/captain/transactions', [CaptainTransactionHistoryController::class, 'index'])->name('captain.transactions');
 
     // Manage Fund
     Route::get('/captain/manage-fund', function () { return Inertia::render('captain/CaptainManageFund');})->name('captain.manage.fund');

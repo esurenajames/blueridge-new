@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FolderTree, CreditCard } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FileClock, History, FolderTree, CreditCard } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -94,6 +94,11 @@ const mainNavItems = computed(() => {
                     title: 'Manage Funds',
                     href: route('captain.requests'),
                     icon: Settings, 
+                },
+                {
+                    title: 'Transaction History',
+                    href: route('captain.transactions'),
+                    icon: History, 
                 },
             ]
         });

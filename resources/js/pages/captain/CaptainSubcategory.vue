@@ -184,7 +184,7 @@ const handlePageChange = (page: number) => {
               >
                 <TableCell class="font-medium">{{ subcategory.name }}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">
+                  <Badge variant="success" class="capitalize">
                     {{ subcategory.category.name }}
                   </Badge>
                 </TableCell>

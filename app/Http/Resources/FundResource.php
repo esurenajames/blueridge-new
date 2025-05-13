@@ -23,6 +23,7 @@ class FundResource extends JsonResource
                         'subcategories' => $category->subcategories->map(function ($subcategory) {
                             $budget = $subcategory->budget;
                             $transactions = $budget ? $budget->transactions()
+                            ->whereYear('transaction_date', $budget->year) 
                             ->latest('transaction_date')
                             ->get()
                             ->map(function($transaction) {
