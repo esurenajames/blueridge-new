@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Captain\CaptainBankController;
 use App\Http\Controllers\Captain\CaptainCategoryController;
 use App\Http\Controllers\Captain\CaptainDashboardController;
+use App\Http\Controllers\Captain\CaptainFundOverviewController;
 use App\Http\Controllers\Captain\CaptainRequestController;
 use App\Http\Controllers\Captain\CaptainSubcategoryController;
 use App\Http\Controllers\Officials\OfficialDashboardController;
@@ -102,8 +103,11 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     Route::post('/requests/{id}/return', [CaptainRequestController::class, 'return'])->name('requests.return');
 
     // Fund Management
-    Route::get('/captain/funds', function () { return Inertia::render('captain/CaptainFundOverview');})->name('captain.funds');
-     Route::get('/captain/manage-fund', function () { return Inertia::render('captain/CaptainManageFund');})->name('captain.manage.fund');
+    Route::get('/captain/funds', [CaptainFundOverviewController::class, 'index'])->name('captain.funds');
+    Route::post('/captain/funds/{budget}/profit', [CaptainFundOverviewController::class, 'addProfit'])->name('captain.funds.add-profit');
+
+    // Manage Fund
+    Route::get('/captain/manage-fund', function () { return Inertia::render('captain/CaptainManageFund');})->name('captain.manage.fund');
 
     // Bank Accounts
     Route::get('/captain/bank-accounts', [CaptainBankController::class, 'index'])->name('captain.bank-accounts');

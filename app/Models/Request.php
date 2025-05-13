@@ -73,4 +73,9 @@ class Request extends Model
         return $this->hasMany(RequestTimeline::class)
             ->orderByRaw('COALESCE(processed_date, approved_date) DESC');
     }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(FundTransactionHistory::class);
+    }
 }

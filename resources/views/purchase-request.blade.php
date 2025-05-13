@@ -137,16 +137,16 @@
   <table>
     <tr>
       <td colspan="3" class="text-center" style="vertical-align:bottom;">
-          <div class="signature"></div>
           <span class="bold">{{ $treasurer->name ?? 'No Treasurer Assigned' }}</span><br>
+          <div class="signature"></div>
           <span class="text-xs">Signature over Printed Name</span><br>
           <span class="text-xs">Barangay Treasurer</span>
           <div class="signature-date"></div>
           <span class="text-xs">Date</span>
       </td>
-      <td colspan="3" class="text-center" style="vertical-align:bottom;">
-          <div class="signature"></div>
+      <td colspan="3" class="text-center" style="vertical-align:bottom;"> 
           <span class="bold">{{ $captain->name ?? 'No Captain Assigned' }}</span><br>
+          <div class="signature"></div>
           <span class="text-xs">Signature over Printed Name</span><br>
           <span class="text-xs">Punong Barangay</span>
           <div class="signature-date"></div>
