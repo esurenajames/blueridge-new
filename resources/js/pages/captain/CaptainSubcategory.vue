@@ -86,10 +86,10 @@ const confirmDelete = () => {
           variant: "success",
         });
       },
-      onError: () => {
+      onError: (errors) => {
         toast({
           title: "Error",
-          description: "Failed to delete subcategory",
+          description: errors.subcategories || "Failed to delete subcategory",
           variant: "destructive",
         });
       }

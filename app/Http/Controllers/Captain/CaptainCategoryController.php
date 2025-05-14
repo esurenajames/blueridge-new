@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CategoryRequest;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Models\FundSettings;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -53,6 +54,13 @@ class CaptainCategoryController extends Controller
 
     public function update(CategoryRequest $request, Category $category)
     {
+        $CategorySetting = FundSettings::where('name', 'categories')->first();
+        if ($CategorySetting && $CategorySetting->is_locked) {
+            return redirect()->back()->withErrors([
+                'categories' => 'Categories are locked and cannot be modified.'
+            ]);
+        }
+
         $validated = $request->validated();
 
         $category->update($validated);
@@ -65,6 +73,13 @@ class CaptainCategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        $CategorySetting = FundSettings::where('name', 'categories')->first();
+        if ($CategorySetting && $CategorySetting->is_locked) {
+            return redirect()->back()->withErrors([
+                'categories' => 'Categories are locked and cannot be deleted.'
+            ]);
+        }
+
         $category->delete();
 
         return redirect()->back()->with([

@@ -105,10 +105,10 @@ const confirmEdit = () => {
       showConfirmation.value = false;
       form.reset();
     },
-    onError: () => {
+    onError: (errors) => {
       toast({
         title: "Error",
-        description: "Failed to update subcategory",
+        description: errors.subcategories || "Failed to update subcategory",
         variant: "destructive",
       });
       showConfirmation.value = false;

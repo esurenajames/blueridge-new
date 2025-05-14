@@ -77,10 +77,10 @@ const confirmDelete = () => {
           variant: "success",
         });
       },
-      onError: () => {
+      onError: (errors) => {
         toast({
           title: "Error",
-          description: "Failed to delete category",
+          description: errors.categories || "Failed to delete category",
           variant: "destructive",
         });
       }

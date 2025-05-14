@@ -7,6 +7,7 @@ use App\Http\Requests\FundRequest;
 use App\Http\Resources\FundResource;
 use App\Models\Budget;
 use App\Models\Category;
+use App\Models\FundSettings;
 use App\Models\FundTransactionHistory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -70,20 +71,53 @@ class CaptainFundOverviewController extends Controller
 
     public function addProfit(FundRequest $request, Budget $budget)
     {
-
         $budget->increment('profit', $request->amount);
+
+        // Always use current time for transaction_date (with seconds)
+        $transactionDate = now()->format('Y-m-d H:i:s');
 
         FundTransactionHistory::create([
             'budget_id' => $budget->id,
             'processed_by' => auth()->id(),
-            'transaction_date' => $request->transaction_date,
+            'transaction_date' => $transactionDate,
             'type' => 'profit',
             'total_amount' => $request->amount,
             'remarks' => $request->remarks,
         ]);
 
-         return redirect()->back()->with([
+        return redirect()->back()->with([
             'message' => 'Profit added successfully',
+            'budget' => $budget->fresh()
+        ]);
+    }
+
+    public function addProposedBudget(FundRequest $request, Budget $budget)
+    {
+        $budgetSetting = FundSettings::where('name', 'budget')->first();
+        if ($budgetSetting && $budgetSetting->is_locked) {
+            return redirect()->back()->withErrors([
+                'proposed_budget' => 'Proposed budget is locked and cannot be modified.'
+            ]);
+        }
+
+        $validated = $request->validated();
+
+        $budget->increment('proposed_budget', $validated['amount']);
+
+        // Always use current time for transaction_date (with seconds)
+        $transactionDate = now()->format('Y-m-d H:i:s');
+
+        FundTransactionHistory::create([
+            'budget_id' => $budget->id,
+            'processed_by' => auth()->id(),
+            'transaction_date' => $transactionDate,
+            'type' => 'proposed budget',
+            'total_amount' => $validated['amount'],
+            'remarks' => $validated['remarks'] ?? null,
+        ]);
+
+        return redirect()->back()->with([
+            'message' => 'Proposed budget added successfully',
             'budget' => $budget->fresh()
         ]);
     }

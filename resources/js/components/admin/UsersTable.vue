@@ -116,14 +116,14 @@ const getRoleBadgeVariant = (role: string) => {
     case 'admin':
       return 'default';
     case 'official':
-      return 'secondary';
+      return 'primary';
     default:
-      return 'secondary';
+      return 'primary';
   }
 };
 
 const getStatusBadgeVariant = (status: string) => {
-  return status === 'active' ? 'secondary' : 'destructive';
+  return status === 'active' ? 'primary' : 'destructive';
 };
 </script>
 

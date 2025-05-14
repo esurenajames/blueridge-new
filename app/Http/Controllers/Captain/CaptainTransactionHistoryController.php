@@ -54,7 +54,6 @@ class CaptainTransactionHistoryController extends Controller
                 'per_page' => $transactions->perPage(),
                 'total' => $transactions->total(),
             ],
-            // Optionally, return the filters to the frontend for state
             'search' => $search,
             'type' => $type,
             'date_from' => $dateFrom,

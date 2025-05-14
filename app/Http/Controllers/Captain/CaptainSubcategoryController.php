@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SubcategoryRequest;
 use App\Http\Resources\SubcategoryResource;
 use App\Http\Resources\CategoryResource;
+use App\Models\FundSettings;
 use App\Models\Subcategory;
 use App\Models\Category;
 use Illuminate\Http\Request;
@@ -64,7 +65,6 @@ class CaptainSubcategoryController extends Controller
             'november' => 0,
             'december' => 0,
             'profit' => 0,
-            'balance' => 0,
         ]);
 
         return redirect()->back()->with([
@@ -75,8 +75,14 @@ class CaptainSubcategoryController extends Controller
 
     public function update(SubcategoryRequest $request, Subcategory $subcategory)
     {
-        $validated = $request->validated();
+        $subCategorySetting = FundSettings::where('name', 'sub_categories')->first();
+        if ($subCategorySetting && $subCategorySetting->is_locked) {
+            return redirect()->back()->withErrors([
+                'subcategories' => 'Subcategories are locked and cannot be modified.'
+            ]);
+        }
 
+        $validated = $request->validated();
         $subcategory->update($validated);
 
         return redirect()->back()->with([
@@ -87,6 +93,13 @@ class CaptainSubcategoryController extends Controller
 
     public function destroy(Subcategory $subcategory)
     {
+        $subCategorySetting = FundSettings::where('name', 'sub_categories')->first();
+        if ($subCategorySetting && $subCategorySetting->is_locked) {
+            return redirect()->back()->withErrors([
+                'subcategories' => 'Subcategories are locked and cannot be deleted.'
+            ]);
+        }
+
         $subcategory->delete();
 
         return redirect()->back()->with([

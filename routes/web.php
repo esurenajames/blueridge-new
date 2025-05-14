@@ -6,6 +6,7 @@ use App\Http\Controllers\Captain\CaptainBankController;
 use App\Http\Controllers\Captain\CaptainCategoryController;
 use App\Http\Controllers\Captain\CaptainDashboardController;
 use App\Http\Controllers\Captain\CaptainFundOverviewController;
+use App\Http\Controllers\Captain\CaptainFundSettingsController;
 use App\Http\Controllers\Captain\CaptainRequestController;
 use App\Http\Controllers\Captain\CaptainSubcategoryController;
 use App\Http\Controllers\Captain\CaptainTransactionHistoryController;
@@ -33,6 +34,7 @@ Route::get('requests/{id}/download/{filename}',
     [OfficialRequestController::class, 'downloadFile'
 ])->name('requests.download-file');
 
+// generate purchase request 
 Route::get('/requests/{id}/purchase-request-pdf', 
     [OfficialRequestController::class, 'generatePurchaseRequestPDF'
 ])->name('requests.purchase-request-pdf');
@@ -77,8 +79,10 @@ Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'role:admin'])
     ->name('admin.dashboard');
 
-// User Management
+
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+
+    // User Management
     Route::get('/users', [UserManagementController::class, 'index'])->name('admin.users');
     Route::post('/users', [UserManagementController::class, 'create'])->name('admin.users.create');
     Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('admin.users.update');
@@ -106,7 +110,14 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     // Fund Management
     Route::get('/captain/funds', [CaptainFundOverviewController::class, 'index'])->name('captain.funds');
     Route::post('/captain/funds/{budget}/profit', [CaptainFundOverviewController::class, 'addProfit'])->name('captain.funds.add-profit');
+    Route::post('/captain/funds/{budget}/proposed-budget', [CaptainFundOverviewController::class, 'addProposedBudget'])->name('captain.funds.add-proposed-budget');
+
+    // Fund Transaction History
     Route::get('/captain/transactions', [CaptainTransactionHistoryController::class, 'index'])->name('captain.transactions');
+
+    // Fund Settings
+    Route::get('/captain/fund-settings', [CaptainFundSettingsController::class, 'index'])->name('captain.fund-settings');
+    Route::post('/captain/fund-settings/save', [CaptainFundSettingsController::class, 'saveChanges'])->name('captain.fund-settings.save');
 
     // Manage Fund
     Route::get('/captain/manage-fund', function () { return Inertia::render('captain/CaptainManageFund');})->name('captain.manage.fund');

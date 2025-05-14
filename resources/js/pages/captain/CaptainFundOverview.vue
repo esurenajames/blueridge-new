@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/toast/use-toast';
 import AddProfit from '@/components/captain/AddProfit.vue';
+import AddProposedBudget from '@/components/captain/AddProposedBudget.vue';
 import TransactionHistory from '@/components/captain/TransactionHistory.vue';
 
 export interface Subcategory {
@@ -32,6 +33,8 @@ export interface Subcategory {
   ytd: number;
   balance: string;
   profit: string;
+  budget_id?: number;
+  transactions?: any[];
 }
 
 export interface Category {
@@ -66,6 +69,7 @@ const expandedFirstHalf = ref(false);
 const expandedSecondHalf = ref(false);
 const expandedCategories = ref<Set<number>>(new Set());
 const showAddProfitDialog = ref(false);
+const showAddProposedBudgetDialog = ref(false);
 const showTransactionHistory = ref(false);
 const selectedSubcategory = ref<Subcategory | null>(null);
 
@@ -85,6 +89,16 @@ const handleAddProfit = (subcategory: Subcategory) => {
 
 const handleCloseAddProfit = () => {
   showAddProfitDialog.value = false;
+  selectedSubcategory.value = null;
+};
+
+const handleAddProposedBudget = (subcategory: Subcategory) => {
+  selectedSubcategory.value = subcategory;
+  showAddProposedBudgetDialog.value = true;
+};
+
+const handleCloseAddProposedBudget = () => {
+  showAddProposedBudgetDialog.value = false;
   selectedSubcategory.value = null;
 };
 
@@ -281,8 +295,12 @@ const totals = computed(() => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem @click="handleAddProfit(sub)">
-                              <PlusCircle class="mr-2 h-4 w-4 text-green-500" />
-                              <span>Add Profit</span>
+                              <PlusCircle class="h-4 w-4 text-green-500" />
+                              <span>Profit</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @click="handleAddProposedBudget(sub)">
+                              <PlusCircle class="h-4 w-4 text-blue-500" />
+                              <span>Proposed Budget</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -314,6 +332,13 @@ const totals = computed(() => {
       :subcategory-id="selectedSubcategory?.id"
       :budget-id="selectedSubcategory?.budget_id"
       @close="handleCloseAddProfit"
+    />
+
+    <AddProposedBudget
+      :show="showAddProposedBudgetDialog"
+      :subcategory-id="selectedSubcategory?.id"
+      :budget-id="selectedSubcategory?.budget_id"
+      @close="handleCloseAddProposedBudget"
     />
 
     <TransactionHistory

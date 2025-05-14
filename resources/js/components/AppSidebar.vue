@@ -91,14 +91,14 @@ const mainNavItems = computed(() => {
                     icon: CreditCard, 
                 },
                 {
-                    title: 'Manage Funds',
-                    href: route('captain.requests'),
-                    icon: Settings, 
-                },
-                {
                     title: 'Transaction History',
                     href: route('captain.transactions'),
                     icon: History, 
+                },
+                {
+                    title: 'Fund Settings',
+                    href: route('captain.fund-settings'),
+                    icon: Settings, 
                 },
             ]
         });

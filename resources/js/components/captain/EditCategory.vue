@@ -111,7 +111,7 @@ const confirmEdit = () => {
       }
       toast({
         title: "Error",
-        description: errors.position || "Failed to update category",
+        description: errors.categories || errors.position || "Failed to update category",
         variant: "destructive",
       });
       showConfirmation.value = false;
