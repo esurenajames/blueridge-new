@@ -442,7 +442,7 @@ class OfficialRequestController extends Controller
             ]
         );
 
-        $quotation->have_quotation = true;
+        $quotation->have_quotation = 'true';   // To indicate "has quotation"
         $quotation->save();
 
         // Process each company
@@ -550,4 +550,96 @@ class OfficialRequestController extends Controller
     
         return $pdf->download("purchase-request-{$prNumber}.pdf");
     }
+    public function generateAbstractOfCanvassPDF($id)
+    {
+        $request = RequestModel::with([
+            'quotation.details.company',
+            'quotation.details.items',
+            'timelines.approver'
+        ])->findOrFail($id);
+        
+        if (!$request->quotation || !$request->quotation->details->count()) {
+            abort(404, 'Quotation details not found');
+        }
+
+        // Get the selected quotation details (same as in Purchase Request)
+        $selectedQuotation = $request->quotation->details()
+            ->where('is_selected', true)
+            ->with(['company', 'items'])
+            ->first();
+
+        // If no selected quotation exists yet, use lowest total price company as default
+        $usePriceBased = !$selectedQuotation;
+
+        // Group items by their names to compare prices across companies
+        $items = [];
+        $companyTotals = [];
+        $companies = collect();
+
+        foreach ($request->quotation->details as $detail) {
+            // Add company to collection if not already present
+            if (!$companies->contains('id', $detail->company->id)) {
+                $companies->push($detail->company);
+                $companyTotals[$detail->company->id] = 0;
+            }
+            
+            // Group items by name for comparison across companies
+            foreach ($detail->items as $item) {
+                $itemKey = $item->item_name . '-' . $item->description;
+                
+                if (!isset($items[$itemKey])) {
+                    $items[$itemKey] = [
+                        'name' => $item->item_name,
+                        'description' => $item->description,
+                        'quantity' => $item->quantity,
+                        'companies' => []
+                    ];
+                }
+                
+                $itemTotal = $item->price * $item->quantity;
+                $items[$itemKey]['companies'][$detail->company->id] = [
+                    'price' => $item->price,
+                    'total' => $itemTotal
+                ];
+                
+                // Add to company's total
+                $companyTotals[$detail->company->id] += $itemTotal;
+            }
+        }
+
+        // Find company with lowest total price
+        $minTotal = min($companyTotals);
+        $awardedCompanyId = array_keys($companyTotals, $minTotal)[0];
+        $awardedCompany = $companies->firstWhere('id', $awardedCompanyId);
+
+        // If no selection was made, create a temporary selectedQuotation object using the awarded company
+        if ($usePriceBased) {
+            $tempDetail = new \stdClass();
+            $tempDetail->company = $awardedCompany;
+            $selectedQuotation = $tempDetail;
+        }
+
+        // Get barangay officials
+        $secretary = User::where('role', 'secretary')->first();
+        $treasurer = User::where('role', 'treasurer')->first();
+        $captain = User::where('role', 'captain')->first();
+
+        $data = [
+            'items' => $items,
+            'companies' => $companies,
+            'companyTotals' => $companyTotals,
+            'awardedCompany' => $awardedCompany,
+            'selectedQuotation' => $selectedQuotation, // Add this line
+            'location' => 'BARANGAY BLUE RIDGE B',
+            'district' => 'QUEZON CITY, DISTRICT III',
+            'secretary' => $secretary ? $secretary->name : 'Barangay Secretary',
+            'treasurer' => $treasurer ? $treasurer->name : 'Barangay Treasurer',
+            'captain' => $captain ? $captain->name : 'Punong Barangay',
+        ];
+
+        $pdf = Pdf::loadView('abstract-of-canvass', $data);
+        
+        return $pdf->download('abstract-of-canvass.pdf');
+    }
 }
+   

@@ -39,6 +39,10 @@ Route::get('/requests/{id}/purchase-request-pdf',
     [OfficialRequestController::class, 'generatePurchaseRequestPDF'
 ])->name('requests.purchase-request-pdf');
 
+Route::get('/requests/{id}/abstract-of-canvass', 
+    [OfficialRequestController::class, 'generateAbstractOfCanvassPDF'   
+])->name('requests.abstract-of-canvass');
+
 /*
 |--------------------------------------------------------------------------
 | Official Routes

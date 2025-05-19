@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Stepper, StepperContent, StepperDescription, StepperIndicator, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
-import { Building, Building2, Warehouse, Plus, Trash2 } from 'lucide-vue-next';
-import type { Company, CompanyItem } from '@/types';
+import { Building, Building2, Warehouse, Plus, Trash2, Repeat } from 'lucide-vue-next';
+import type { Company } from '@/types';
 
 const props = defineProps<{
   show: boolean;
@@ -41,62 +41,76 @@ const emit = defineEmits<{
 const { toast } = useToast();
 const currentStep = ref(1);
 
-// Initialize companies with 3 empty companies
-const companies = ref<Company[]>(
-  props.quotation ? props.quotation.details.map(detail => ({
-    companyName: detail.company.company_name,
-    contactPerson: detail.company.contact_person,
-    address: detail.company.address,
-    contactNumber: detail.company.contact_number,
-    email: detail.company.email,
-    items: detail.items.map(item => ({
-      name: item.item_name,
-      description: item.description,
-      price: parseFloat(item.price),
-      quantity: item.quantity
-    }))
-  })) : [
-    {
-      companyName: '',
-      contactPerson: '',
-      address: '',
-      contactNumber: '',
-      email: '',
-      items: [{
-        name: '',
-        description: '',
-        price: null,
-        quantity: null
-      }]
-    },
-    {
-      companyName: '',
-      contactPerson: '',
-      address: '',
-      contactNumber: '',
-      email: '',
-      items: [{
-        name: '',
-        description: '',
-        price: null,
-        quantity: null
-      }]
-    },
-    {
-      companyName: '',
-      contactPerson: '',
-      address: '',
-      contactNumber: '',
-      email: '',
-      items: [{
-        name: '',
-        description: '',
-        price: null,
-        quantity: null
-      }]
-    }
-  ]
-);
+// Initialize companies with their own item details
+const companies = ref<Array<{
+  companyName: string;
+  contactPerson: string;
+  address: string;
+  contactNumber: string;
+  email: string;
+  items: Array<{
+    name: string;
+    description: string;
+    quantity: number;
+    price: number;
+  }>;
+}>>([]);
+
+// Populate data if existing quotation is provided
+if (props.quotation) {
+  // Extract unique item names from all companies
+  const uniqueItemNames = new Set<string>();
+  props.quotation.details.forEach(detail => {
+    detail.items.forEach(item => {
+      uniqueItemNames.add(item.item_name);
+    });
+  });
+  
+  const sharedItemNames = Array.from(uniqueItemNames);
+  
+  // Create company data with items for each company
+  companies.value = props.quotation.details.map(detail => {
+    // Create map of existing items for quick lookup
+    const itemMap = new Map();
+    detail.items.forEach(item => {
+      itemMap.set(item.item_name, {
+        description: item.description,
+        quantity: item.quantity,
+        price: parseFloat(item.price)
+      });
+    });
+    
+    // Create items array with all shared names
+    const items = sharedItemNames.map(name => {
+      const existingItem = itemMap.get(name);
+      return {
+        name,
+        description: existingItem ? existingItem.description : '',
+        quantity: existingItem ? existingItem.quantity : 0,
+        price: existingItem ? existingItem.price : 0
+      };
+    });
+    
+    return {
+      companyName: detail.company.company_name,
+      contactPerson: detail.company.contact_person,
+      address: detail.company.address,
+      contactNumber: detail.company.contact_number,
+      email: detail.company.email,
+      items
+    };
+  });
+} else {
+  // Initialize 3 empty companies if no existing data
+  companies.value = Array(3).fill(null).map(() => ({
+    companyName: '',
+    contactPerson: '',
+    address: '',
+    contactNumber: '',
+    email: '',
+    items: [{ name: '', description: '', quantity: 0, price: 0 }]
+  }));
+}
 
 const steps = computed(() => [
   {
@@ -121,12 +135,12 @@ const steps = computed(() => [
 
 const form = useForm({
   request_id: props.requestId,
-  companies: companies.value
+  companies: [] // Will be populated on submit
 });
 
 const validatePrice = (event: KeyboardEvent) => {
-  // Allow only numbers and decimal point
-  if (!/[\d.]/.test(event.key)) {
+  // Allow only numbers, decimal point, and backspace
+  if (!/[\d.]/.test(event.key) && event.key !== 'Backspace' && event.key !== 'Delete') {
     event.preventDefault();
   }
 };
@@ -137,25 +151,38 @@ const formatNumber = (num: number | null) => {
 };
 
 const validateQuantity = (event: KeyboardEvent) => {
-  // Allow only numbers
-  if (!/\d/.test(event.key)) {
+  // Allow only numbers and backspace
+  if (!/\d/.test(event.key) && event.key !== 'Backspace' && event.key !== 'Delete') {
     event.preventDefault();
   }
 };
 
-const addItem = (companyIndex: number) => {
-  companies.value[companyIndex - 1].items.push({
-    name: '',
-    description: '',
-    price: 0,
-    quantity: 0
+// Update item name across all companies
+const updateItemName = (itemIndex: number, newName: string) => {
+  // Update name in all companies
+  companies.value.forEach(company => {
+    company.items[itemIndex].name = newName;
   });
 };
 
-const removeItem = (companyIndex: number, itemIndex: number) => {
-  const company = companies.value[companyIndex - 1];
-  if (company.items.length > 1) {
-    company.items.splice(itemIndex, 1);
+const addItem = () => {
+  // Add corresponding item to each company
+  companies.value.forEach(company => {
+    company.items.push({
+      name: '',
+      description: '',
+      quantity: 0,
+      price: 0
+    });
+  });
+};
+
+const removeItem = (itemIndex: number) => {
+  if (companies.value[0].items.length > 1) {
+    // Remove corresponding item from each company
+    companies.value.forEach(company => {
+      company.items.splice(itemIndex, 1);
+    });
   }
 };
 
@@ -165,16 +192,75 @@ const handlePrevious = () => {
   }
 };
 
+// Validate form before submission - we'll only check for required company fields
+const validateForm = () => {
+  const errors = [];
+  
+  // Validate company information (basic checks)
+  companies.value.forEach((company, companyIndex) => {
+    // Check required company fields - at a minimum, company name is required
+    if (!company.companyName.trim()) {
+      errors.push(`Company ${companyIndex + 1}: Company name is required`);
+    }
+    // Email is optional now
+  });
+  
+  return errors;
+};
+
+// Skip validation and go straight to submit
 const handleNext = () => {
   if (currentStep.value < 3) {
     currentStep.value++;
   } else {
-    handleSubmit();
+    // Only check company name
+    const validationErrors = validateForm();
+    
+    if (validationErrors.length > 0) {
+      // Show validation errors
+      validationErrors.forEach(error => {
+        toast({
+          title: 'Validation Error',
+          description: error,
+          variant: 'destructive'
+        });
+      });
+    } else {
+      handleSubmit();
+    }
   }
 };
 
 const handleSubmit = () => {
-  form.companies = companies.value;
+  // Format companies for the API - always ensure price and quantity have values (0 if empty)
+  const formattedCompanies = companies.value.map(company => {
+    // Filter out items with empty names
+    const items = company.items
+      .filter(item => item.name.trim() !== '')
+      .map(item => {
+        // Convert to number or force to 0 if NaN
+        const price = parseFloat(String(item.price)) || 0;
+        const quantity = parseInt(String(item.quantity)) || 0;
+        
+        return {
+          name: item.name,
+          description: item.description || '',
+          price: price,
+          quantity: quantity
+        };
+      });
+    
+    return {
+      companyName: company.companyName,
+      contactPerson: company.contactPerson || '',
+      address: company.address || '',
+      contactNumber: company.contactNumber || '',
+      email: company.email || '', // Make email optional
+      items
+    };
+  });
+  
+  form.companies = formattedCompanies;
 
   const routeName = props.quotation
     ? 'officials.requests.quotation.resubmit'
@@ -191,7 +277,8 @@ const handleSubmit = () => {
         variant: 'success'
       });
     },
-    onError: () => {
+    onError: (errors) => {
+      console.error(errors);
       toast({
         title: 'Error',
         description: 'There was an error submitting the quotation.',
@@ -244,7 +331,7 @@ const handleSubmit = () => {
               <CardContent class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                   <div class="space-y-2">
-                    <Label>Company Name</Label>
+                    <Label>Company Name <span class="text-destructive">*</span></Label>
                     <Input 
                       v-model="companies[currentStep - 1].companyName" 
                       placeholder="Enter company name" 
@@ -286,8 +373,21 @@ const handleSubmit = () => {
             </Card>
 
             <Card>
-              <CardHeader>
+              <CardHeader class="flex flex-row items-center justify-between">
                 <CardTitle class="text-lg">Items</CardTitle>
+                <div class="text-xs text-muted-foreground italic font-bold">
+                  Empty/zero price or quantity values are allowed
+                </div>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  class="gap-2"
+                  @click="addItem"
+                >
+                  <Plus class="w-4 h-4" />
+                  Add Item
+                </Button>
               </CardHeader>
               <CardContent class="space-y-4">
                 <div class="space-y-4">
@@ -295,13 +395,17 @@ const handleSubmit = () => {
                     <div 
                       v-for="(item, itemIndex) in companies[currentStep - 1].items" 
                       :key="itemIndex"
-                      class="grid grid-cols-[2fr,2fr,1fr,1fr,auto] gap-4 items-end"
+                      class="grid grid-cols-[1.5fr,1.5fr,1fr,1fr,auto] gap-4 items-end border-b pb-4 mb-2"
                     >
                       <div class="space-y-2">
-                        <Label>Item Name</Label>
+                        <Label class="flex items-center gap-1">
+                          Item Name
+                          <Repeat class="h-3 w-3 text-muted-foreground" title="Synchronized across companies" />
+                        </Label>
                         <Input 
-                          v-model="item.name"
+                          v-model="companies[currentStep - 1].items[itemIndex].name"
                           placeholder="Enter item name"
+                          @input="() => updateItemName(itemIndex, companies[currentStep - 1].items[itemIndex].name)"
                         />
                       </div>
                       <div class="space-y-2">
@@ -309,16 +413,6 @@ const handleSubmit = () => {
                         <Input 
                           v-model="item.description"
                           placeholder="Enter item description"
-                        />
-                      </div>
-                      <div class="space-y-2">
-                        <Label>Unit Price</Label>
-                        <Input 
-                          v-model.number="item.price"
-                          inputmode="decimal"
-                          placeholder="0.00"
-                          @keypress="validatePrice"
-                          class="text-right"
                         />
                       </div>
                       <div class="space-y-2">
@@ -332,27 +426,27 @@ const handleSubmit = () => {
                           class="text-right"
                         />
                       </div>
+                      <div class="space-y-2">
+                        <Label>Unit Price</Label>
+                        <Input 
+                          v-model.number="item.price"
+                          inputmode="decimal"
+                          placeholder="0.00"
+                          @keypress="validatePrice"
+                          class="text-right"
+                        />
+                      </div>
                       <Button 
                         type="button" 
                         variant="ghost" 
                         size="icon"
-                        @click="removeItem(currentStep, itemIndex)"
+                        @click="removeItem(itemIndex)"
                         :disabled="companies[currentStep - 1].items.length === 1"
                       >
                         <Trash2 class="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    size="sm" 
-                    class="gap-2"
-                    @click="addItem(currentStep)"
-                  >
-                    <Plus class="w-4 h-4" />
-                    Add Item
-                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -238,6 +238,11 @@ const downloadPurchaseRequestPDF = () => {
   const url = route('requests.purchase-request-pdf', { id: request.value.id });
   window.open(url, '_blank');
 };
+
+const downloadAbstractOfCanvass = () => {
+  const url = route('requests.abstract-of-canvass', { id: request.value.id });
+  window.open(url, '_blank');
+};
 </script>
 
 <template>
@@ -426,6 +431,30 @@ const downloadPurchaseRequestPDF = () => {
                           View Details
                         </Button>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="request.progress === 'Purchase Request'" class="grid gap-2 mt-4">
+                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <FileText class="h-4 w-4" />
+                    Abstract of Canvass
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex items-center gap-2 p-2 bg-muted rounded-md">
+                      <FileText class="h-4 w-4 text-primary ml-2" />
+                      <div class="flex-1">
+                        <span class="text-sm">abstract-of-canvass.pdf</span>
+                        <span class="text-xs text-muted-foreground ml-2">(System Generated)</span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        class="h-8 w-8 ml-auto" 
+                        @click="downloadAbstractOfCanvass"
+                      >
+                        <Download class="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </div>
