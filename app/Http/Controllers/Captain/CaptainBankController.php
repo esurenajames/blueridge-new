@@ -70,4 +70,12 @@ class CaptainBankController extends Controller
             'account' => new BankResource($bankAccount)
         ]);
     }
+
+    public function getBankAccounts()
+    {
+        $accounts = BankAccount::where('status', 'active')->get();
+        return response()->json([
+            'data' => BankResource::collection($accounts)
+        ]);
+    }
 }

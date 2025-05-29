@@ -203,7 +203,7 @@ const totals = computed(() => {
               </TableHead>
               <TableHead class="min-w-[120px] text-right">YTD</TableHead>
               <TableHead class="min-w-[120px] text-right">Balance</TableHead>
-              <TableHead class="min-w-[120px] text-right">Profit</TableHead>
+              <TableHead class="min-w-[120px] text-right">Income</TableHead>
               <TableHead class="min-w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>

@@ -6,7 +6,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, Sid
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FileClock, History, FolderTree, CreditCard } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Users, UserCheck, FileText, Wallet, ChartBar, Settings, FolderPlus, FileCheck, FileClock, History, FolderTree, CreditCard } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from './AppLogo.vue';
 
@@ -72,6 +72,11 @@ const mainNavItems = computed(() => {
                     title: 'View All',
                     href: route('captain.requests'),
                     icon: Folder,
+                },
+                {
+                    title: 'Process Requests',
+                    href: route('captain.requests'),
+                    icon: FileCheck,
                 },
             ]
         });

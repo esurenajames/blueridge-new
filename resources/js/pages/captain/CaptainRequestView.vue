@@ -20,11 +20,13 @@ import ApproverRequestStatus from '@/components/ApproverRequestStatus.vue';
 import ViewQuotationDialog from '@/components/ViewQuotationDialog.vue';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import QuotationFormApprove from '@/components/captain/QuotationFormApprove.vue';
+import PBCForm from '@/components/captain/PBCForm.vue';
 
 const { toast } = useToast();
 const { getStatusConfig } = useStatusConfig();
 const showQuotationDialog = ref(false);
 const showQuotationApprove = ref(false);
+const showPBCForm = ref(false);
 const confirmationState = ref({
   show: false,
   title: '',
@@ -91,6 +93,10 @@ const handleCancel = () => {
 
 const handleStatusAction = (title: string, description: string, action: string, data?: any) => {
   switch (action) {
+    case 'release-pbc':
+      showPBCForm.value = true;
+      break;
+      
     case 'approve':
       if (request.value.progress === 'Quotation' && request.value.quotation?.have_quotation === 'true') {
         showQuotationApprove.value = true;
@@ -240,6 +246,11 @@ const downloadPurchaseRequestPDF = () => {
   const url = route('requests.purchase-request-pdf', { id: request.value.id });
   window.open(url, '_blank');
 };
+
+const downloadAbstractOfCanvass = () => {
+  const url = route('requests.abstract-of-canvass', { id: request.value.id });
+  window.open(url, '_blank');
+};
 </script>
 
 <template>
@@ -284,6 +295,12 @@ const downloadPurchaseRequestPDF = () => {
           @return="handleQuotationReturn"
         />
 
+        <PBCForm
+          :show="showPBCForm"
+          :request="request"
+          @close="showPBCForm = false"
+        />
+
         <div class="flex justify-end mb-6">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -304,6 +321,13 @@ const downloadPurchaseRequestPDF = () => {
               >
                 <File class="h-4 w-4 mr-2" />
                   Quotation as PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                v-if="request.progress === 'Purchase Request' || request.progress === 'Purchase Order'"
+                @click="downloadAbstractOfCanvass"
+              >
+                <File class="h-4 w-4 mr-2" />
+                Abstract of Canvass as PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

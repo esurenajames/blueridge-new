@@ -130,7 +130,7 @@ const formatAmount = (amount: string) => {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      :variant="transaction.type === 'profit' ? 'success' : transaction.type === 'expenses' ? 'destructive' : 'secondary'"
+                      :variant="transaction.type === 'profit' ? 'success' : transaction.type === 'expenses' ? 'destructive' : 'primary'"
                       class="capitalize"
                     >
                       {{ transaction.type }}

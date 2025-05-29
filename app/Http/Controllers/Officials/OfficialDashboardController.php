@@ -27,7 +27,7 @@ class OfficialDashboardController extends Controller
     $collaborativeRequests = RequestModel::whereHas('collaborators', function($query) {
         $query->where('user_id', auth()->id());
     })
-        ->whereNotIn('status', ['draft', 'voided', 'declined', 'completed'])
+        ->whereNotIn('status', [ 'voided', 'declined', 'completed'])
         ->withCount(['files'])
         ->get();
 
@@ -35,7 +35,7 @@ class OfficialDashboardController extends Controller
         'activeUsers' => $users,
         'requestStats' => [
             'single' => [
-                'requestForms' => $myRequests->where('progress', 'Request form')->count(),
+                'requestForms' => $myRequests->where('progress', 'Request Form')->count(),
                 'quotations' => $myRequests->where('progress', 'Quotation')->count(),
                 'purchaseRequests' => $myRequests->where('progress', 'Purchase Request')->count(),
                 'purchaseOrders' => $myRequests->where('progress', 'Purchase Order')->count(),

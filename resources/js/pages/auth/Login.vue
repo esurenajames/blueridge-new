@@ -92,14 +92,6 @@
                         </Button>
 
                         <div class="text-center text-sm text-gray-600 dark:text-gray-300">
-                            Don't have an account?
-                            <TextLink 
-                                :href="route('register')" 
-                                :tabindex="5" 
-                                class="font-medium text-blue-600 hover:text-blue-500 dark:hover:text-blue-600  dark:text-blue-400 ml-1 no-underline"
-                            >
-                                Sign up
-                            </TextLink>
                         </div>
                     </form>
                 </div>

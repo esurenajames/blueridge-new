@@ -131,6 +131,7 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
     Route::post('/captain/bank-accounts', [CaptainBankController::class, 'create'])->name('captain.bank-accounts.create');
     Route::put('/captain/bank-accounts/{bankAccount}', [CaptainBankController::class, 'update'])->name('captain.bank-accounts.update');
     Route::delete('/captain/bank-accounts/{bankAccount}', [CaptainBankController::class, 'destroy'])->name('captain.bank-accounts.destroy');
+    Route::get('/bank-accounts', [CaptainBankController::class, 'getBankAccounts'])->name('api.bank-accounts');
 
     // Category Management
     Route::get('/captain/categories', [CaptainCategoryController::class, 'index'])->name('captain.categories');

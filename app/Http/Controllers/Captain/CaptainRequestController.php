@@ -198,4 +198,15 @@ class CaptainRequestController extends Controller
 
         return redirect()->back()->with('success', 'Request has been returned for revision.');
     }
+
+    public function releasePBCForm(HttpRequest $httpRequest, $id)
+    {
+        $request = RequestModel::findOrFail($id);
+        $pdf = Pdf::loadView('pdf.pbc-form', [
+            'request' => $request,
+            'date' => Carbon::now()->format('F j, Y')
+        ]);
+
+        return $pdf->stream('pbc-form.pdf');
+    }
 }
