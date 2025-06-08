@@ -12,21 +12,13 @@ use Inertia\Inertia;
 
 class UserManagementController extends Controller
 {
-    public function index(Request $request)
+public function index(Request $request)
     {
         $query = User::query();
-    
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('role', 'like', "%{$search}%");
-            });
-        }
-    
+        $query = $this->filter($query, $request);
+
         $users = $query->orderBy('created_at', 'desc')->paginate(10);
-    
+
         return Inertia::render('admin/UserManagement', [
             'users' => [
                 'data' => UserManagementResource::collection($users)->resolve(),
@@ -35,8 +27,34 @@ class UserManagementController extends Controller
                 'per_page' => $users->perPage(),
                 'total' => $users->total(),
             ],
+            'search' => $request->input('search'),
         ]);
     }
+
+    private function filter($query, Request $request)
+    {
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('role', 'like', "%{$search}%");
+            });
+        }
+
+        $type = $request->input('type');
+        if ($type) {
+            $query->where('role', $type);
+        }
+
+        $status = $request->input('status');
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query;
+    }
+
     public function update(UserRequest $request, User $user)
     {
         $validated = $request->validated();

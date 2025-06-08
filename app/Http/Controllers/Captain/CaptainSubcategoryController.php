@@ -17,22 +17,14 @@ class CaptainSubcategoryController extends Controller
     public function index(Request $request)
     {
         $query = Subcategory::query();
-    
-        $search = $request->input('search');
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-    
+        $query = $this->filter($query, $request);
+
         $subcategories = $query->with('category')
-                              ->orderBy('created_at', 'desc')
-                              ->paginate(10);
-        
-        // Get all active categories for the dropdown
+                            ->orderBy('created_at', 'desc')
+                            ->paginate(10);
+
         $categories = Category::where('status', 'active')->get();
-    
+
         return Inertia::render('captain/CaptainSubcategory', [
             'subcategories' => [
                 'data' => SubcategoryResource::collection($subcategories)->resolve(),
@@ -42,7 +34,26 @@ class CaptainSubcategoryController extends Controller
                 'total' => $subcategories->total(),
             ],
             'categories' => CategoryResource::collection($categories),
+            'search' => $request->input('search'),
         ]);
+    }
+
+    private function filter($query, Request $request)
+    {
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $categoryId = $request->input('category_id');
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        return $query;
     }
 
     public function create(SubcategoryRequest $request)

@@ -21,17 +21,8 @@ class CaptainRequestController extends Controller
     {
         $query = Request::query()
             ->where('status', '!=', 'draft');
-    
-        if (request()->has('search') && trim(request('search')) !== '') {
-            $search = request('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('category', 'like', "%{$search}%")
-                  ->orWhereHas('creator', function($subQ) use ($search) {
-                      $subQ->where('name', 'like', "%{$search}%");
-                  });
-            });
-        }
+
+        $query = $this->filter($query, request());
 
         $requests = $query
             ->with([
@@ -50,6 +41,42 @@ class CaptainRequestController extends Controller
             'requests' => RequestResource::collection($requests),
             'search' => request('search', ''),
         ]);
+    }
+
+    private function filter($query, HttpRequest $request)
+    {
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('category', 'like', "%{$search}%")
+                ->orWhereHas('creator', function($subQ) use ($search) {
+                    $subQ->where('name', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $type = $request->input('type');
+        if ($type) {
+            $query->where('progress', $type);
+        }
+
+        $status = $request->input('status');
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        if ($dateFrom && $dateTo) {
+            $query->whereBetween('created_at', [$dateFrom, $dateTo]);
+        } elseif ($dateFrom) {
+            $query->where('created_at', '>=', $dateFrom);
+        } elseif ($dateTo) {
+            $query->where('created_at', '<=', $dateTo);
+        }
+
+        return $query;
     }
 
     public function show($id)

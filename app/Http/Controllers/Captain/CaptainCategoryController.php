@@ -15,20 +15,13 @@ class CaptainCategoryController extends Controller
     public function index(Request $request)
     {
         $query = Category::query();
-    
-        $search = $request->input('search');
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-    
+        $query = $this->filter($query, $request);
+
         $categories = $query->with('subcategories')
                           ->orderBy('group_name')
                           ->orderBy('name')
                           ->paginate(10);
-    
+
         return Inertia::render('captain/CaptainCategory', [
             'categories' => [
                 'data' => CategoryResource::collection($categories)->resolve(),
@@ -37,7 +30,28 @@ class CaptainCategoryController extends Controller
                 'per_page' => $categories->perPage(),
                 'total' => $categories->total(),
             ],
+            'search' => $request->input('search'),
         ]);
+    }
+
+    private function filter($query, Request $request)
+    {
+        // Search filter
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        // Type filter
+        $type = $request->input('type');
+        if ($type) {
+            $query->where('group_name', $type);
+        }
+
+        return $query;
     }
 
     public function create(CategoryRequest $request)

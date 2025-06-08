@@ -125,7 +125,6 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
 
         <!-- Right Section: Type Filter Dropdown and Date Range -->
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto items-center">
-          <!-- Type Filter Dropdown -->
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <Button variant="outline" class="w-[200px] justify-between">
@@ -157,7 +156,6 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
               <span class="flex items-center gap-2">
                 <CalendarIcon class="h-4 w-4" />
                 <span>
-                  <!-- Always show the selected value or placeholder -->
                   {{
                     dateRange.from && dateRange.to
                       ? `${format(dateRange.from, 'MMM d, yyyy')} - ${format(dateRange.to, 'MMM d, yyyy')}`
@@ -173,7 +171,7 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
               <RangeCalendar
                 v-model="dateRange"
                 class="rounded-md"
-                :number-of-months="2"
+                :number-of-months="1"
                 @update:model-value="val => { 
                   dateRange.from = val.start; 
                   dateRange.to = val.end; 

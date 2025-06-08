@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { InboxIcon, MoreHorizontal, Pencil, Trash2, PlusIcon, SearchIcon } from 'lucide-vue-next';
+import { InboxIcon, MoreHorizontal, Pencil, Trash2, PlusIcon, SearchIcon, ChevronDownIcon } from 'lucide-vue-next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import DataTablePagination from '@/components/DataTablePagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -19,7 +19,7 @@ interface Category {
   id: number;
   name: string;
   description: string;
-  group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
+  group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures';
   position: number;
   status: 'active' | 'inactive';
   created_at: string;
@@ -41,15 +41,24 @@ const props = defineProps<{
     total: number;
   };
   search?: string;
+  type?: string;
 }>();
 
 const searchQuery = ref(props.search ?? '');
+const typeFilter = ref(props.type ?? '');
 const showCreateDialog = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirmation = ref(false);
 const selectedCategory = ref<Category | null>(null);
 const { toast } = useToast();
 const form = useForm({});
+
+const typeOptions = [
+  { label: 'All Group', value: '' },
+  { label: 'Beginning Cash Balance', value: 'Beginning Cash Balance' },
+  { label: 'Receipts', value: 'Receipts' },
+  { label: 'Expenditures', value: 'Expenditures' },
+];
 
 const handleCloseCreate = () => {
   showCreateDialog.value = false;
@@ -88,10 +97,10 @@ const confirmDelete = () => {
   }
 };
 
-watch(searchQuery, (query) => {
+watch([searchQuery, typeFilter], ([query, type]) => {
   router.get(
     route('captain.categories'),
-    { search: query },
+    { search: query, type: type },
     { preserveState: true, replace: true }
   );
 });
@@ -99,7 +108,7 @@ watch(searchQuery, (query) => {
 const handlePageChange = (page: number) => {
   router.get(
     route('captain.categories'),
-    { page, search: searchQuery.value },
+    { page, search: searchQuery.value, type: typeFilter.value },
     { preserveState: true }
   );
 };
@@ -121,6 +130,28 @@ const handlePageChange = (page: number) => {
             />
           </div>
         </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline" class="w-[220px] justify-between">
+              {{ typeFilter ? typeOptions.find(t => t.value === typeFilter)?.label : 'All Group' }}
+              <ChevronDownIcon class="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent class="w-[220px]">
+            <DropdownMenuItem
+              v-for="option in typeOptions"
+              :key="option.value"
+              @click="typeFilter = option.value"
+              :class="{'bg-accent': typeFilter === option.value}"
+            >
+              <span>
+                {{ option.label }}
+              </span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button
           variant="default"
           class="flex items-center gap-2"

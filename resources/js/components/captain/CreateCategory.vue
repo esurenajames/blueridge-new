@@ -15,7 +15,6 @@ const GROUP_NAMES = [
   'Beginning Cash Balance',
   'Receipts',
   'Expenditures',
-  'MOOE'
 ];
 
 const props = defineProps<{ show: boolean }>();

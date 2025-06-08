@@ -3,7 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { InboxIcon, MoreHorizontal, Pencil, Trash2, PlusIcon, SearchIcon } from 'lucide-vue-next';
+import { InboxIcon, MoreHorizontal, Pencil, Trash2, PlusIcon, SearchIcon, ChevronDownIcon } from 'lucide-vue-next';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import DataTablePagination from '@/components/DataTablePagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -49,9 +49,11 @@ const props = defineProps<{
   };
   categories: { data: Category[] };
   search?: string;
+  category_id?: string | number;
 }>();
 
 const searchQuery = ref(props.search ?? '');
+const categoryFilter = ref(props.category_id ?? '');
 const showCreateDialog = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirmation = ref(false);
@@ -59,6 +61,14 @@ const selectedSubcategory = ref<Subcategory | null>(null);
 const { toast } = useToast();
 
 const form = useForm({});
+
+const categoryOptions = [
+  { label: 'All Categories', value: '' },
+  ...props.categories.data.map(cat => ({
+    label: cat.name,
+    value: cat.id
+  }))
+];
 
 const handleCloseCreate = () => {
   showCreateDialog.value = false;
@@ -97,10 +107,10 @@ const confirmDelete = () => {
   }
 };
 
-watch(searchQuery, (query) => {
+watch([searchQuery, categoryFilter], ([query, catId]) => {
   router.get(
     route('captain.subcategories'),
-    { search: query },
+    { search: query, category_id: catId },
     { preserveState: true, replace: true }
   );
 });
@@ -108,7 +118,7 @@ watch(searchQuery, (query) => {
 const handlePageChange = (page: number) => {
   router.get(
     route('captain.subcategories'),
-    { page, search: searchQuery.value },
+    { page, search: searchQuery.value, category_id: categoryFilter.value },
     { preserveState: true }
   );
 };
@@ -130,6 +140,28 @@ const handlePageChange = (page: number) => {
             />
           </div>
         </div>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button variant="outline" class="w-[220px] justify-between">
+              {{ categoryFilter ? categoryOptions.find(c => c.value == categoryFilter)?.label : 'All Categories' }}
+              <ChevronDownIcon class="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent class="w-[220px]">
+            <DropdownMenuItem
+              v-for="option in categoryOptions"
+              :key="option.value"
+              @click="categoryFilter = option.value"
+              :class="{'bg-accent': categoryFilter == option.value}"
+            >
+              <span>
+                {{ option.label }}
+              </span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button
           variant="default"
           class="flex items-center gap-2"

@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search } from 'lucide-vue-next';
+import { Plus, Search, ChevronDownIcon } from 'lucide-vue-next';
 import UsersTable from '@/components/admin/UsersTable.vue';
 import CreateUser from '@/components/admin/CreateUser.vue';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { router } from '@inertiajs/vue3';
 
 interface User {
@@ -37,6 +38,9 @@ const props = defineProps<{
     per_page: number;
     total: number;
   };
+  search?: string;
+  type?: string;
+  status?: string;
 }>();
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -46,29 +50,30 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-const searchQuery = ref('');
+const searchQuery = ref(props.search ?? '');
+const typeFilter = ref(props.type ?? '');
+const statusFilter = ref(props.status ?? '');
 
-const filteredUsers = computed(() => {
-    if (!searchQuery.value) return props.users;
+const typeOptions = [
+  { label: 'All Roles', value: '' },
+  { label: 'Admin', value: 'admin' },
+  { label: 'Captain', value: 'captain' },
+  { label: 'Treasurer', value: 'treasurer' },
+  { label: 'Barangay Official', value: 'official' },
+];
 
-    const query = searchQuery.value.toLowerCase();
-    return {
-        ...props.users,
-        data: props.users.data.filter(user =>
-            user.name.toLowerCase().includes(query) ||
-            user.email.toLowerCase().includes(query) ||
-            user.role.toLowerCase().includes(query)
-        ),
-        total: props.users.data.filter(user =>
-            user.name.toLowerCase().includes(query) ||
-            user.email.toLowerCase().includes(query) ||
-            user.role.toLowerCase().includes(query)
-        ).length,
-    };
-});
+const statusOptions = [
+  { label: 'All Status', value: '' },
+  { label: 'Active', value: 'active' },
+  { label: 'Inactive', value: 'inactive' },
+];
 
-watch(searchQuery, (query) => {
-  router.get(route('admin.users'), { search: query }, { preserveState: true, replace: true });
+watch([searchQuery, typeFilter, statusFilter], ([query, type, status]) => {
+  router.get(
+    route('admin.users'),
+    { search: query, type: type, status: status },
+    { preserveState: true, replace: true }
+  );
 });
 </script>
 
@@ -87,10 +92,52 @@ watch(searchQuery, (query) => {
                         class="pl-10 w-full"
                     />
                 </div>
-                <Button class="w-full sm:w-auto" @click="handleCreateUser">
-                    <Plus class="mr-2 h-4 w-4" />
-                    Create New User
-                </Button>
+                <div class="flex items-center gap-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                      <Button variant="outline" class="w-[200px] justify-between">
+                        {{ typeFilter ? typeOptions.find(t => t.value === typeFilter)?.label : 'All Roles' }}
+                        <ChevronDownIcon class="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent class="w-[200px]">
+                      <DropdownMenuItem
+                        v-for="option in typeOptions"
+                        :key="option.value"
+                        @click="typeFilter = option.value"
+                        :class="{'bg-accent': typeFilter === option.value}"
+                      >
+                        <span>
+                          {{ option.label }}
+                        </span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                      <Button variant="outline" class="w-[200px] justify-between">
+                        {{ statusFilter ? statusOptions.find(s => s.value === statusFilter)?.label : 'All Status' }}
+                        <ChevronDownIcon class="ml-2 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent class="w-[200px]">
+                      <DropdownMenuItem
+                        v-for="option in statusOptions"
+                        :key="option.value"
+                        @click="statusFilter = option.value"
+                        :class="{'bg-accent': statusFilter === option.value}"
+                      >
+                        <span>
+                          {{ option.label }}
+                        </span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button class="w-full sm:w-auto" @click="handleCreateUser">
+                      <Plus class="mr-2 h-4 w-4" />
+                      Create New User
+                  </Button>
+                </div>
             </div>
             <UsersTable :users="props.users" />
         </div>
