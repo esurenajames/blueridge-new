@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Stepper, StepperDescription, StepperIndicator, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
 import { useForm } from '@inertiajs/vue3';
@@ -24,10 +24,16 @@ const props = defineProps<{
   }>;
 }>();
 
+interface Category {
+  id: number;
+  name: string;
+}
+
 const emit = defineEmits(['close']);
 const currentStep = ref(1);
 const showConfirmation = ref(false);
 const formValues = ref(null);
+const categories = ref<Category[]>([]);
 
 const steps = [{
   step: 1,
@@ -145,6 +151,29 @@ const onSubmit = () => {
   showConfirmation.value = true;
 };
 
+const fetchCategories = async () => {
+  try {
+    const response = await fetch('/categories');
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    const data = await response.json();
+    categories.value = data;
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load categories",
+      variant: "destructive",
+    });
+  }
+};
+
+// Call fetchCategories when component mounts
+onMounted(() => {
+  fetchCategories();
+});
+
+
 const handleConfirm = () => {
   const values = formValues.value;
   
@@ -241,10 +270,13 @@ const handleConfirm = () => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="supplies">Office Supplies</SelectItem>
-                    <SelectItem value="equipment">Equipment</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="others">Others</SelectItem>
+                    <SelectItem
+                      v-for="cat in categories"
+                      :key="cat.id"
+                      :value="cat.id.toString()"
+                    >
+                      {{ cat.name }}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <span v-if="categoryError" class="text-sm text-red-500">{{ categoryError }}</span>

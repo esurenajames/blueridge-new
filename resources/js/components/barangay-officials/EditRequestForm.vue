@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from '@inertiajs/vue3';
 import { useToast } from '@/components/ui/toast';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useField, useForm as useVeeForm } from 'vee-validate';
 import { object, string, array } from 'yup';
 import { Check, FileText, Users, Upload } from 'lucide-vue-next';
@@ -37,6 +37,12 @@ const { toast } = useToast();
 const currentStep = ref(1);
 const showConfirmation = ref(false);
 const formValues = ref(null);
+
+interface Category {
+  id: number;
+  name: string;
+}
+const categories = ref<Category[]>([]);
 
 const steps = [
   {
@@ -77,7 +83,7 @@ const { handleSubmit, values } = useVeeForm({
   validationSchema,
   initialValues: {
     name: props.request.title,
-    category: props.request.category,
+    category: props.request.category_id?.toString() ?? props.request.category?.id?.toString() ?? '',
     description: props.request.description,
     collaborators: props.request.collaborators || [],
     files: [],
@@ -179,6 +185,23 @@ const prevStep = () => {
     currentStep.value--;
   }
 };
+
+// Fetch categories on mount
+const fetchCategories = async () => {
+  try {
+    const response = await fetch('/categories');
+    if (!response.ok) throw new Error('Network response was not ok');
+    const data = await response.json();
+    categories.value = data;
+  } catch (error) {
+    toast({
+      title: "Error",
+      description: "Failed to load categories",
+      variant: "destructive",
+    });
+  }
+};
+onMounted(fetchCategories);
 </script>
 
 <template>
@@ -243,10 +266,13 @@ const prevStep = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="supplies">Office Supplies</SelectItem>
-                  <SelectItem value="equipment">Equipment</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="others">Others</SelectItem>
+                  <SelectItem
+                    v-for="cat in categories"
+                    :key="cat.id"
+                    :value="cat.id.toString()"
+                  >
+                    {{ cat.name }}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <span v-if="categoryError" class="text-sm text-red-500">

@@ -18,7 +18,8 @@ class RequestResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->name,
-            'category' => $this->category,
+            'category_id' => $this->category_id,
+            'category' => $this->category->name,
             'status' => $this->status,
             'description' => $this->description,
             'created_at' => $this->created_at->format('Y-m-d'),

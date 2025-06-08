@@ -58,6 +58,7 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
     Route::get('/requests/view/{id}', [OfficialRequestController::class, 'show'])->name('requests.view');  // Move this route first
     Route::get('/requests/{tab?}', [OfficialRequestController::class, 'index'])->name('requests.index');    // Move this route second
     Route::post('/dashboard/store-request', [OfficialDashboardController::class, 'storeRequest'])->name('dashboard.store-request');
+    Route::get('/categories', [OfficialDashboardController::class, 'getCategories'])->name('categories');
 
     // Request View Actions
     Route::post('/requests/{id}', [OfficialRequestController::class, 'update'])->name('requests.update');

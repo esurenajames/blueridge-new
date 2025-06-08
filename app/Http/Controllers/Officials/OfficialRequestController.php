@@ -246,7 +246,7 @@ class OfficialRequestController extends Controller
         // Update basic info
         $requestModel->update([
             'name' => $validated['name'],
-            'category' => $validated['category'],
+            'category_id' => $validated['category'],
             'description' => $validated['description'],
         ]);
     
@@ -316,7 +316,7 @@ class OfficialRequestController extends Controller
             // Update request details
             $requestModel->update([
                 'name' => $validated['name'],
-                'category' => $validated['category'],
+                'category_id' => $validated['category'],
                 'description' => $validated['description']
             ]);
     

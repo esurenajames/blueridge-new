@@ -23,7 +23,7 @@ class RequestFormRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3',
-            'category' => 'required|string',
+            'category' => 'required|integer|exists:categories,id',
             'description' => 'required|string|min:10',
             'collaborators' => 'nullable|array',
             'collaborators.*.id' => 'required|exists:users,id',

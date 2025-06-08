@@ -13,7 +13,7 @@ class Request extends Model
     protected $table = 'requests';
     protected $fillable = [
         'name',
-        'category',
+        'category_id',
         'description',
         'progress',
         'status',
@@ -77,5 +77,10 @@ class Request extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(FundTransactionHistory::class);
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }
