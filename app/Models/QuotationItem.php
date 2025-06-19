@@ -14,7 +14,8 @@ class QuotationItem extends Model
         'item_name',
         'description',
         'price',
-        'quantity'
+        'quantity',
+        'unit'
     ];
 
     protected $casts = [

@@ -72,6 +72,11 @@ Route::middleware(['auth', 'verified', 'role:official'])->group(function () {
 
     // Request Purchase Request Actions
     Route::post('/requests/{id}/process-purchase', [OfficialRequestController::class, 'processPurchaseRequest'])->name('requests.process-purchase');
+
+    Route::get('/officials/requests/companies/search', [OfficialRequestController::class, 'searchCompanies'])
+    ->name('officials.requests.companies.search');
+
+    Route::get('/api/companies/search', [OfficialRequestController::class, 'searchCompanies'])->name('companies.search');
 });
 
 /*

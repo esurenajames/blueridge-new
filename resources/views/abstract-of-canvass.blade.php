@@ -144,7 +144,7 @@
                     <td class="item-center">{{ $loop->iteration }}</td>
                     <td class="item-center">{{ $item['quantity'] }}</td>
                     <td class="item-center"></td>
-                    <td class="item-description">{{ $item['name'] }}<br>{{ $item['description'] }}</td>
+                    <td class="item-description">{{ $item['name'] }}</td>
                     @foreach($companies as $company)
                         <td class="price">
                             @if(isset($item['companies'][$company->id]) && $item['companies'][$company->id]['price'] > 0)

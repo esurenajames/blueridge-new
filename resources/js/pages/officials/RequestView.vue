@@ -1,487 +1,598 @@
-<script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem, type Request } from '@/types';
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Edit2, FileText, File, Download, ChevronDown } from 'lucide-vue-next';
-import { Badge } from '@/components/ui/badge';
-import { computed, ref, watch } from 'vue';
-import { useToast } from '@/components/ui/toast';
-import Confirmation from '@/components/Confirmation.vue';
-import { getDisplayRole } from '@/utils/roles';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getAvatarProps } from '@/utils/avatar';
-import EditRequestForm from '@/components/barangay-officials/EditRequestForm.vue';
-import RequestTimeline from '@/components/RequestTimeline.vue';
-import RequestStatus from '@/components/RequestStatus.vue';
-import QuotationForm from '@/components/barangay-officials/QuotationForm.vue';
-import ViewQuotationDialog from '@/components/ViewQuotationDialog.vue';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+  <script setup lang="ts">
+  import AppLayout from '@/layouts/AppLayout.vue';
+  import { type BreadcrumbItem, type Request } from '@/types';
+  import { Head, router, usePage } from '@inertiajs/vue3';
+  import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+  import { Button } from '@/components/ui/button';
+  import { Edit2, FileText, File, Download, ChevronDown, Send } from 'lucide-vue-next';
+  import { Badge } from '@/components/ui/badge';
+  import { computed, ref, watch } from 'vue';
+  import { useToast } from '@/components/ui/toast';
+  import Confirmation from '@/components/Confirmation.vue';
+  import { getDisplayRole } from '@/utils/roles';
+  import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+  import { getAvatarProps } from '@/utils/avatar';
+  import EditRequestForm from '@/components/barangay-officials/EditRequestForm.vue';
+  import RequestTimeline from '@/components/RequestTimeline.vue';
+  import RequestStatus from '@/components/RequestStatus.vue';
+  import QuotationForm from '@/components/barangay-officials/QuotationForm.vue';
+  import ViewQuotationDialog from '@/components/ViewQuotationDialog.vue';
+  import QuotationRequestGenerator from '@/components/barangay-officials/QuotationFormMaker.vue';
+  import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
+  const { toast } = useToast();
+  const showEditModal = ref(false);
+  const showQuotationModal = ref(false);
+  const showQuotationRequestGenerator = ref(false);
+  const quotationData = ref(null);
+  const showQuotationDialog = ref(false);
+  const confirmationState = ref({
+    show: false,
+    title: '',
+    description: '',
+    action: null as (() => void) | null
+  });
 
-const { toast } = useToast();
-const showEditModal = ref(false);
-const showQuotationModal = ref(false);
-const quotationData = ref(null);
-const showQuotationDialog = ref(false);
-const confirmationState = ref({
-  show: false,
-  title: '',
-  description: '',
-  action: null as (() => void) | null
-});
+  const props = defineProps<{
+    request: {
+      data: Request;
+    };
+    userPermission: string;
+    currentUser?: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+      login: string;
+    };
+    currentDateTime?: string;
+  }>();
 
-const props = defineProps<{
-  request: {
-    data: Request;
+  const page = usePage();
+  const activeUsers = page.props.activeUsers;
+
+  // Get current user data from props or page props
+  const currentUser = computed(() => {
+    return props.currentUser || {
+      id: page.props.auth?.user?.id,
+      name: page.props.auth?.user?.name,
+      email: page.props.auth?.user?.email,
+      role: page.props.auth?.user?.role,
+      login: page.props.auth?.user?.email, // Use email as login if no separate login field
+    };
+  });
+
+  // Get current date time - use props or generate current time
+  const currentDateTime = computed(() => {
+    return props.currentDateTime || new Date().toISOString().replace('T', ' ').substring(0, 19);
+  });
+
+  // Prepare request data for the generator
+  const requestDataForGenerator = computed(() => {
+    if (!request.value) return null;
+    
+    return {
+      title: request.value.title,
+      description: request.value.description,
+      // If you have items in your request, map them here
+      items: request.value.items || [
+        {
+          name: request.value.title,
+          description: request.value.description,
+          quantity: 1,
+          unit: 'unit'
+        }
+      ]
+    };
+  });
+
+  const showConfirmation = (title: string, description: string, action: () => void) => {
+    confirmationState.value = {
+      show: true,
+      title,
+      description,
+      action
+    };
   };
-  userPermission: string;
-}>();
 
-const page = usePage();
-const activeUsers = page.props.activeUsers;
-
-const showConfirmation = (title: string, description: string, action: () => void) => {
-  confirmationState.value = {
-    show: true,
-    title,
-    description,
-    action
-  };
-};
-
-const handleConfirm = () => {
-  if (confirmationState.value.action) {
-    confirmationState.value.action();
-  }
-  confirmationState.value.show = false;
-};
-
-const handleCancel = () => {
-  confirmationState.value.show = false;
-};
-
-const handleEdit = () => {
-  showEditModal.value = true;
-};
-
-const handleEditClose = () => {
-  showEditModal.value = false;
-};
-
-const handleQuotationClose = () => {
-  showQuotationModal.value = false;
-};
-
-const request = ref(props.request.data);
-
-const exportAsPDF = (type: 'quotation' | 'form' | 'request') => {
-  // TODO: Implement export functionality
-  console.log(`Exporting ${type} as PDF`);
-};
-
-watch(
-  () => props.request.data,
-  (newVal) => {
-    request.value = newVal;
-  }
-);
-
-const canEdit = computed(() => {
-  return props.userPermission === 'owner' || props.userPermission === 'edit';
-});
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: 'View All Requests',
-    href: route('requests.index'),
-  },
-  {
-    title: `Request #${request.value.id}`,
-    href: '#',
-  }
-];
-
-const processRequest = () => {
-  router.post(route('requests.process', { id: request.value.id }), {}, {
-    preserveScroll: true,
-    preserveState: true,
-    onSuccess: (page) => {
-      if (page.props.flash?.request?.data?.status) {
-        request.value.status = page.props.flash.request.data.status;
-      }
-      toast({
-        title: "Success",
-        description: page.props.flash?.success ?? "Request processed successfully.",
-        variant: "success",
-      });
-    },
-  });
-};
-
-const processPurchaseRequest = () => {
-  router.post(route('requests.process-purchase', { id: request.value.id }), {}, {
-    preserveScroll: true,
-    preserveState: true,
-    onSuccess: (page) => {
-      if (page.props.flash?.request?.data?.status) {
-        request.value = page.props.flash.request.data;
-      }
-      toast({
-        title: "Success",
-        description: page.props.flash?.success ?? "Purchase request processed successfully.",
-        variant: "success",
-      });
-    },
-  });
-};
-
-const reprocessRequest = () => {
-  router.post(route('requests.reprocess', { id: request.value.id }), {}, {
-    preserveScroll: true,
-    onSuccess: (page) => {
-      if (page.props.flash?.request?.data?.status) {
-        request.value.status = page.props.flash.request.data.status;
-      }
-      toast({
-        title: "Success",
-        description: page.props.flash?.success ?? "Request has been reprocessed",
-        variant: "success",
-      });
-    },
-  });
-};
-
-const resubmitDocuments = () => {
-  const form = useForm({
-    name: request.value.title,
-    category: request.value.category,
-    description: request.value.description,
-    collaborators: request.value.collaborators,
-    files: [],
-    removedFiles: []
-  });
-
-  form.post(route('requests.resubmit', { id: request.value.id }), {
-    preserveScroll: true,
-    onSuccess: (page) => {
-      if (page.props.flash?.request?.data) {
-        request.value = page.props.flash.request.data;
-      }
-      toast({
-        title: "Success",
-        description: page.props.flash?.success ?? "Documents have been resubmitted",
-        variant: "success",
-      });
-      showEditModal.value = false;
-    },
-    onError: (errors) => {
-      toast({
-        title: "Error",
-        description: Object.values(errors)[0] as string || "Failed to resubmit request",
-        variant: "destructive",
-      });
+  const handleConfirm = () => {
+    if (confirmationState.value.action) {
+      confirmationState.value.action();
     }
-  });
-};
+    confirmationState.value.show = false;
+  };
 
-const voidRequest = () => {
-  router.post(route('requests.void', { id: request.value.id }), {}, {
-    preserveScroll: true,
-    preserveState: true,
-    onSuccess: (page) => {
-      if (page.props.flash?.request?.data?.status) {
-        request.value.status = page.props.flash.request.data.status;
-      }
-      toast({
-        title: "Success",
-        description: page.props.flash?.success ?? "Request has been voided.",
-        variant: "success",
-      });
+  const handleCancel = () => {
+    confirmationState.value.show = false;
+  };
+
+  const handleEdit = () => {
+    showEditModal.value = true;
+  };
+
+  const handleEditClose = () => {
+    showEditModal.value = false;
+  };
+
+  const handleQuotationClose = () => {
+    showQuotationModal.value = false;
+  };
+
+  const handleQuotationRequestGeneratorClose = () => {
+    showQuotationRequestGenerator.value = false;
+  };
+
+  const openQuotationRequestGenerator = () => {
+    showQuotationRequestGenerator.value = true;
+  };
+
+  const request = ref(props.request.data);
+
+  const exportAsPDF = (type: 'quotation' | 'form' | 'request') => {
+    // TODO: Implement export functionality
+    console.log(`Exporting ${type} as PDF`);
+  };
+
+  watch(
+    () => props.request.data,
+    (newVal) => {
+      request.value = newVal;
+    }
+  );
+
+  const canEdit = computed(() => {
+    return props.userPermission === 'owner' || props.userPermission === 'edit';
+  });
+
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      title: 'View All Requests',
+      href: route('requests.index'),
     },
-  });
-};
+    {
+      title: `Request #${request.value.id}`,
+      href: '#',
+    }
+  ];
 
-const handleStatusAction = (title: string, description: string, action: string, data?: any) => {
-  switch (action) {
-    case 'process':
-      showConfirmation(title, description, processRequest);
-      break;
-    case 'process-purchase-request':
-      showConfirmation(title, description, processPurchaseRequest);
-      break;
-    case 'reprocess':
-      showConfirmation(title, description, reprocessRequest);
-      break;
-    case 'resubmit':
-      showConfirmation(title, description, () => {
-        showEditModal.value = true;
-      });
-      break;
-    case 'void':
-      showConfirmation(title, description, voidRequest);
-      break;
-    case 'show-quotation':
-      quotationData.value = data;
-      showQuotationModal.value = true;
-      break;
-  }
-};
+  const processRequest = () => {
+    router.post(route('requests.process', { id: request.value.id }), {}, {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: (page) => {
+        if (page.props.flash?.request?.data?.status) {
+          request.value.status = page.props.flash.request.data.status;
+        }
+        toast({
+          title: "Success",
+          description: page.props.flash?.success ?? "Request processed successfully.",
+          variant: "success",
+        });
+      },
+    });
+  };
 
-const downloadFile = (file: { name: string }) => {
-  const url = route('requests.download-file', { id: request.value.id, filename: file.name });
-  window.open(url, '_blank');
-};
+  const processPurchaseRequest = () => {
+    router.post(route('requests.process-purchase', { id: request.value.id }), {}, {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: (page) => {
+        if (page.props.flash?.request?.data?.status) {
+          request.value = page.props.flash.request.data;
+        }
+        toast({
+          title: "Success",
+          description: page.props.flash?.success ?? "Purchase request processed successfully.",
+          variant: "success",
+        });
+      },
+    });
+  };
 
-const downloadPurchaseRequestPDF = () => {
-  const url = route('requests.purchase-request-pdf', { id: request.value.id });
-  window.open(url, '_blank');
-};
+  const reprocessRequest = () => {
+    router.post(route('requests.reprocess', { id: request.value.id }), {}, {
+      preserveScroll: true,
+      onSuccess: (page) => {
+        if (page.props.flash?.request?.data?.status) {
+          request.value.status = page.props.flash.request.data.status;
+        }
+        toast({
+          title: "Success",
+          description: page.props.flash?.success ?? "Request has been reprocessed",
+          variant: "success",
+        });
+      },
+    });
+  };
 
-const downloadAbstractOfCanvass = () => {
-  const url = route('requests.abstract-of-canvass', { id: request.value.id });
-  window.open(url, '_blank');
-};
-</script>
+  const resubmitDocuments = () => {
+    const form = useForm({
+      name: request.value.title,
+      category: request.value.category,
+      description: request.value.description,
+      collaborators: request.value.collaborators,
+      files: [],
+      removedFiles: []
+    });
 
-<template>
-  <Head title="Request View" />
+    form.post(route('requests.resubmit', { id: request.value.id }), {
+      preserveScroll: true,
+      onSuccess: (page) => {
+        if (page.props.flash?.request?.data) {
+          request.value = page.props.flash.request.data;
+        }
+        toast({
+          title: "Success",
+          description: page.props.flash?.success ?? "Documents have been resubmitted",
+          variant: "success",
+        });
+        showEditModal.value = false;
+      },
+      onError: (errors) => {
+        toast({
+          title: "Error",
+          description: Object.values(errors)[0] as string || "Failed to resubmit request",
+          variant: "destructive",
+        });
+      }
+    });
+  };
 
-  <AppLayout :breadcrumbs="breadcrumbs">
-    <div class="p-6">
-      <div v-if="!request" class="text-center p-6">
-        <p class="text-muted-foreground">Request not found or loading...</p>
-      </div>
+  const voidRequest = () => {
+    router.post(route('requests.void', { id: request.value.id }), {}, {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: (page) => {
+        if (page.props.flash?.request?.data?.status) {
+          request.value.status = page.props.flash.request.data.status;
+        }
+        toast({
+          title: "Success",
+          description: page.props.flash?.success ?? "Request has been voided.",
+          variant: "success",
+        });
+      },
+    });
+  };
 
-      <template v-else>
-        <Confirmation
-          :show="confirmationState.show"
-          :title="confirmationState.title"
-          :description="confirmationState.description"
-          @confirm="handleConfirm"
-          @cancel="handleCancel"
-        />
+  const handleStatusAction = (title: string, description: string, action: string, data?: any) => {
+    switch (action) {
+      case 'process':
+        showConfirmation(title, description, processRequest);
+        break;
+      case 'process-purchase-request':
+        showConfirmation(title, description, processPurchaseRequest);
+        break;
+      case 'reprocess':
+        showConfirmation(title, description, reprocessRequest);
+        break;
+      case 'resubmit':
+        showConfirmation(title, description, () => {
+          showEditModal.value = true;
+        });
+        break;
+      case 'void':
+        showConfirmation(title, description, voidRequest);
+        break;
+      case 'show-quotation':
+        quotationData.value = data;
+        showQuotationModal.value = true;
+        break;
+    }
+  };
 
-        <EditRequestForm
-          v-if="showEditModal"
-          :show="showEditModal"
-          :request="request"
-          :active-users="activeUsers ?? []"
-          :is-resubmit="request.status === 'returned'"
-          @close="handleEditClose"  
-          @update:request="(newRequest) => request = newRequest.data"
-        />
+  const downloadFile = (file: { name: string }) => {
+    const url = route('requests.download-file', { id: request.value.id, filename: file.name });
+    window.open(url, '_blank');
+  };
 
-        <QuotationForm
-          v-if="showQuotationModal"
-          :show="showQuotationModal"
-          :request-id="request.id"
-          :quotation="quotationData" 
-          @close="handleQuotationClose"
-        />
+  const downloadPurchaseRequestPDF = () => {
+    const url = route('requests.purchase-request-pdf', { id: request.value.id });
+    window.open(url, '_blank');
+  };
 
-        <ViewQuotationDialog
-          v-if="request.quotation"
-          v-model:show="showQuotationDialog"
-          :quotation="request.quotation"
-        />
+  const downloadAbstractOfCanvass = () => {
+    const url = route('requests.abstract-of-canvass', { id: request.value.id });
+    window.open(url, '_blank');
+  };
+  </script>
 
-        <div class="flex justify-end mb-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" class="gap-2">
-                <File class="h-4 w-4" />
-                Export as PDF
-                <ChevronDown class="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" class="w-[200px]">
-              <DropdownMenuItem @click="exportAsPDF('form')">
-                <File class="h-4 w-4 mr-2" />
-                  Request Form as PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                v-if="request.quotation"
-                @click="exportAsPDF('quotation')"
-              >
-                <File class="h-4 w-4 mr-2" />
-                  Quotation as PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                v-if="request.progress === 'Purchase Request' || request.progress === 'Purchase Order'"
-                @click="downloadAbstractOfCanvass"
-              >
-                <File class="h-4 w-4 mr-2" />
-                Abstract of Canvass as PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+  <template>
+    <Head title="Request View" />
+
+    <AppLayout :breadcrumbs="breadcrumbs">
+      <div class="p-6">
+        <div v-if="!request" class="text-center p-6">
+          <p class="text-muted-foreground">Request not found or loading...</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card class="md:col-span-2">
-            <CardHeader class="pb-6">
-              <div class="flex items-center justify-between">
-                <div>
-                  <CardTitle class="text-2xl">{{ request.title }}</CardTitle>
-                  <div class="flex items-center gap-2 mt-2">
-                    <Badge variant="secondary" class="capitalize">
-                      {{ request.category }}
-                    </Badge>
-                    <CardDescription class="ml-2">Request #{{ request.id }}</CardDescription>
+        <template v-else>
+          <Confirmation
+            :show="confirmationState.show"
+            :title="confirmationState.title"
+            :description="confirmationState.description"
+            @confirm="handleConfirm"
+            @cancel="handleCancel"
+          />
+
+          <EditRequestForm
+            v-if="showEditModal"
+            :show="showEditModal"
+            :request="request"
+            :active-users="activeUsers ?? []"
+            :is-resubmit="request.status === 'returned'"
+            @close="handleEditClose"  
+            @update:request="(newRequest) => request = newRequest.data"
+          />
+
+          <QuotationForm
+            v-if="showQuotationModal"
+            :show="showQuotationModal"
+            :request-id="request.id"
+            :quotation="quotationData" 
+            @close="handleQuotationClose"
+          />
+
+          <!-- Add the Quotation Request Generator -->
+          <QuotationRequestGenerator
+            v-if="showQuotationRequestGenerator"
+            :show="showQuotationRequestGenerator"
+            :request-id="request.id"
+            :current-user="currentUser"
+            :current-date-time="currentDateTime"
+            :request-data="requestDataForGenerator"
+            @close="handleQuotationRequestGeneratorClose"
+          />
+
+          <ViewQuotationDialog
+            v-if="request.quotation"
+            v-model:show="showQuotationDialog"
+            :quotation="request.quotation"
+          />
+
+          <div class="flex justify-end mb-6">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" class="gap-2">
+                  <File class="h-4 w-4" />
+                  Export as PDF
+                  <ChevronDown class="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" class="w-[200px]">
+                <DropdownMenuItem @click="exportAsPDF('form')">
+                  <File class="h-4 w-4 mr-2" />
+                    Request Form as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  v-if="request.quotation"
+                  @click="exportAsPDF('quotation')"
+                >
+                  <File class="h-4 w-4 mr-2" />
+                    Quotation as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  v-if="request.progress === 'Purchase Request' || request.progress === 'Purchase Order'"
+                  @click="downloadAbstractOfCanvass"
+                >
+                  <File class="h-4 w-4 mr-2" />
+                  Abstract of Canvass as PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card class="md:col-span-2">
+              <CardHeader class="pb-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <CardTitle class="text-2xl">{{ request.title }}</CardTitle>
+                    <div class="flex items-center gap-2 mt-2">
+                      <Badge variant="secondary" class="capitalize">
+                        {{ request.category }}
+                      </Badge>
+                      <CardDescription class="ml-2">Request #{{ request.id }}</CardDescription>
+                    </div>
+                  </div>
+                  <div class="flex gap-2">
+                    <!-- ✅ ONLY SHOW Create Quotation Request button in Quotation progress -->
+                    <Button 
+                      v-if="request.progress === 'Quotation'"
+                      variant="outline"
+                      class="gap-2"
+                      @click="openQuotationRequestGenerator"
+                    >
+                      <Send class="h-4 w-4" />
+                      Create Quotation Request
+                    </Button>
+                    
+                    <Button 
+                      v-if="request.status === 'draft' && canEdit"
+                      variant="default"
+                      class="gap-2"
+                      @click="handleEdit"
+                    >
+                      <Edit2 class="h-4 w-4" />
+                      Edit Request
+                    </Button>
                   </div>
                 </div>
-                <Button 
-                  v-if="request.status === 'draft' && canEdit"
-                  variant="default"
-                  class="gap-2"
-                  @click="handleEdit"
-                >
-                  <Edit2 class="h-4 w-4" />
-                  Edit Request
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div class="grid gap-8">
-                <!-- Description Section -->
-                <div class="grid gap-2">
-                  <div class="text-sm font-medium text-muted-foreground">Description</div>
-                  <div class="text-sm">{{ request.description }}</div>
-                </div>
+              </CardHeader>
+              <CardContent>
+                <div class="grid gap-8">
+                  <!-- Description Section -->
+                  <div class="grid gap-2">
+                    <div class="text-sm font-medium text-muted-foreground">Description</div>
+                    <div class="text-sm">{{ request.description }}</div>
+                  </div>
 
-                <!-- Collaborators Section -->
-                <div class="grid gap-2">
-                  <div class="text-sm font-medium text-muted-foreground">Collaborators</div>
-                  <div class="space-y-2">
-                    <div v-for="(collaborator, index) in request.collaborators" 
-                      :key="index"
-                      class="flex items-center justify-between p-2 bg-muted rounded-md"
-                    >
-                      <div class="flex items-center gap-2">
-                        <Avatar class="h-8 w-8">
-                          <AvatarImage 
-                            v-if="getAvatarProps(collaborator).showAvatar" 
-                            :src="getAvatarProps(collaborator).src" 
-                            :alt="getAvatarProps(collaborator).alt" 
-                          />
-                          <AvatarFallback class="bg-primary/10">
-                            {{ getAvatarProps(collaborator).fallback }}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div class="flex flex-col">
-                          <span class="text-sm font-medium">{{ collaborator.name }}</span>
-                          <span class="text-xs text-muted-foreground">{{ getDisplayRole(collaborator.role) }}</span>
+                  <!-- Collaborators Section -->
+                  <div class="grid gap-2">
+                    <div class="text-sm font-medium text-muted-foreground">Collaborators</div>
+                    <div class="space-y-2">
+                      <div v-for="(collaborator, index) in request.collaborators" 
+                        :key="index"
+                        class="flex items-center justify-between p-2 bg-muted rounded-md"
+                      >
+                        <div class="flex items-center gap-2">
+                          <Avatar class="h-8 w-8">
+                            <AvatarImage 
+                              v-if="getAvatarProps(collaborator).showAvatar" 
+                              :src="getAvatarProps(collaborator).src" 
+                              :alt="getAvatarProps(collaborator).alt" 
+                            />
+                            <AvatarFallback class="bg-primary/10">
+                              {{ getAvatarProps(collaborator).fallback }}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div class="flex flex-col">
+                            <span class="text-sm font-medium">{{ collaborator.name }}</span>
+                            <span class="text-xs text-muted-foreground">{{ getDisplayRole(collaborator.role) }}</span>
+                          </div>
+                        </div>
+                        <Badge :variant="collaborator.permission === 'edit' ? 'default' : 'secondary'" class="capitalize text-xs px-4">
+                          {{ collaborator.permission === 'edit' ? 'Can Edit' : 'View Only' }}
+                        </Badge>
+                      </div>
+                      <div v-if="!request.collaborators?.length" class="text-sm text-muted-foreground">
+                        No collaborators assigned
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Files Section -->
+                  <div class="grid gap-2">
+                    <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <FileText class="h-4 w-4" />
+                      Attached Files
+                    </div>
+                    <div class="space-y-2">
+                      <div v-for="(file, index) in request.files" 
+                        :key="index"
+                        class="flex items-center gap-2 p-2 bg-muted rounded-md"
+                      >
+                        <FileText class="h-4 w-4 text-primary ml-2" />
+                        <span class="text-sm">{{ file.name }}</span>
+                        <span class="text-xs text-muted-foreground ml-auto">
+                          {{ Math.round(file.size / 1024) }}KB
+                        </span>
+                        <Button variant="ghost" size="icon" class="h-8 w-8" @click="downloadFile(file)">
+                          <Download class="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <div v-if="!request.files?.length" class="text-sm text-muted-foreground">
+                        No files attached
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quotation Section -->
+                  <div v-if="request.quotation?.have_quotation === 'true'" class="grid gap-2">
+                    <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <FileText class="h-4 w-4" />
+                      Quotation Details
+                    </div>
+                    <div class="p-4 bg-muted rounded-md">
+                      <div class="flex flex-col gap-2">
+                        <div class="flex items-center justify-between">
+                          <div class="space-y-1">
+                            <p class="text-xs text-muted-foreground">
+                              Processed by: {{ request.quotation.processed_by }}
+                            </p>
+                            <p class="text-xs text-muted-foreground">
+                              Date: {{ request.quotation.processed_at }}
+                            </p>
+                          </div>
+                          <div class="flex gap-2">
+                            <Button 
+                              @click="showQuotationDialog = true"
+                              variant="outline"
+                              size="sm"
+                              class="gap-2"
+                            >
+                              <FileText class="h-4 w-4" />
+                              View Details
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <Badge :variant="collaborator.permission === 'edit' ? 'default' : 'secondary'" class="capitalize text-xs px-4">
-                        {{ collaborator.permission === 'edit' ? 'Can Edit' : 'View Only' }}
-                      </Badge>
-                    </div>
-                    <div v-if="!request.collaborators?.length" class="text-sm text-muted-foreground">
-                      No collaborators assigned
                     </div>
                   </div>
-                </div>
 
-                <!-- Files Section -->
-                <div class="grid gap-2">
-                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <FileText class="h-4 w-4" />
-                    Attached Files
-                  </div>
-                  <div class="space-y-2">
-                    <div v-for="(file, index) in request.files" 
-                      :key="index"
-                      class="flex items-center gap-2 p-2 bg-muted rounded-md"
-                    >
-                      <FileText class="h-4 w-4 text-primary ml-2" />
-                      <span class="text-sm">{{ file.name }}</span>
-                      <span class="text-xs text-muted-foreground ml-auto">
-                        {{ Math.round(file.size / 1024) }}KB
-                      </span>
-                      <Button variant="ghost" size="icon" class="h-8 w-8" @click="downloadFile(file)">
-                        <Download class="h-4 w-4" />
-                      </Button>
+                  <!-- ✅ UPDATED: Add Quotation Action Section (only in Quotation progress) -->
+                  <div v-if="!request.quotation?.have_quotation && request.progress === 'Quotation'" class="grid gap-2">
+                    <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <FileText class="h-4 w-4" />
+                      Quotation Actions
                     </div>
-                    <div v-if="!request.files?.length" class="text-sm text-muted-foreground">
-                      No files attached
+                    <div class="p-4 bg-muted rounded-md">
+                      <div class="flex flex-col gap-3">
+                        <p class="text-sm text-muted-foreground">
+                          Generate quotation request forms to send to companies, then submit their responses.
+                        </p>
+                        <div class="flex gap-2">
+                          <Button 
+                            @click="openQuotationRequestGenerator"
+                            variant="outline"
+                            size="sm"
+                            class="gap-2"
+                          >
+                            <Send class="h-4 w-4" />
+                            Create Quotation Request
+                          </Button>
+                          <Button 
+                            @click="showQuotationModal = true"
+                            variant="default"
+                            size="sm"
+                            class="gap-2"
+                          >
+                            <FileText class="h-4 w-4" />
+                            Submit Quotation
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <!-- Quotation Section -->
-                <div v-if="request.quotation?.have_quotation === 'true'" class="grid gap-2">
-                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <FileText class="h-4 w-4" />
-                    Quotation Details
-                  </div>
-                  <div class="p-4 bg-muted rounded-md">
-                    <div class="flex flex-col gap-2">
-                      <div class="flex items-center justify-between">
-                        <div class="space-y-1">
-                          <p class="text-xs text-muted-foreground">
-                            Processed by: {{ request.quotation.processed_by }}
-                          </p>
-                          <p class="text-xs text-muted-foreground">
-                            Date: {{ request.quotation.processed_at }}
-                          </p>
+                  <div v-if="request.purchaseRequest?.have_supplier_approval === true" class="grid gap-2">
+                    <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                      <FileText class="h-4 w-4" />
+                      Purchase Request Details
+                    </div>
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        <FileText class="h-4 w-4 text-primary ml-2" />
+                        <div class="flex-1">
+                          <span class="text-sm">Purchase-request.pdf</span>
+                          <span class="text-xs text-muted-foreground ml-2">(System Generated)</span>
                         </div>
                         <Button 
-                          @click="showQuotationDialog = true"
-                          variant="outline"
-                          size="sm"
-                          class="gap-2"
+                          variant="ghost" 
+                          size="icon" 
+                          class="h-8 w-8 ml-auto" 
+                          @click="downloadPurchaseRequestPDF"
                         >
-                          <FileText class="h-4 w-4" />
-                          View Details
+                          <Download class="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                <div v-if="request.purchaseRequest?.have_supplier_approval === true" class="grid gap-2">
-                  <div class="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                    <FileText class="h-4 w-4" />
-                    Purchase Request Details
-                  </div>
-                  <div class="space-y-2">
-                    <div class="flex items-center gap-2 p-2 bg-muted rounded-md">
-                      <FileText class="h-4 w-4 text-primary ml-2" />
-                      <div class="flex-1">
-                        <span class="text-sm">Purchase-request.pdf</span>
-                        <span class="text-xs text-muted-foreground ml-2">(System Generated)</span>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        class="h-8 w-8 ml-auto" 
-                        @click="downloadPurchaseRequestPDF"
-                      >
-                        <Download class="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                
-              </div>
-            </CardContent>
-          </Card>
-
-          <div class="space-y-6">
-            <RequestStatus 
-              :request="request"
-              :can-edit="canEdit"
-              @show-confirmation="handleStatusAction"
-              @show-edit="handleEdit"
-            />
-            <RequestTimeline :request="request" />
+            <div class="space-y-6">
+              <RequestStatus 
+                :request="request"
+                :can-edit="canEdit"
+                @show-confirmation="handleStatusAction"
+                @show-edit="handleEdit"
+              />
+              <RequestTimeline :request="request" />
+            </div>
           </div>
-        </div>
-      </template>
-    </div>
-  </AppLayout>
-</template>
+        </template>
+      </div>
+    </AppLayout>
+  </template>
