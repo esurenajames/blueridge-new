@@ -362,73 +362,7 @@ class OfficialRequestController extends Controller
         ]);
     }
 
-    public function resubmitQuotation(QuotationFormRequest $request, $id)
-    {
-        $requestModel = RequestModel::findOrFail($id);
-    
-        $requestModel->status = 'pending';
-        $requestModel->save();
-
-        // Update quotation status
-        $quotation = $requestModel->quotation;
-        if ($quotation) {
-            $quotation->status = 'pending';
-            $quotation->processed_by = auth()->id();
-            $quotation->processed_at = now();
-            $quotation->save();
-    
-            // Remove old details and items
-            foreach ($quotation->details as $detail) {
-                $detail->items()->delete();
-                $detail->delete();
-            }
-        }
-    
-        // Process each company
-        foreach ($request->validated()['companies'] as $companyData) {
-            $company = Company::updateOrCreate(
-                ['email' => $companyData['email']],
-                [
-                    'company_name' => $companyData['companyName'],
-                    'contact_person' => $companyData['contactPerson'],
-                    'address' => $companyData['address'],
-                    'contact_number' => $companyData['contactNumber'],
-                ]
-            );
-    
-            // Create new quotation detail
-            $quotationDetail = $quotation->details()->create([
-                'company_id' => $company->id,
-                'is_selected' => false,
-            ]);
-    
-            // Create items for this quotation detail
-            foreach ($companyData['items'] as $itemData) {
-                $quotationDetail->items()->create([
-                    'item_name' => $itemData['name'],
-                    'description' => $itemData['description'],
-                    'price' => $itemData['price'],
-                    'quantity' => $itemData['quantity'],
-                ]);
-            }
-        }
-    
-        $requestModel->timelines()->create([
-            'request_id' => $requestModel->id,
-            'processor_id' => auth()->id(),
-            'processed_date' => now(),
-            'processed_progress' => $requestModel->progress,
-            'processed_status' => 'resubmitted',
-            'remarks' => $request->remarks ?? null
-        ]);
-    
-        return back()->with([
-            'success' => 'Quotation resubmitted successfully',
-            'request' => new RequestResource($requestModel->load(['quotation.details.company', 'quotation.details.items']))
-        ]);
-    }
-
-    public function submitQuotation(QuotationFormRequest $request, $id)
+        public function submitQuotation(QuotationFormRequest $request, $id)
     {
         $requestModel = RequestModel::findOrFail($id);
         
@@ -442,19 +376,24 @@ class OfficialRequestController extends Controller
             ]
         );
 
-        $quotation->have_quotation = 'true';   // To indicate "has quotation"
+        $quotation->have_quotation = 'true';
         $quotation->save();
 
         // Process each company
         foreach ($request->validated()['companies'] as $companyData) {
-            // Create or update company
+            // Handle companies without email
+            $companyIdentifier = !empty($companyData['email']) 
+                ? ['email' => $companyData['email']]
+                : ['company_name' => $companyData['companyName']];
+                
             $company = Company::updateOrCreate(
-                ['email' => $companyData['email']],
+                $companyIdentifier,
                 [
                     'company_name' => $companyData['companyName'],
-                    'contact_person' => $companyData['contactPerson'],
-                    'address' => $companyData['address'],
-                    'contact_number' => $companyData['contactNumber'],
+                    'contact_person' => $companyData['contactPerson'] ?? '',
+                    'address' => $companyData['address'] ?? '',
+                    'contact_number' => $companyData['contactNumber'] ?? '',
+                    'email' => $companyData['email'] ?? null,
                 ]
             );
 
@@ -468,9 +407,10 @@ class OfficialRequestController extends Controller
             foreach ($companyData['items'] as $itemData) {
                 $quotationDetail->items()->create([
                     'item_name' => $itemData['name'],
-                    'description' => $itemData['description'],
+                    'description' => $itemData['description'] ?? '',
                     'price' => $itemData['price'],
                     'quantity' => $itemData['quantity'],
+                    'unit' => $itemData['unit'] ?? '',
                 ]);
             }
         }
@@ -485,12 +425,85 @@ class OfficialRequestController extends Controller
             'processor_id' => auth()->id(),
             'processed_date' => now(),
             'processed_progress' => $requestModel->progress,
-            'processed_status' => 'submitted',
-            'remarks' => $request->remarks ?? null
+            'processed_status' => 'processed', // ✅ Changed from 'submitted' to 'processed'
+            'remarks' => $request->remarks ?? 'Quotation submitted'
         ]);
 
         return back()->with([
             'success' => 'Quotation submitted successfully',
+            'request' => new RequestResource($requestModel->load(['quotation.details.company', 'quotation.details.items']))
+        ]);
+    }
+
+    public function resubmitQuotation(QuotationFormRequest $request, $id)
+    {
+        $requestModel = RequestModel::findOrFail($id);
+
+        $requestModel->status = 'pending';
+        $requestModel->save();
+
+        // Update quotation status
+        $quotation = $requestModel->quotation;
+        if ($quotation) {
+            $quotation->status = 'pending';
+            $quotation->processed_by = auth()->id();
+            $quotation->processed_at = now();
+            $quotation->save();
+
+            // Remove old details and items
+            foreach ($quotation->details as $detail) {
+                $detail->items()->delete();
+                $detail->delete();
+            }
+        }
+
+        // Process each company
+        foreach ($request->validated()['companies'] as $companyData) {
+            // Handle companies without email
+            $companyIdentifier = !empty($companyData['email']) 
+                ? ['email' => $companyData['email']]
+                : ['company_name' => $companyData['companyName']];
+                
+            $company = Company::updateOrCreate(
+                $companyIdentifier,
+                [
+                    'company_name' => $companyData['companyName'],
+                    'contact_person' => $companyData['contactPerson'] ?? '',
+                    'address' => $companyData['address'] ?? '',
+                    'contact_number' => $companyData['contactNumber'] ?? '',
+                    'email' => $companyData['email'] ?? null,
+                ]
+            );
+
+            // Create new quotation detail
+            $quotationDetail = $quotation->details()->create([
+                'company_id' => $company->id,
+                'is_selected' => false,
+            ]);
+
+            // Create items for this quotation detail
+            foreach ($companyData['items'] as $itemData) {
+                $quotationDetail->items()->create([
+                    'item_name' => $itemData['name'],
+                    'description' => $itemData['description'] ?? '',
+                    'price' => $itemData['price'],
+                    'quantity' => $itemData['quantity'],
+                    'unit' => $itemData['unit'] ?? '',
+                ]);
+            }
+        }
+
+        $requestModel->timelines()->create([
+            'request_id' => $requestModel->id,
+            'processor_id' => auth()->id(),
+            'processed_date' => now(),
+            'processed_progress' => $requestModel->progress,
+            'processed_status' => 'resubmitted', // ✅ This should work since it's used in resubmit()
+            'remarks' => $request->remarks ?? 'Quotation resubmitted'
+        ]);
+
+        return back()->with([
+            'success' => 'Quotation resubmitted successfully',
             'request' => new RequestResource($requestModel->load(['quotation.details.company', 'quotation.details.items']))
         ]);
     }
@@ -641,5 +654,30 @@ class OfficialRequestController extends Controller
         
         return $pdf->download('abstract-of-canvass.pdf');
     }
+
+    public function searchCompanies(Request $request)
+        {
+            $search = $request->get('search', '');
+            
+            if (strlen($search) < 2) {
+                return response()->json([]);
+            }
+            
+            try {
+                $companies = \App\Models\Company::where('company_name', 'LIKE', "%{$search}%")
+                    ->orWhere('contact_person', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%")
+                    ->select(['id', 'company_name', 'contact_person', 'address', 'contact_number', 'email'])
+                    ->orderBy('company_name')
+                    ->limit(10)
+                    ->get();
+                
+                return response()->json($companies);
+                
+            } catch (\Exception $e) {
+                \Log::error('Company search error: ' . $e->getMessage());
+                return response()->json([]);
+            }
+        }
 }
    
