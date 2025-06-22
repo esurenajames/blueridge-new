@@ -75,7 +75,7 @@ class CaptainSubcategoryController extends Controller
             'october' => 0,
             'november' => 0,
             'december' => 0,
-            'profit' => 0,
+            'income' => 0,
         ]);
 
         return redirect()->back()->with([

@@ -27,7 +27,7 @@ class Budget extends Model
         'october',
         'november',
         'december',
-        'profit',
+        'income',
         'balance'
     ];
 
@@ -45,7 +45,7 @@ class Budget extends Model
         'october' => 'decimal:2',
         'november' => 'decimal:2',
         'december' => 'decimal:2',
-        'profit' => 'decimal:2',
+        'income' => 'decimal:2',
         'balance' => 'decimal:2'
     ];
 

@@ -94,8 +94,7 @@ class RequestResource extends JsonResource
                 'uploaded_at' => $f->created_at->format('Y-m-d'),
             ])),
             'timelines' => $this->whenLoaded('timelines', fn() => $this->timelines
-                ->sortBy(function($timeline) {
-                    // Use the earliest date between processed_date and approved_date
+                ->sortBy(function($timeline) {  
                     if ($timeline->processed_date && $timeline->approved_date) {
                         return min($timeline->processed_date, $timeline->approved_date);
                     }

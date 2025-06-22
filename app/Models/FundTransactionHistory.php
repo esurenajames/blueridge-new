@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class FundTransactionHistory extends Model
 {
@@ -33,6 +34,11 @@ class FundTransactionHistory extends Model
     public function budget(): BelongsTo
     {
         return $this->belongsTo(Budget::class);
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(BudgetTransactionFile::class, 'budget_transaction_history_id');
     }
 
     public function processedBy(): BelongsTo

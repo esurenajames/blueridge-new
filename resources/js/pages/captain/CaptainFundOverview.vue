@@ -8,7 +8,7 @@ import { ChevronRight, ChevronDown, MoreHorizontal, PlusCircle } from 'lucide-vu
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/components/ui/toast/use-toast';
-import AddProfit from '@/components/captain/AddProfit.vue';
+import AddIncome from '@/components/captain/AddIncome.vue';
 import AddProposedBudget from '@/components/captain/AddProposedBudget.vue';
 import TransactionHistory from '@/components/captain/TransactionHistory.vue';
 
@@ -32,7 +32,7 @@ export interface Subcategory {
   december: string;
   ytd: number;
   balance: string;
-  profit: string;
+  income: string;
   budget_id?: number;
   transactions?: any[];
 }
@@ -68,7 +68,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const expandedFirstHalf = ref(false);
 const expandedSecondHalf = ref(false);
 const expandedCategories = ref<Set<number>>(new Set());
-const showAddProfitDialog = ref(false);
+const showAddIncomeDialog = ref(false);
 const showAddProposedBudgetDialog = ref(false);
 const showTransactionHistory = ref(false);
 const selectedSubcategory = ref<Subcategory | null>(null);
@@ -82,13 +82,13 @@ function toggleCategory(categoryId: number) {
   expandedCategories.value = new Set(expandedCategories.value);
 }
 
-const handleAddProfit = (subcategory: Subcategory) => {
+const handleAddIncome = (subcategory: Subcategory) => {
   selectedSubcategory.value = subcategory;
-  showAddProfitDialog.value = true;
+  showAddIncomeDialog.value = true;
 };
 
-const handleCloseAddProfit = () => {
-  showAddProfitDialog.value = false;
+const handleCloseAddIncome = () => {
+  showAddIncomeDialog.value = false;
   selectedSubcategory.value = null;
 };
 
@@ -128,7 +128,7 @@ const totals = computed(() => {
     julDec: 0,
     ytd: 0,
     balance: 0,
-    profit: 0
+    income: 0
   };
 
   props.budgetGroups.forEach(group => {
@@ -139,7 +139,7 @@ const totals = computed(() => {
         total.julDec += sub.julDec || 0;
         total.ytd += sub.ytd || 0;
         total.balance += parseFloat(sub.balance) || 0;
-        total.profit += parseFloat(sub.profit) || 0;
+        total.income += parseFloat(sub.income) || 0;
       });
     });
   });
@@ -159,6 +159,7 @@ const totals = computed(() => {
             <TableRow>
               <TableHead class="min-w-[200px]">Object of Expenditure</TableHead>
               <TableHead class="min-w-[150px] text-right">Proposed Budget</TableHead>
+               <TableHead class="min-w-[120px] text-right">Income</TableHead>
               <TableHead class="min-w-[120px] text-right">
                 <div class="flex items-center justify-end gap-2">
                   <span>1st Half</span>
@@ -203,7 +204,6 @@ const totals = computed(() => {
               </TableHead>
               <TableHead class="min-w-[120px] text-right">YTD</TableHead>
               <TableHead class="min-w-[120px] text-right">Balance</TableHead>
-              <TableHead class="min-w-[120px] text-right">Income</TableHead>
               <TableHead class="min-w-[80px] text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -252,6 +252,9 @@ const totals = computed(() => {
                       <TableCell class="font-medium tabular-nums text-right">
                         {{ parseFloat(sub.proposedBudget).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
                       </TableCell>
+                      <TableCell class="tabular-nums text-right text-green-600">
+                        {{ parseFloat(sub.income).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
+                      </TableCell>
                       <TableCell class="tabular-nums text-right">
                         {{ sub.janJun.toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
                       </TableCell>
@@ -282,9 +285,6 @@ const totals = computed(() => {
                       <TableCell class="tabular-nums text-right">
                         {{ parseFloat(sub.balance).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
                       </TableCell>
-                      <TableCell class="tabular-nums text-right text-green-600">
-                        {{ parseFloat(sub.profit).toLocaleString(undefined, { minimumFractionDigits: 2 }) }}
-                      </TableCell>
                       <TableCell class="text-right p-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -294,9 +294,9 @@ const totals = computed(() => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem @click="handleAddProfit(sub)">
+                            <DropdownMenuItem @click="handleAddIncome(sub)">
                               <PlusCircle class="h-4 w-4 text-green-500" />
-                              <span>Profit</span>
+                              <span>Income</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem @click="handleAddProposedBudget(sub)">
                               <PlusCircle class="h-4 w-4 text-blue-500" />
@@ -327,11 +327,11 @@ const totals = computed(() => {
       </div>
     </div>
 
-    <AddProfit
-      :show="showAddProfitDialog"
+    <AddIncome
+      :show="showAddIncomeDialog"
       :subcategory-id="selectedSubcategory?.id"
       :budget-id="selectedSubcategory?.budget_id"
-      @close="handleCloseAddProfit"
+      @close="handleCloseAddIncome"
     />
 
     <AddProposedBudget

@@ -14,6 +14,7 @@ import FileUpload from '@/components/FileUpload.vue';
 import CollaboratorList from '@/components/CollaboratorList.vue';
 import { Textarea } from '@/components/ui/textarea';
 import Confirmation from '@/components/Confirmation.vue';
+import { Label } from '@/components/ui/label';
 
 const props = defineProps<{
   show: boolean;
@@ -306,6 +307,13 @@ const handleConfirm = () => {
 
           <!-- Step 3: Documents -->
           <div v-if="currentStep === 3">
+            <div class="py-2">  
+              <Label>Add Files
+                <span class="text-xs ml-1 bg-muted px-2 py-1 rounded-md text-muted-foreground">
+                  Optional
+                </span>
+              </Label>
+            </div>
             <FileUpload
               v-model="uploadedFiles"
               :errors="form.errors.files"

@@ -34,6 +34,16 @@ class FundResource extends JsonResource
                                     'amount' => number_format($transaction->total_amount, 2, '.', ''),
                                     'remarks' => $transaction->remarks,
                                     'processed_by' => $transaction->processedBy->name,
+                                    'files' => $transaction->files->map(function ($file) {
+                                        return [
+                                            'id' => $file->id,
+                                            'name' => $file->name,
+                                            'path' => $file->path,
+                                            'size' => $file->size,
+                                            'file_type' => $file->file_type,
+                                            'url' => $file->path ? asset('storage/' . $file->path) : null,
+                                        ];
+                                    }),
                                 ];
                             }) : [];
                             return [
@@ -59,7 +69,7 @@ class FundResource extends JsonResource
                                 'november' => $budget->november ?? 0,
                                 'december' => $budget->december ?? 0,
                                 'ytd' => $budget->ytd ?? 0,
-                                'profit' => $budget->profit ?? 0,
+                                'income' => $budget->income ?? 0,
                                 'balance' => $budget->balance ?? 0,
                                 'transactions' => $transactions,
                             ];

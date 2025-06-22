@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\FundRequest;
 use App\Http\Resources\FundResource;
 use App\Models\Budget;
+use App\Models\BudgetTransactionFile;
 use App\Models\Category;
 use App\Models\FundSettings;
 use App\Models\FundTransactionHistory;
@@ -18,7 +19,7 @@ class CaptainFundOverviewController extends Controller
     public function index()
     {
         $currentMonth = Carbon::now()->format('F');
-        $currentYear = Carbon::now()->year; // Get current year
+        $currentYear = Carbon::now()->year; 
         $months = [
             'January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'
@@ -48,8 +49,6 @@ class CaptainFundOverviewController extends Controller
                             $ytd += $subcategory->budget->{$monthFields[$i]} ?? 0;
                         }
                         $subcategory->budget->ytd = $ytd;
-
-                        // Compute balance: (proposed_budget - sum(jan-dec)) + profit
                         $sumMonths = 0;
                         foreach ($monthFields as $month) {
                             $sumMonths += $subcategory->budget->{$month} ?? 0;
@@ -57,7 +56,7 @@ class CaptainFundOverviewController extends Controller
                         $subcategory->budget->balance = 
                             ($subcategory->budget->proposed_budget ?? 0)
                             - $sumMonths
-                            + ($subcategory->budget->profit ?? 0);
+                            + ($subcategory->budget->income ?? 0);
                     }
                     return $subcategory;
                 });
@@ -69,24 +68,36 @@ class CaptainFundOverviewController extends Controller
         ]);
     }
 
-    public function addProfit(FundRequest $request, Budget $budget)
+    public function addIncome(FundRequest $request, Budget $budget)
     {
-        $budget->increment('profit', $request->amount);
+        $budget->increment('income', $request->amount);
 
-        // Always use current time for transaction_date (with seconds)
         $transactionDate = now()->format('Y-m-d H:i:s');
 
-        FundTransactionHistory::create([
+        $transaction = FundTransactionHistory::create([
             'budget_id' => $budget->id,
             'processed_by' => auth()->id(),
             'transaction_date' => $transactionDate,
-            'type' => 'profit',
+            'type' => 'income',
             'total_amount' => $request->amount,
             'remarks' => $request->remarks,
         ]);
 
+        if ($request->hasFile('receipts')) {
+            foreach ($request->file('receipts') as $file) {
+                $path = $file->store('receipts', 'public');
+                BudgetTransactionFile::create([
+                    'budget_transaction_history_id' => $transaction->id,
+                    'name' => $file->getClientOriginalName(),
+                    'path' => $path,
+                    'size' => $file->getSize(),
+                    'file_type' => $file->getClientMimeType() === 'application/pdf' ? 'pdf' : 'image',
+                ]);
+            }
+        }
+
         return redirect()->back()->with([
-            'message' => 'Profit added successfully',
+            'message' => 'Income added successfully',
             'budget' => $budget->fresh()
         ]);
     }

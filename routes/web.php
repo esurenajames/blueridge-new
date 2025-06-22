@@ -114,7 +114,7 @@ Route::middleware(['auth', 'verified', 'role:captain'])->group(function () {
 
     // Fund Management
     Route::get('/captain/funds', [CaptainFundOverviewController::class, 'index'])->name('captain.funds');
-    Route::post('/captain/funds/{budget}/profit', [CaptainFundOverviewController::class, 'addProfit'])->name('captain.funds.add-profit');
+    Route::post('/captain/funds/{budget}/income', [CaptainFundOverviewController::class, 'addIncome'])->name('captain.funds.add-income');
     Route::post('/captain/funds/{budget}/proposed-budget', [CaptainFundOverviewController::class, 'addProposedBudget'])->name('captain.funds.add-proposed-budget');
 
     // Fund Transaction History

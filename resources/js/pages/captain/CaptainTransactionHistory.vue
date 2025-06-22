@@ -11,7 +11,17 @@ import { computed, ref, watch } from 'vue';
 import { format } from 'date-fns';
 import type { DateRange } from 'reka-ui'
 import { RangeCalendar } from '@/components/ui/range-calendar'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+
+interface TransactionFile {
+  id: number;
+  name: string;
+  path: string;
+  size: number;
+  file_type: string;
+  url: string;
+}
 
 interface Transaction {
   id: number;
@@ -20,8 +30,8 @@ interface Transaction {
   transaction_date: string;
   type: string;
   total_amount: string | number;
-  remarks: string | null;
   processed_by?: string | number;
+  files?: TransactionFile[];
 }
 
 interface TransactionsPaginated {
@@ -57,7 +67,6 @@ const dateRange = ref<DateRange>({
 });
 
 watch([searchQuery, typeFilter, dateRange], ([search, type, dates]) => {
-  console.log('Date Range Changed:', dates); // Debug: log date range changes
   router.get(
     route('captain.transactions'),
     {
@@ -93,7 +102,7 @@ const formatAmount = (amount: string | number | undefined | null) => {
 const typeOptions = [
   { value: '', label: 'All Types' },
   { value: 'expenses', label: 'Expenses' },
-  { value: 'profit', label: 'Profit' },
+  { value: 'income', label: 'Income' },
   { value: 'proposed budget', label: 'Proposed Budget' },
 ];
 
@@ -103,6 +112,20 @@ import { ref as vueRef } from 'vue'
 const calendarOpen = ref(false)
 const calendarRef = vueRef<HTMLElement | null>(null)
 onClickOutside(calendarRef, () => { calendarOpen.value = false })
+
+// Preview dialog state
+const showPreviewDialog = ref(false);
+const selectedPreview = ref<{ url: string; type: string } | null>(null);
+
+function openPreview(file: { url: string; file_type: string }) {
+  selectedPreview.value = { url: file.url, type: file.file_type === 'pdf' ? 'application/pdf' : 'image' };
+  showPreviewDialog.value = true;
+}
+
+function closePreview() {
+  selectedPreview.value = null;
+  showPreviewDialog.value = false;
+}
 </script>
 
 <template>
@@ -197,7 +220,7 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
               <TableHead>Subcategory</TableHead>
               <TableHead>Type</TableHead>
               <TableHead class="text-right">Amount</TableHead>
-              <TableHead>Remarks</TableHead>
+              <TableHead>Files</TableHead>
               <TableHead>Processed By</TableHead>
             </TableRow>
           </TableHeader>
@@ -219,7 +242,7 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
                 </TableCell>
                 <TableCell>
                   <Badge
-                    :variant="transaction.type === 'profit' ? 'success' : transaction.type === 'expenses' ? 'destructive' : 'secondary'"
+                    :variant="transaction.type === 'income' ? 'success' : transaction.type === 'expenses' ? 'destructive' : 'secondary'"
                     class="capitalize"
                   >
                     {{ transaction.type }}
@@ -228,7 +251,7 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
                 <TableCell class="text-right tabular-nums">
                   <span
                     :class="{
-                      'text-green-600': transaction.type === 'profit',
+                      'text-green-600': transaction.type === 'income',
                       'text-red-600': transaction.type === 'expenses',
                       'text-blue-600': transaction.type === 'proposed budget'
                     }"
@@ -236,7 +259,33 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
                     ₱{{ formatAmount(transaction.total_amount) }}
                   </span>
                 </TableCell>
-                <TableCell class="text-gray-600">{{ transaction.remarks || '-' }}</TableCell>
+                <TableCell>
+                  <template v-if="transaction.files && transaction.files.length">
+                    <template v-if="transaction.files[0].file_type === 'image'">
+                      <img
+                        :src="transaction.files[0].url"
+                        alt="Receipt"
+                        class="w-12 h-12 object-cover rounded border cursor-pointer transition-transform hover:scale-105"
+                        @click="openPreview(transaction.files[0])"
+                      />
+                    </template>
+                    <template v-else-if="transaction.files[0].file_type === 'pdf'">
+                      <a
+                        :href="transaction.files[0].url"
+                        target="_blank"
+                        class="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        PDF
+                      </a>
+                    </template>
+                  </template>
+                  <template v-else>
+                    <span class="text-xs text-gray-400">No file</span>
+                  </template>
+                </TableCell>
                 <TableCell>{{ transaction.processed_by ?? '-' }}</TableCell>
               </TableRow>
             </template>
@@ -264,5 +313,24 @@ onClickOutside(calendarRef, () => { calendarOpen.value = false })
         />
       </div>
     </div>
+
+    <Dialog v-model:open="showPreviewDialog" @update:open="closePreview">
+      <DialogContent class="sm:max-w-[900px] sm:max-h-[80vh]">
+        <div class="relative w-full h-full max-h-[60vh] overflow-auto">
+          <img 
+            v-if="selectedPreview?.type === 'image'"
+            :src="selectedPreview?.url" 
+            class="w-full h-auto"
+            alt="Receipt preview" 
+          />
+          <iframe
+            v-else-if="selectedPreview?.type === 'application/pdf'"
+            :src="selectedPreview?.url"
+            class="w-full h-full min-h-[500px]"
+            type="application/pdf"
+          ></iframe>
+        </div>
+      </DialogContent>
+    </Dialog>
   </AppLayout>
 </template>

@@ -20,6 +20,16 @@ class TransactionHistoryResource extends JsonResource
             'processed_by' => $this->processedBy->name ?? 'Unknown',
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'files' => $this->files->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'name' => $file->name,
+                    'path' => $file->path,
+                    'size' => $file->size,
+                    'file_type' => $file->file_type,
+                    'url' => $file->path ? asset('storage/' . $file->path) : null,
+                ];
+            }),
         ];
     }
 }
