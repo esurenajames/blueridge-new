@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('request_quotation_detail_id')->constrained()->onDelete('cascade');
             $table->string('item_name');
             $table->text('description')->nullable();
-            $table->decimal('price', 10, 2)>nullable();
-            $table->integer('quantity')>nullable();
+            $table->decimal('price', 10, 2)->nullable();
+            $table->integer('quantity')->nullable();
             $table->string('unit')->nullable();
             $table->timestamps();
         });

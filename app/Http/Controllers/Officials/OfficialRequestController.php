@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Officials;
 
 use App\Http\Requests\QuotationFormRequest;
 use App\Http\Requests\RequestFormRequest;
+use App\Http\Resources\CompanyResource;
 use App\Models\Company;
 use App\Models\RequestFile;
 use App\Models\User;
@@ -362,7 +363,7 @@ class OfficialRequestController extends Controller
         ]);
     }
 
-        public function submitQuotation(QuotationFormRequest $request, $id)
+    public function submitQuotation(QuotationFormRequest $request, $id)
     {
         $requestModel = RequestModel::findOrFail($id);
         
@@ -656,28 +657,41 @@ class OfficialRequestController extends Controller
     }
 
     public function searchCompanies(Request $request)
-        {
-            $search = $request->get('search', '');
-            
-            if (strlen($search) < 2) {
-                return response()->json([]);
-            }
-            
-            try {
-                $companies = \App\Models\Company::where('company_name', 'LIKE', "%{$search}%")
-                    ->orWhere('contact_person', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%")
-                    ->select(['id', 'company_name', 'contact_person', 'address', 'contact_number', 'email'])
-                    ->orderBy('company_name')
-                    ->limit(10)
-                    ->get();
-                
-                return response()->json($companies);
-                
-            } catch (\Exception $e) {
-                \Log::error('Company search error: ' . $e->getMessage());
-                return response()->json([]);
-            }
+    {
+        $search = $request->get('search', '');
+        
+        if (strlen($search) < 2) {
+            return response()->json([]);
         }
+        
+        try {
+            $companies = Company::where('company_name', 'LIKE', "%{$search}%")
+                ->orWhere('contact_person', 'LIKE', "%{$search}%")
+                ->orWhere('email', 'LIKE', "%{$search}%")
+                ->select(['id', 'company_name', 'contact_person', 'address', 'contact_number', 'email'])
+                ->orderBy('company_name')
+                ->limit(10)
+                ->get();
+            
+            return response()->json($companies);
+            
+        } catch (\Exception $e) {
+            \Log::error('Company search error: ' . $e->getMessage());
+            return response()->json([]);
+        }
+    }
+
+    public function fetchCompanies(Request $request)
+    {
+        $companies = Company::orderBy('company_name')->paginate(10);
+
+        return response()->json([
+            'data' => CompanyResource::collection($companies)->resolve(),
+            'current_page' => $companies->currentPage(),
+            'last_page' => $companies->lastPage(),
+            'per_page' => $companies->perPage(),
+            'total' => $companies->total(),
+        ]);
+    }
 }
    

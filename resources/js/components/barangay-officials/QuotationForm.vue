@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Stepper, StepperContent, StepperDescription, StepperIndicator, StepperItem, StepperSeparator, StepperTitle, StepperTrigger } from '@/components/ui/stepper';
-import { Building, Building2, Warehouse, Plus, Trash2, Repeat } from 'lucide-vue-next';
+import { Building, Building2, Warehouse, Plus, Trash2, Repeat, Search } from 'lucide-vue-next';
+import ExistingCompany from '@/components/ExistingCompany.vue';
 
 interface Company {
   id: number;
@@ -53,6 +54,9 @@ const currentStep = ref(1);
 const companySuggestions = ref<Company[]>([]);
 const isLoadingCompanies = ref(false);
 
+// Existing company modal state
+const showExistingCompanyModal = ref(false);
+
 // Initialize companies with updated item structure
 const companies = ref([
   {
@@ -61,7 +65,7 @@ const companies = ref([
     address: '',
     contactNumber: '',
     email: '',
-    items: [{ description: '', quantity: 0, unit: '', unitPrice: 0 }]
+    items: [{ description: '', quantity: '', unit: '', unitPrice: '' }]
   },
   {
     companyName: '',
@@ -69,7 +73,7 @@ const companies = ref([
     address: '',
     contactNumber: '',
     email: '',
-    items: [{ description: '', quantity: 0, unit: '', unitPrice: 0 }]
+    items: [{ description: '', quantity: '', unit: '', unitPrice: '' }]
   },
   {
     companyName: '',
@@ -77,7 +81,7 @@ const companies = ref([
     address: '',
     contactNumber: '',
     email: '',
-    items: [{ description: '', quantity: 0, unit: '', unitPrice: 0 }]
+    items: [{ description: '', quantity: '', unit: '', unitPrice: '' }] 
   }
 ]);
 
@@ -205,6 +209,25 @@ const selectCompany = (company: Company) => {
   
   // Clear suggestions
   companySuggestions.value = [];
+};
+
+// Handle company selection from existing companies modal
+const handleCompanySelection = (company: any) => {
+  const currentCompanyIndex = currentStep.value - 1;
+  
+  companies.value[currentCompanyIndex].companyName = company.company_name;
+  companies.value[currentCompanyIndex].contactPerson = company.contact_person || '';
+  companies.value[currentCompanyIndex].address = company.address || '';
+  companies.value[currentCompanyIndex].contactNumber = company.contact_number || '';
+  companies.value[currentCompanyIndex].email = company.email || '';
+  
+  showExistingCompanyModal.value = false;
+  
+  toast({
+    title: 'Company Selected',
+    description: `${company.company_name} has been added to ${steps.value[currentCompanyIndex].title}`,
+    variant: 'default'
+  });
 };
 
 const validatePrice = (event: KeyboardEvent) => {
@@ -392,13 +415,25 @@ const handleSubmit = () => {
               <CardContent class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
-                    <Label class="text-sm font-medium">
-                      Company Name <span class="text-red-500">*</span>
-                    </Label>
+                    <div class="flex items-center justify-between">
+                      <Label class="text-sm font-medium">
+                        Company Name <span class="text-red-500">*</span>
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="gap-2 h-7 text-xs"
+                        @click="showExistingCompanyModal = true"
+                      >
+                        <Search class="w-3 h-3" />
+                        Browse Existing
+                      </Button>
+                    </div>
                     <div class="relative">
                       <Input 
                         v-model="companies[currentStep - 1].companyName"
-                        placeholder="Type company name..."
+                        placeholder="Type company name or use 'Browse Existing' button..."
                         class="h-10"
                       />
                       
@@ -501,10 +536,10 @@ const handleSubmit = () => {
                         <Repeat class="h-3 w-3 text-muted-foreground" title="Synchronized across companies" />
                       </Label>
                       <Input 
-                        v-model="companies[currentStep - 1].items[itemIndex].description"
+                        :value="companies[currentStep - 1].items[itemIndex].description"
                         placeholder="Enter description of articles"
                         class="h-9"
-                        @input="() => updateItemDescription(itemIndex, companies[currentStep - 1].items[itemIndex].description)"
+                        @input="e => updateItemDescription(itemIndex, e.target.value)"
                       />
                     </div>
                     
@@ -598,4 +633,11 @@ const handleSubmit = () => {
       </div>
     </DialogContent>
   </Dialog>
+
+  <!-- Existing Company Modal -->
+  <ExistingCompany 
+    :show="showExistingCompanyModal" 
+    @update:show="showExistingCompanyModal = $event"
+    @select-company="handleCompanySelection"
+  />
 </template>

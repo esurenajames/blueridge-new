@@ -43,6 +43,8 @@ Route::get('/requests/{id}/abstract-of-canvass',
     [OfficialRequestController::class, 'generateAbstractOfCanvassPDF'   
 ])->name('requests.abstract-of-canvass');
 
+Route::get('/companies/fetch', [OfficialRequestController::class, 'fetchCompanies']);
+
 /*
 |--------------------------------------------------------------------------
 | Official Routes

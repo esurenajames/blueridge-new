@@ -1,3 +1,36 @@
+
+<script setup lang="ts">
+import { Head, useForm } from '@inertiajs/vue3';
+import InputError from '@/components/InputError.vue';
+import TextLink from '@/components/TextLink.vue';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { LoaderCircle, Eye, EyeOff } from 'lucide-vue-next';
+import loginImage from '@/./../images/login.svg';
+import { ref } from 'vue';
+
+defineProps<{
+    status?: string;
+    canResetPassword: boolean;
+}>();
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const showPassword = ref(false);
+
+const submit = () => {
+    form.post(route('login'), {
+        onFinish: () => form.reset('password'),
+    });
+};
+</script>
+
 <template>
     <div class="flex min-h-screen flex-col items-center bg-gradient-to-br from-blue-50 to-blue-100 p-6 text-gray-800 dark:from-gray-900 dark:to-gray-800 dark:text-gray-100 lg:justify-center lg:p-8">
         <Head title="Log in" />
@@ -57,16 +90,28 @@
                                         Forgot password?
                                     </TextLink>
                                 </div>
-                                <Input
-                                    id="password"
-                                    type="password"
-                                    required
-                                    :tabindex="2"
-                                    autocomplete="current-password"
-                                    v-model="form.password"
-                                    placeholder="Enter your password"
-                                    class="w-full h-11 px-4 transition-shadow focus:ring-2"
-                                />
+                                <div class="relative">
+                                    <Input
+                                        id="password"
+                                        :type="showPassword ? 'text' : 'password'"
+                                        required
+                                        :tabindex="2"
+                                        autocomplete="current-password"
+                                        v-model="form.password"
+                                        placeholder="Enter your password"
+                                        class="w-full h-11 px-4 pr-12 transition-shadow focus:ring-2"
+                                    />
+                                    <button
+                                        type="button"
+                                        @click="showPassword = !showPassword"
+                                        class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 focus:outline-none"
+                                        :tabindex="-1"
+                                        aria-label="Toggle password visibility"
+                                    >
+                                        <EyeOff v-if="showPassword" class="h-5 w-5" />
+                                        <Eye v-else class="h-5 w-5" />
+                                    </button>
+                                </div>
                                 <InputError :message="form.errors.password" />
                             </div>
                         </div>
@@ -99,32 +144,3 @@
         </main>
     </div>
 </template>
-
-<script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { LoaderCircle } from 'lucide-vue-next';
-import loginImage from '@/./../images/login.svg';
-
-defineProps<{
-    status?: string;
-    canResetPassword: boolean;
-}>();
-
-const form = useForm({
-    email: '',
-    password: '',
-    remember: false,
-});
-
-const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
-};
-</script>

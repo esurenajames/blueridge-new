@@ -43,6 +43,8 @@ php artisan key:generate
 ```
 php artisan migrate
 php artisan migrate --seed (run this to create an admin account)
+
+php artisan db:seed --class=CompanySeeder (for specific seeding)
 ```
 ### 6. Git Branching
 

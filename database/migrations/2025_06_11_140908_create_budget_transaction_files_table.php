@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('budget_transaction_files', function (Blueprint $table) {
             $table->id();
             $table->foreignId('budget_transaction_history_id')
-                ->constrained('budget_transaction_history  ')
+                ->constrained('budget_transaction_history')
                 ->onDelete('cascade');
             $table->string('name');
             $table->string('path');

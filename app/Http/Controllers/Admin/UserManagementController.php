@@ -12,7 +12,7 @@ use Inertia\Inertia;
 
 class UserManagementController extends Controller
 {
-public function index(Request $request)
+    public function index(Request $request)
     {
         $query = User::query();
         $query = $this->filter($query, $request);
