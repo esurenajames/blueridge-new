@@ -45,13 +45,13 @@ export interface Category {
 }
 
 export interface BudgetGroup {
-  group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
+  group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures';
   categories: Category[];
 }
 
 const props = defineProps<{
   budgetGroups: {
-    group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
+    group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures';
     categories: Category[];
   }[]
 }>();

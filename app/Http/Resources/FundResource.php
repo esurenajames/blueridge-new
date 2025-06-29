@@ -52,10 +52,10 @@ class FundResource extends JsonResource
                                 'name' => $subcategory->name,
                                 'year' => $budget->year ?? null,
                                 'proposedBudget' => $budget->proposed_budget ?? 0,
-                                'janJun' => $budget->january + $budget->february + $budget->march + 
-                                          $budget->april + $budget->may + $budget->june,
-                                'julDec' => $budget->july + $budget->august + $budget->september + 
-                                          $budget->october + $budget->november + $budget->december,
+                                'janJun' => ($budget->january ?? 0) + ($budget->february ?? 0) + ($budget->march ?? 0) +
+                                        ($budget->april ?? 0) + ($budget->may ?? 0) + ($budget->june ?? 0),
+                                'julDec' => ($budget->july ?? 0) + ($budget->august ?? 0) + ($budget->september ?? 0) +
+                                        ($budget->october ?? 0) + ($budget->november ?? 0) + ($budget->december ?? 0),
                                 'january' => $budget->january ?? 0,
                                 'february' => $budget->february ?? 0,
                                 'march' => $budget->march ?? 0,

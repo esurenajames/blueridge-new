@@ -23,7 +23,7 @@ const props = defineProps<{
     id: number;
     name: string;
     description: string;
-    group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures' | 'MOOE';
+    group_name: 'Beginning Cash Balance' | 'Receipts' | 'Expenditures';
     position: number;
     status: 'active' | 'inactive';
   };

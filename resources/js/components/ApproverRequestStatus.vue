@@ -368,13 +368,6 @@ const handleAction = (title: string, description: string, action: string) => {
                 </DropdownMenu>
               </div>
             </template>
-<Button 
-    class="flex-1 gap-2 bg-amber-600 hover:bg-amber-700 dark:bg-amber-700 dark:hover:bg-amber-800"
-    @click="handleAction('Release PBC Form', 'Are you sure you want to release the PBC form?', 'release-pbc')"
->
-    <span class="font-semibold">₱</span>
-    Release PBC Form
-</Button>
           </template>
 
           <!-- Status Messages -->
