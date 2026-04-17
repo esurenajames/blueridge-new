@@ -57,7 +57,8 @@ class OfficialDashboardController extends Controller
     public function getCategories()
     {
         $categories = CategoryResource::collection(
-            Category::where('status', 'active')
+            Category::with('subcategories')
+                ->where('status', 'active')
                 ->where('group_name', '!=', 'Beginning Cash Balance')
                 ->get()
         );

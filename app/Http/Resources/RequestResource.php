@@ -34,86 +34,11 @@ class RequestResource extends JsonResource
                 'purchaseRequest' => in_array('Purchase Request', $approvedStages),
                 'purchaseOrder' => in_array('Purchase Order', $approvedStages),
             ],
-            'quotation' => $this->when($this->relationLoaded('quotation'), function() {
-                return [
-                    'id' => $this->quotation?->id,
-                    'status' => $this->quotation?->status,
-                    'have_quotation' => $this->quotation?->have_quotation,
-                    'processed_by' => $this->quotation?->processor?->name,
-                    'processed_at' => $this->quotation?->processed_at?->format('Y-m-d'),
-                    'details' => $this->when($this->quotation?->relationLoaded('details'), function() {
-                        return $this->quotation->details->map(function($detail) {
-                            return [
-                                'id' => $detail->id,
-                                'is_selected' => $detail->is_selected,
-                                'company' => $this->when($detail->relationLoaded('company'), function() use ($detail) {
-                                    return [
-                                        'id' => $detail->company->id,
-                                        'company_name' => $detail->company->company_name,
-                                        'contact_person' => $detail->company->contact_person,
-                                        'address' => $detail->company->address,
-                                        'contact_number' => $detail->company->contact_number,
-                                        'email' => $detail->company->email,
-                                    ];
-                                }),
-                                'items' => $this->when($detail->relationLoaded('items'), function() use ($detail) {
-                                    return $detail->items->map(function($item) {
-                                        return [
-                                            'id' => $item->id,
-                                            'item_name' => $item->item_name,
-                                            'description' => $item->description,
-                                            'price' => $item->price,
-                                            'quantity' => $item->quantity,
-                                            'total' => $item->price * $item->quantity,
-                                        ];
-                                    });
-                                }),
-                            ];
-                        });
-                    }),
-                ];
-            }),
-            'purchaseRequest' => $this->when($this->relationLoaded('purchaseRequest'), function() {
-                return [
-                    'id' => $this->purchaseRequest?->id,
-                    'status' => $this->purchaseRequest?->status,
-                    'have_supplier_approval' => (bool) $this->purchaseRequest?->have_supplier_approval,
-                    'processed_by' => $this->purchaseRequest?->processor?->name,
-                    'processed_at' => $this->purchaseRequest?->processed_at?->format('Y-m-d'),
-                ];
-            }),
-            'collaborators' => $this->whenLoaded('collaborators', fn() => $this->collaborators->map(fn($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'role' => $c->role,
-                'permission' => $c->pivot->permission
-            ])),
-            'files' => $this->whenLoaded('files', fn() => $this->files->map(fn($f) => [
-                'name' => $f->name,
-                'size' => $f->size,
-                'uploaded_at' => $f->created_at->format('Y-m-d'),
-            ])),
-            'timelines' => $this->whenLoaded('timelines', fn() => $this->timelines
-                ->sortBy(function($timeline) {  
-                    if ($timeline->processed_date && $timeline->approved_date) {
-                        return min($timeline->processed_date, $timeline->approved_date);
-                    }
-                    return $timeline->processed_date ?? $timeline->approved_date;
-                })
-                ->values()
-                ->map(fn($t) => [
-                    'id' => $t->id,
-                    'approver_name' => $t->approver?->name ?? 'N/A',
-                    'processor_name' => $t->processor?->name ?? 'N/A',
-                    'approved_date' => $t->approved_date ? Carbon::parse($t->approved_date)->format('Y-m-d') : null,
-                    'processed_date' => $t->processed_date ? Carbon::parse($t->processed_date)->format('Y-m-d') : null,
-                    'approved_progress' => $t->approved_progress ?? null,
-                    'processed_progress' => $t->processed_progress ?? null,
-                    'approved_status' => $t->approved_status ?? null,
-                    'processed_status' => $t->processed_status ?? null,
-                    'remarks' => $t->remarks ?? null
-                ])
-            ),
+            'quotation' => $this->whenLoaded('quotation'),
+            'purchaseRequest' => $this->whenLoaded('purchaseRequest'),
+            'collaborators' => $this->whenLoaded('collaborators'),
+            'files' => $this->whenLoaded('files'),
+            'timelines' => $this->whenLoaded('timelines'),
         ];
     }
 }

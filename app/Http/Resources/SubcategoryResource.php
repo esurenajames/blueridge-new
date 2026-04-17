@@ -15,10 +15,7 @@ class SubcategoryResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'status' => $this->status,
-            'category' => [
-                'id' => $this->category->id,
-                'name' => $this->category->name,
-            ],
+            'category' => $this->whenLoaded('category'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at
         ];

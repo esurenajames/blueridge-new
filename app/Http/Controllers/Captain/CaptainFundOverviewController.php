@@ -34,7 +34,9 @@ class CaptainFundOverviewController extends Controller
 
         $categories = Category::with(['subcategories' => function($q) use ($currentYear) {
                 $q->active()->with(['budget' => function($b) use ($currentYear) {
-                    $b->where('year', $currentYear);
+                    $b->where('year', $currentYear)->with(['transactions' => function($t) use ($currentYear) {
+                        $t->whereYear('transaction_date', $currentYear)->latest('transaction_date')->with(['files', 'processedBy']);
+                    }]);
                 }]);
             }])
             ->active()

@@ -15,7 +15,9 @@ class CaptainTransactionHistoryController extends Controller
         $query = FundTransactionHistory::query();
         $query = $this->filter($query, $request);
 
-        $transactions = $query->orderBy('transaction_date', 'desc')->paginate(10);
+        $transactions = $query->with(['files', 'request', 'budget.subcategory', 'processedBy'])
+                              ->orderBy('transaction_date', 'desc')
+                              ->paginate(10);
 
         return Inertia::render('captain/CaptainTransactionHistory', [
             'transactions' => [

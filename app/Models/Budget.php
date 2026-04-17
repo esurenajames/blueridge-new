@@ -49,6 +49,20 @@ class Budget extends Model
         'balance' => 'decimal:2'
     ];
 
+    protected $appends = ['jan_jun', 'jul_dec'];
+
+    public function getJanJunAttribute(): float
+    {
+        return (float) (($this->january ?? 0) + ($this->february ?? 0) + ($this->march ?? 0) + 
+               ($this->april ?? 0) + ($this->may ?? 0) + ($this->june ?? 0));
+    }
+
+    public function getJulDecAttribute(): float
+    {
+        return (float) (($this->july ?? 0) + ($this->august ?? 0) + ($this->september ?? 0) + 
+               ($this->october ?? 0) + ($this->november ?? 0) + ($this->december ?? 0));
+    }
+
     public function subcategory()
     {
         return $this->belongsTo(Subcategory::class);

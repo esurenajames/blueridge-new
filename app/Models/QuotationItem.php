@@ -22,6 +22,13 @@ class QuotationItem extends Model
         'price' => 'decimal:2'
     ];
 
+    protected $appends = ['total'];
+
+    public function getTotalAttribute()
+    {
+        return $this->price * $this->quantity;
+    }
+
     public function quotationDetail(): BelongsTo
     {
         return $this->belongsTo(QuotationDetail::class, 'request_quotation_detail_id');
